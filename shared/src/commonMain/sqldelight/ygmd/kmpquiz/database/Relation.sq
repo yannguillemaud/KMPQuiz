@@ -1,0 +1,22 @@
+CREATE TABLE relationEntity (
+    quiz_id TEXT NOT NULL,
+    qanda_id TEXT NOT NULL,
+    PRIMARY KEY (quiz_id, qanda_id),
+    FOREIGN KEY (quiz_id) REFERENCES quizEntity(id) ON DELETE CASCADE ,
+    FOREIGN KEY (qanda_id) REFERENCES qandaEntity(id)
+);
+
+getAllRelations:
+SELECT * FROM relationEntity;
+
+insertRelation:
+INSERT INTO relationEntity(quiz_id, qanda_id)
+VALUES (?, ?);
+
+deleteQuizById:
+DELETE FROM relationEntity
+WHERE quiz_id = ?;
+
+deleteQandasToQuiz:
+DELETE FROM relationEntity
+WHERE qanda_id = ?;
