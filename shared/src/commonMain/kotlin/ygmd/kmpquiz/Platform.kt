@@ -1,0 +1,7 @@
+package ygmd.kmpquiz
+
+interface Platform {
+    val name: String
+}
+
+expect fun getPlatform(): Platform
