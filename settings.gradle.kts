@@ -36,4 +36,8 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "KMPQuiz"
-include(":androidApp", ":shared", ":server")
+include(
+    ":androidApp",
+    ":shared",
+    //":server"
+)

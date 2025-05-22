@@ -9,6 +9,8 @@ plugins {
 }
 
 kotlin {
+    jvm()
+
     androidTarget {
         compilations.all {
             compileTaskProvider.configure {
@@ -18,19 +20,10 @@ kotlin {
             }
         }
     }
-    
-    listOf(
-        iosX64(),
-        iosArm64(),
-        iosSimulatorArm64()
-    ).forEach {
-        it.binaries.framework {
-            baseName = "shared"
-            isStatic = true
-        }
-    }
 
     sourceSets {
+
+
         commonMain.dependencies {
             //put your multiplatform dependencies here
             implementation(libs.kermit)
@@ -47,24 +40,21 @@ kotlin {
             implementation(libs.ktor.client.content.negotiation)
             implementation(libs.ktor.serialization.kotlinx.json)
 
-            implementation(libs.room.runtime)
-//            implementation(libs.sqlite)
             implementation("co.touchlab:kermit:2.0.5")
         }
+
         commonTest.dependencies {
             implementation(libs.kotlin.test)
+            implementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.0")
+            implementation("org.assertj:assertj-core:3.25.3")
         }
+
         androidMain.dependencies {
             implementation(libs.androidx.activity.compose)
             implementation(libs.koin.android)
             implementation(libs.ktor.client.okhttp)
             implementation("app.cash.sqldelight:android-driver:2.0.2")
 //            ksp(libs.room.compiler)
-        }
-        iosMain.dependencies {
-            api(libs.kermit.simple)
-            implementation(libs.ktor.client.darwin)
-            implementation("app.cash.sqldelight:native-driver:2.0.2")
         }
     }
 }
@@ -76,11 +66,9 @@ android {
         minSdk = 24
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
     }
 }
 
-//room {
-//    schemaDirectory("$projectDir/schemas")
-//}
+tasks.withType<Test>().configureEach {
+    useJUnitPlatform()
+}

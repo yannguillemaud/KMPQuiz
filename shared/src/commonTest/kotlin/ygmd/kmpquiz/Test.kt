@@ -1,12 +1,5 @@
 package ygmd.kmpquiz
 
-import kotlin.test.Test
-import kotlin.test.assertTrue
+class FetchQandasUseCaseTest {
 
-class CommonGreetingTest {
-
-    @Test
-    fun testExample() {
-        assertTrue(Greeting().greet().contains("Hello"), "Check 'Hello' is mentioned")
-    }
 }

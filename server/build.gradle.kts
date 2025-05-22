@@ -12,6 +12,10 @@ application {
     applicationDefaultJvmArgs = listOf("-Dio.ktor.development=$isDevelopment")
 }
 
+repositories {
+    mavenCentral()
+}
+
 dependencies {
     implementation(libs.ktor.server.core)
     implementation(libs.ktor.server.netty)
@@ -26,6 +30,9 @@ dependencies {
 
     // HikariCP pour la gestion des connexions
     implementation(libs.hikaricp)
+
+    testImplementation("org.junit.jupiter:junit-jupiter:5.7.1")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 repositories {
     mavenCentral()
@@ -33,3 +40,4 @@ repositories {
 kotlin {
     jvmToolchain(21)
 }
+
