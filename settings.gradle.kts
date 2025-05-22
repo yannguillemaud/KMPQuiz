@@ -12,7 +12,14 @@ pluginManagement {
         mavenCentral()
         gradlePluginPortal()
     }
+    plugins {
+        kotlin("jvm") version "2.1.21"
+    }
 }
+plugins {
+    id("org.gradle.toolchains.foojay-resolver-convention") version "0.8.0"
+}
+
 
 dependencyResolutionManagement {
     @Suppress("UnstableApiUsage")
@@ -29,4 +36,4 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "KMPQuiz"
-include(":androidApp", ":shared")
+include(":androidApp", ":shared", ":server")
