@@ -47,6 +47,7 @@ kotlin {
             implementation(libs.kotlin.test)
             implementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.0")
             implementation("org.assertj:assertj-core:3.25.3")
+            implementation("io.mockk:mockk:1.14.2")
         }
 
         androidMain.dependencies {

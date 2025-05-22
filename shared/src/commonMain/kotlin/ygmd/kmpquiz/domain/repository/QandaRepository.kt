@@ -13,25 +13,3 @@ interface QandaRepository {
     fun save(qanda: QANDA)
     fun exists(qanda: QANDA): Boolean
 }
-
-class QandaRepositoryPersistenceImpl: QandaRepository {
-    private val _qandas = MutableStateFlow<List<QANDA>>(emptyList())
-
-    override fun observeQandas(): Flow<List<QANDA>> {
-        return _qandas.asStateFlow()
-    }
-
-    override fun exists(qanda: QANDA): Boolean = _qandas.value.any { it == qanda }
-
-    override fun saveAll(qandas: List<QANDA>) {
-        this._qandas.update { _ -> qandas }
-        saveCallback()
-    }
-
-    override fun save(qanda: QANDA) {
-        this._qandas.update { it + qanda }
-        saveCallback()
-    }
-
-    private fun saveCallback() = println("QandasRepository now contains ${_qandas.value}")
-}

@@ -39,5 +39,5 @@ rootProject.name = "KMPQuiz"
 include(
     ":androidApp",
     ":shared",
-    //":server"
+    ":server"
 )
