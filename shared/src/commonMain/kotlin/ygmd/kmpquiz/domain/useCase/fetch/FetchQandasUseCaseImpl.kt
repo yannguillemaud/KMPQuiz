@@ -3,44 +3,43 @@ package ygmd.kmpquiz.domain.useCase.fetch
 import io.ktor.client.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Deferred
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
+import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
-import ygmd.kmpquiz.domain.pojo.QANDA
+import ygmd.kmpquiz.domain.pojo.InternalQanda
 
-class FetchQandasUseCase(private val client: HttpClient) {
-    private var cachedResult: Deferred<Result<List<QANDA>>>? = null
+class OpenTriviaFetchQanda(
+    private val client: HttpClient
+): FetchQandas {
+    private val json = Json { ignoreUnknownKeys = true }
+    private var cachedResult: Result<List<InternalQanda>>? = null
 
-    suspend operator fun invoke(): Result<List<QANDA>> {
-        cachedResult?.let { return it.await() }
-
-        val deferred = CoroutineScope(Dispatchers.IO)
-            .async {
-                fetchFromApi()
-                    .fold(
-                        onFailure = { Result.failure(it) },
-                        onSuccess = { Result.success(it.toQandas()) }
-                    )
-            }
-        cachedResult = deferred
-        return deferred.await()
-    }
+    override suspend fun fetch(): Result<List<InternalQanda>> =
+        cachedResult ?: kotlin.runCatching {
+            val response: String = fetchBrut()
+            val qandas: List<InternalQanda> = decode(response)
+            val success = Result.success(qandas)
+            cachedResult = success
+            return success
+        }
 
 
-    private suspend fun fetchFromApi(): Result<QuizResultDto> {
-        println("Fetching")
+    private suspend fun fetchBrut(): String =
         try {
-            val response = client.get(OpenTriviaDb.DEFAULT_URL)
+            client.get(OpenTriviaDb.DEFAULT_URL)
                 .bodyAsText()
-            return Json.decodeFromString<QuizResultDto>(response)
-                .also { println("Fetched ${it.results.size} Qandas") }
-                .let { Result.success(it) }
-        } catch (e: Exception) {
-            return Result.failure(e)
+        } catch (e: Exception){
+            throw RuntimeException(e)
+        }
+
+    private fun decode(brut: String): List<InternalQanda> {
+        return try {
+            val dto = json.decodeFromString<QuizResultDto>(brut)
+            dto.toQandas()
+        } catch (error: SerializationException){
+            println("Error when fetching: $error")
+            error("Fetching failed: $brut")
         }
     }
 }
 
-private fun QuizResultDto.toQandas() = results.map { it.toQanda() }
+private fun QuizResultDto.toQandas(): List<InternalQanda> = results.map { it.toQanda() }

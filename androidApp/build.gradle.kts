@@ -47,6 +47,5 @@ dependencies {
     implementation(libs.koin.android)
     implementation(libs.koin.compose.viewmodel)
     implementation(libs.koin.compose.viewmodel.nav)
-    implementation(libs.androidx.compose.foundation)
     implementation(libs.kotlinx.serialization.json)
 }

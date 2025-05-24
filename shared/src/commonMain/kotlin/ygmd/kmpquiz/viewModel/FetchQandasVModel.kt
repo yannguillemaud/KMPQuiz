@@ -5,35 +5,41 @@ import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import ygmd.kmpquiz.domain.pojo.QANDA
-import ygmd.kmpquiz.domain.useCase.fetch.FetchQandasUseCase
+import ygmd.kmpquiz.domain.pojo.InternalQanda
+import ygmd.kmpquiz.domain.useCase.fetch.OpenTriviaFetchQanda
 
 data class FetchQandasUiState(
     val isLoading: Boolean = false,
-    val qandas: List<QANDA> = emptyList(),
+    val qandas: List<InternalQanda> = emptyList(),
     val error: String? = null,
 )
 
 class FetchQandasVModel(
-    private val fetchQandasUseCase: FetchQandasUseCase
+    private val fetchQandasUseCase: OpenTriviaFetchQanda
 ): ViewModel() {
     private val _uiFetchedState = MutableStateFlow(FetchQandasUiState())
     val fetchedUiState = _uiFetchedState.asStateFlow()
 
-    private val _uiSavedState = MutableStateFlow(SavedQandasUiState())
-    val savedUiState = _uiSavedState.asStateFlow()
-
     fun fetchQandas(){
         viewModelScope.launch {
-            _uiFetchedState.value = FetchQandasUiState(isLoading = true)
+            _uiFetchedState.value = FetchQandasUiState(isLoading = true, error = null)
 
-            try {
-                fetchQandasUseCase().let {
-                    _uiFetchedState.value = FetchQandasUiState(qandas = it)
+            fetchQandasUseCase.fetch().fold(
+                onSuccess = {
+                    _uiFetchedState.value = _uiFetchedState.value.copy(
+                        isLoading = false,
+                        qandas = it,
+                        error = null,
+                    )
+                },
+                onFailure = {
+                    println("Erreur: $it")
+                    _uiFetchedState.value = _uiFetchedState.value.copy(
+                        isLoading = false,
+                        error = it.message ?: "Erreur inconnue",
+                    )
                 }
-            } catch (e: Exception){
-                _uiFetchedState.value = FetchQandasUiState(error = e.message)
-            }
+            )
         }
     }
 }

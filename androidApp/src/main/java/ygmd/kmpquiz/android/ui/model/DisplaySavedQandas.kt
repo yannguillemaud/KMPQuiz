@@ -4,7 +4,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -14,12 +13,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import org.koin.compose.viewmodel.koinViewModel
 import ygmd.kmpquiz.android.ui.composable.QandaComposable
-import ygmd.kmpquiz.viewModel.FetchQandasVModel
-import ygmd.kmpquiz.viewModel.SaveQandasVModel
+import ygmd.kmpquiz.viewModel.GetQandasVModel
 
 @Composable
-fun DisplaySavedQandas(viewModel: SaveQandasVModel = koinViewModel()){
-    val state by viewModel.savedState.collectAsState()
+fun DisplaySavedQandas(viewModel: GetQandasVModel = koinViewModel()){
+    val state by viewModel.qandasStateFlow.collectAsState()
 
     when {
         state.isLoading -> {

@@ -5,12 +5,12 @@ import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
 import kotlinx.io.IOException
 import org.assertj.core.api.Assertions.assertThat
-import ygmd.kmpquiz.domain.pojo.QANDA
-import ygmd.kmpquiz.domain.useCase.fetch.FetchQandasUseCase
+import ygmd.kmpquiz.domain.pojo.InternalQanda
+import ygmd.kmpquiz.domain.useCase.fetch.OpenTriviaFetchQanda
 import kotlin.test.Test
 
-class FetchQandasUseCaseTest {
-    private val fetchUseCase = mockk<FetchQandasUseCase>()
+class OpenTriviaFetchQandaTest {
+    private val fetchUseCase = mockk<OpenTriviaFetchQanda>()
 
     @Test
     fun `should return error when fetch fail`(){
@@ -23,14 +23,19 @@ class FetchQandasUseCaseTest {
     @Test
     fun `should return qandas when fetch success`(){
         // GIVEN
-        val expectedQanda = QANDA("Science", "Question ?", listOf("Answers"), "CorrectAnswer")
+        val expectedQanda = InternalQanda(
+            id = 1,
+            category = "Science",
+            question = "Question ?",
+            answers = listOf("Answers"),
+            correctAnswer = "CorrectAnswer"
+        )
         coEvery { fetchUseCase() } returns Result.success(listOf(expectedQanda))
 
         val results = runBlocking { fetchUseCase.invoke() }
         assertThat(results.isSuccess).isTrue
         assertThat(results.getOrThrow())
             .hasSize(1)
-            .usingRecursiveComparison()
-            .isEqualTo(expectedQanda)
+            .isEqualTo(listOf(expectedQanda))
     }
 }

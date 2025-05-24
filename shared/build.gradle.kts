@@ -2,28 +2,16 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
-    alias(libs.plugins.androidLibrary)
     kotlin("plugin.serialization") version "2.1.20"
-
     alias(libs.plugins.ksp)
+    alias(libs.plugins.androidLibrary)
 }
 
 kotlin {
+    androidTarget()
     jvm()
 
-    androidTarget {
-        compilations.all {
-            compileTaskProvider.configure {
-                compilerOptions {
-                    jvmTarget.set(JvmTarget.JVM_1_8)
-                }
-            }
-        }
-    }
-
     sourceSets {
-
-
         commonMain.dependencies {
             //put your multiplatform dependencies here
             implementation(libs.kermit)
@@ -51,22 +39,23 @@ kotlin {
         }
 
         androidMain.dependencies {
-            implementation(libs.androidx.activity.compose)
-            implementation(libs.koin.android)
             implementation(libs.ktor.client.okhttp)
-            implementation("app.cash.sqldelight:android-driver:2.0.2")
-//            ksp(libs.room.compiler)
+        }
+
+        jvmMain {
+            dependencies {
+                implementation(libs.ktor.client.cio)
+            }
         }
     }
 }
 
 android {
-    namespace = "ygmd.kmpquiz"
+    namespace = "ygmd.kmpquiz.shared"
     compileSdk = 35
+
     defaultConfig {
         minSdk = 24
-    }
-    compileOptions {
     }
 }
 

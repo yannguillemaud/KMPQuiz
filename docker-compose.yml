@@ -1,13 +1,13 @@
-version: '3.8'
+version: "3.8"
 
 services:
   postgres:
     image: postgres:15
-    container_name: ktor_postgres
+    container_name: postgres
     restart: always
     environment:
-      POSTGRES_USER: pgsql
-      POSTGRES_PASSWORD: pgsql
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
       POSTGRES_DB: kmpquizdb
     ports:
       - "5432:5432"

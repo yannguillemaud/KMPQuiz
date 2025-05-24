@@ -1,26 +1,87 @@
-package kotlin.ygmd.kmpquiz.db
+package ygmd.kmpquiz.db
 
-import ygmd.kmpquiz.domain.pojo.QANDA
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.withContext
+import org.jetbrains.exposed.sql.deleteAll
+import org.jetbrains.exposed.sql.transactions.transaction
+import ygmd.kmpquiz.db.exposed.QandaEntity
+import ygmd.kmpquiz.db.exposed.QandaEntity.DAO.all
+import ygmd.kmpquiz.db.exposed.QandaEntity.DAO.find
+import ygmd.kmpquiz.db.exposed.QandasTable
+import ygmd.kmpquiz.domain.pojo.InternalQanda
 import ygmd.kmpquiz.domain.repository.QandaRepository
 
 class QandaRepositoryPersistenceImpl: QandaRepository {
-    private val _qandas: MutableList<QANDA> = mutableListOf()
-
-    override fun observeQandas(): Flow<List<QANDA>> {
-        return _qandas.asStateFlow()
+    override fun observeQandas(): Flow<List<InternalQanda>> = flow {
+        val qandas = withContext(Dispatchers.IO){
+            transaction {
+                all().toList().map { it.toInternalQanda() }
+            }
+        }
+        emit(qandas)
     }
 
-    override fun exists(qanda: QANDA): Boolean = _qandas.value.any { it == qanda }
-
-    override fun saveAll(qandas: List<QANDA>) {
-        this._qandas.update { _ -> qandas }
-        saveCallback()
+    override suspend fun getAll(): List<InternalQanda> {
+        return withContext(Dispatchers.IO){
+            transaction {
+                all().map { it.toInternalQanda() }
+            }
+        }
     }
 
-    override fun save(qanda: QANDA) {
-        this._qandas.update { it + qanda }
-        saveCallback()
+    override suspend fun findById(id: Long): InternalQanda? =
+        withContext(Dispatchers.IO) {
+            transaction {
+                QandaEntity.findById(id)?.toInternalQanda()
+            }
+        }
+
+    override suspend fun saveAll(qandas: List<InternalQanda>): Unit =
+        withContext(Dispatchers.IO){
+
+        }
+
+    override suspend fun save(qanda: InternalQanda) {
+        withContext(Dispatchers.IO){
+            transaction {
+                QandaEntity.new {
+                    category = qanda.category
+                    question = qanda.question
+                    answers = qanda.answers.joinToString(",")
+                    correctPosition = qanda.answers.indexOf(qanda.correctAnswer)
+                }
+            }
+        }
     }
 
-    private fun saveCallback() = println("QandasRepository now contains ${_qandas.value}")
+    override suspend fun deleteById(id: Long): Boolean {
+        return withContext(Dispatchers.IO){
+            transaction {
+                val entity = QandaEntity.findById(id)
+                if(entity != null){
+                    entity.delete()
+                    true
+                } else false
+            }
+        }
+    }
+
+    override suspend fun deleteAll(id: Long): Boolean {
+        return withContext(Dispatchers.IO){
+            transaction {
+                QandasTable.deleteAll() == 0
+            }
+        }
+    }
 }
+
+private fun QandaEntity.toInternalQanda(): InternalQanda =
+    InternalQanda(
+        id = id.value,
+        category = category,
+        question = question,
+        answers = answers.split(",").toList(),
+        correctAnswer = answers
+    )

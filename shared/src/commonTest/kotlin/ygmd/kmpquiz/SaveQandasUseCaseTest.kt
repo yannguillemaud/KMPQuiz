@@ -1,10 +1,11 @@
 package ygmd.kmpquiz
 
+import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import ygmd.kmpquiz.domain.pojo.QANDA
+import ygmd.kmpquiz.domain.pojo.InternalQanda
 import ygmd.kmpquiz.domain.repository.QandaRepository
-import ygmd.kmpquiz.domain.useCase.SaveQandaUseCase
+import ygmd.kmpquiz.domain.useCase.save.SaveQandaUseCase
 import kotlin.test.Test
 
 class SaveQandasUseCaseTest {
@@ -14,7 +15,14 @@ class SaveQandasUseCaseTest {
     @Test
     fun `should save qanda`(){
         // GIVEN
-        val qanda = QANDA("Science", "Question ?", listOf("Answers"), "CorrectAnswer")
+        val qanda = InternalQanda(
+            id = 1,
+            category = "Science",
+            question = "Question ?",
+            answers = listOf("Answers"),
+            correctAnswer = "CorrectAnswer"
+        )
+        every { saveUseCase.saveQanda(any()) } returns Unit
 
         // WHEN
         saveUseCase.saveQanda(qanda)

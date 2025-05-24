@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
@@ -29,7 +28,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import ygmd.kmpquiz.domain.pojo.QANDA
+import ygmd.kmpquiz.domain.pojo.InternalQanda
 import ygmd.kmpquiz.domain.pojo.Quiz
 
 @Composable
@@ -41,12 +40,12 @@ fun QuizList(list: List<Quiz>, block: @Composable (quiz: Quiz) -> Unit){
 
 @Composable
 fun QandaList(
-    qandas: List<QANDA>,
+    qandas: List<InternalQanda>,
     modifier: Modifier,
     padding: PaddingValues = PaddingValues(horizontal = 16.dp),
     itemSpacing: Dp = 8.dp,
-    filter: (QANDA) -> Boolean = { true },
-    block: @Composable (QANDA) -> Unit
+    filter: (InternalQanda) -> Boolean = { true },
+    block: @Composable (InternalQanda) -> Unit
 ){
     LazyColumn(
         modifier = modifier,
@@ -61,7 +60,7 @@ fun QandaList(
 
 
 @Composable
-fun QandaComposable(qanda: QANDA) {
+fun QandaComposable(qanda: InternalQanda) {
     val question = qanda.question
     val answers = qanda.answers
     val correctAnswer = qanda.correctAnswer

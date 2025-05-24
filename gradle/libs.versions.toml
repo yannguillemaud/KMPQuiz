@@ -1,16 +1,14 @@
 [versions]
 agp = "8.9.1"
-exposedCore = "0.47.1"
-exposedDao = "0.47.1"
-hikaricp = "5.0.1"
+exposedCoreVersion = "0.45.0"
+exposedDaoVersion = "0.45.0"
+hikaricpVersion = "5.1.0"
+koinLoggerSlf4j = "3.4.3"
 kotlin = "2.1.20"
 compose = "1.5.4"
-compose-material3 = "1.1.2"
 
 androidx-activityCompose = "1.8.0"
-androidx-foundation = "1.8.0"
-androidx-lifecycle = "2.8.4"
-androidx-navigation = "2.8.4"
+androidx-lifecycle = "2.9.0"
 
 kotlin-coroutines = "1.10.2"
 kotlin-serialization-json = "1.8.1"
@@ -20,32 +18,42 @@ kermit = "2.0.5"
 
 ktor = "3.1.2"
 material3Android = "1.3.2"
-postgresql = "42.6.0"
+postgresql = "42.7.3"
+postgresqlVersion = "42.7.3"
 room = "2.7.1"
 ksp = "1.9.23-1.0.19"
-sqlite = "2.5.0-SNAPSHOT"
+
+# DATABASE
+exposedCore = "0.47.1"
+exposedDao = "0.47.1"
+hikaricp = "5.1.0"
 
 [libraries]
-androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "androidx-activityCompose" }
+androidx-activity-compose = { module = "androidx.activity:activity-compose", version = "1.10.1" }
 androidx-lifecycle-viewmodel = { group = "org.jetbrains.androidx.lifecycle", name = "lifecycle-viewmodel", version.ref = "androidx-lifecycle" }
 androidx-lifecycle-runtime-compose = { group = "org.jetbrains.androidx.lifecycle", name = "lifecycle-runtime-compose", version.ref = "androidx-lifecycle" }
 
-androidx-compose-foundation = { module = "androidx.compose.foundation:foundation", version.ref = "androidx-foundation" }
-androidx-compose-navigation = { module = "androidx.navigation:navigation-compose", version.ref = "androidx-navigation" }
+androidx-compose-foundation = { module = "androidx.compose.foundation:foundation", version.ref = "androidx-lifecycle" }
+androidx-compose-navigation = { module = "androidx.navigation:navigation-compose", version.ref = "androidx-lifecycle" }
 androidx-material3-android = { group = "androidx.compose.material3", name = "material3-android", version.ref = "material3Android" }
 
 compose-ui = { module = "androidx.compose.ui:ui", version.ref = "compose" }
 compose-ui-tooling = { module = "androidx.compose.ui:ui-tooling", version.ref = "compose" }
 compose-ui-tooling-preview = { module = "androidx.compose.ui:ui-tooling-preview", version.ref = "compose" }
 
-exposed-dao = { module = "org.jetbrains.exposed:exposed-dao", version.ref = "exposedDao" }
-exposed-core = { module = "org.jetbrains.exposed:exposed-core", version.ref = "exposedCore" }
-exposed-jdbc = { module = "org.jetbrains.exposed:exposed-jdbc", version.ref = "exposedCore" }
-hikaricp = { module = "com.zaxxer:HikariCP", version.ref = "hikaricp" }
+# DATABASE
 
-koin-android = {module = "io.insert-koin:koin-android", version.ref = "koin"}
-koin-compose-viewmodel = {module = "io.insert-koin:koin-compose-viewmodel", version.ref = "koin"}
-koin-compose-viewmodel-nav = {module = "io.insert-koin:koin-compose-viewmodel-navigation", version.ref = "koin"}
+exposed-dao = { module = "org.jetbrains.exposed:exposed-dao", version.ref = "exposedDaoVersion" }
+exposed-core = { module = "org.jetbrains.exposed:exposed-core", version.ref = "exposedCoreVersion" }
+exposed-jdbc = { module = "org.jetbrains.exposed:exposed-jdbc", version.ref = "exposedCoreVersion" }
+hikaricp = { module = "com.zaxxer:HikariCP", version.ref = "hikaricpVersion" }
+
+# KOIN
+koin-core = {module = "io.insert-koin:koin-core", version.ref = "koin"}
+koin-ktor = {module = "io.insert-koin:koin-ktor", version.ref = "koin"}
+koin-android = {module = "io.insert-koin:koin-android", version.ref = "koin" }
+koin-compose-viewmodel = {module = "io.insert-koin:koin-compose-viewmodel", version.ref = "koin" }
+koin-compose-viewmodel-nav = {module = "io.insert-koin:koin-compose-viewmodel-navigation", version.ref = "koin" }
 
 kermit = { module = "co.touchlab:kermit", version.ref = "kermit" }
 kermit-simple = { module = "co.touchlab:kermit-simple", version.ref = "kermit" }
@@ -58,15 +66,17 @@ kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serializa
 ktor-client-content-negotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor" }
 ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
 ktor-client-okhttp = { module = "io.ktor:ktor-client-okhttp", version.ref = "ktor" }
-ktor-client-darwin = { module = "io.ktor:ktor-client-darwin", version.ref = "ktor" }
+ktor-client-cio = { module = "io.ktor:ktor-client-cio", version.ref = "ktor" }
 ktor-serialization-kotlinx-json = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktor"}
-
+ktor-server-status-page = { module = "io.ktor:ktor-server-status-pages", version.ref = "ktor"}
+ktor-server-content-negotiation = { module = "io.ktor:ktor-server-content-negotiation", version.ref = "ktor" }
 ktor-server-core = { module = "io.ktor:ktor-server-core", version.ref = "ktor" }
 ktor-server-netty = { module = "io.ktor:ktor-server-netty", version.ref = "ktor" }
+koin-logger-slf4j = { module = "io.insert-koin:koin-logger-slf4j", version.ref = "koin" }
 logback = { module = "ch.qos.logback:logback-classic", version = "1.4.11" }
 
 
-postgresql = { module = "org.postgresql:postgresql", version.ref = "postgresql" }
+postgresql = { module = "org.postgresql:postgresql", version.ref = "postgresqlVersion" }
 room-runtime = { group = "androidx.room", name = "room-runtime", version.ref = "room" }
 room-runtime-android = { group = "androidx.room", name = "room-runtime-android", version.ref = "room" }
 room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "room" }

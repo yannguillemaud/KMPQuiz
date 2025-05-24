@@ -1,14 +1,11 @@
 package ygmd.kmpquiz.android
 
 import android.app.Application
-import org.koin.dsl.module
-import ygmd.kmpquiz.initKoin
+import koin.initKoin
 
 class App: Application(){
     override fun onCreate() {
         super.onCreate()
-        initKoin(module {
-
-        })
+        initKoin()
     }
 }

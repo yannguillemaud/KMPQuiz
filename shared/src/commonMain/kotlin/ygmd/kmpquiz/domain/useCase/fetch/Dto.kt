@@ -1,7 +1,7 @@
 package ygmd.kmpquiz.domain.useCase.fetch
 
 import kotlinx.serialization.Serializable
-import ygmd.kmpquiz.domain.pojo.QANDA
+import ygmd.kmpquiz.domain.pojo.InternalQanda
 
 @Serializable
 data class QuizResultDto(
@@ -18,8 +18,9 @@ class QANDADto(
     val correct_answer: String,
     val incorrect_answers: List<String>
 ){
-    fun toQanda(): QANDA {
-        return QANDA(
+    fun toQanda(): InternalQanda {
+        return InternalQanda(
+            id = IDGenerator.nextId(),
             question = question.unescaped(),
             correctAnswer = correct_answer.unescaped(),
             answers = if(type == "boolean") incorrect_answers.asBooleanAnswers()
@@ -42,3 +43,8 @@ private fun List<String>.asBooleanAnswers(): List<String> = listOf(
 )
 
 private fun String.toInternalCategory(): String = this.replace("Entertainment: ", "")
+
+object IDGenerator {
+    private var id: Long = 0
+    fun nextId() = id++
+}

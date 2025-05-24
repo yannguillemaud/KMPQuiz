@@ -1,6 +1,7 @@
 plugins {
     application
     kotlin("jvm")
+    kotlin("plugin.serialization") version "2.1.20"
 }
 
 group = "ygmd.kmpquiz"
@@ -12,31 +13,34 @@ application {
     applicationDefaultJvmArgs = listOf("-Dio.ktor.development=$isDevelopment")
 }
 
-repositories {
-    mavenCentral()
-}
-
 dependencies {
+    implementation(project(":shared"))
+
     implementation(libs.ktor.server.core)
     implementation(libs.ktor.server.netty)
+    implementation(libs.ktor.server.content.negotiation)
+    implementation(libs.ktor.serialization.kotlinx.json)
+    implementation(libs.ktor.server.status.page)
     implementation(libs.logback)
 
-    implementation(libs.postgresql)
+//    implementation(libs.postgresql)
 
     // Exposed
     implementation(libs.exposed.core)
     implementation(libs.exposed.dao)
     implementation(libs.exposed.jdbc)
-
-    // HikariCP pour la gestion des connexions
+    implementation(libs.postgresql)
     implementation(libs.hikaricp)
+
+    /* KOIN */
+    implementation(libs.koin.core)
+    implementation(libs.koin.ktor)
+    implementation(libs.koin.logger.slf4j)
 
     testImplementation("org.junit.jupiter:junit-jupiter:5.7.1")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
-repositories {
-    mavenCentral()
-}
+
 kotlin {
     jvmToolchain(21)
 }

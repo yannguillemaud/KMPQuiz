@@ -10,6 +10,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -17,6 +18,7 @@ import kotlinx.serialization.Serializable
 import ygmd.kmpquiz.android.ui.QuizTheme
 import ygmd.kmpquiz.android.ui.model.DisplayFetchQanda
 import ygmd.kmpquiz.android.ui.model.DisplaySavedQandas
+import ygmd.kmpquiz.viewModel.FetchQandasVModel
 
 class Main: ComponentActivity(){
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -24,6 +26,8 @@ class Main: ComponentActivity(){
         setContent {
             QuizTheme(darkTheme = false)  {
                 val navController = rememberNavController()
+                val fetchViewModel: FetchQandasVModel = viewModel()
+
                 NavHost(navController = navController, startDestination = Home){
                     composable<Home> {
                         Column(

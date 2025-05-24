@@ -14,12 +14,17 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult.ActionPerformed
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -27,75 +32,114 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.ViewModel
+import kotlinx.coroutines.launch
+import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 import ygmd.kmpquiz.android.ui.composable.QandaComposable
 import ygmd.kmpquiz.android.ui.composable.QandaList
 import ygmd.kmpquiz.android.ui.event.ClickActions
-import ygmd.kmpquiz.domain.pojo.QANDA
+import ygmd.kmpquiz.domain.pojo.InternalQanda
+import ygmd.kmpquiz.domain.useCase.save.SaveQandaUseCase
 import ygmd.kmpquiz.viewModel.FetchQandasVModel
-import ygmd.kmpquiz.viewModel.SaveQandasVModel
 
 @Composable
 fun DisplayFetchQanda(
     fetchQandasVModel: FetchQandasVModel = koinViewModel(),
-    saveQandasVModel: SaveQandasVModel = koinViewModel()
+    saveQandaUseCase: SaveQandaUseCase = koinInject(),
 ) {
+    val scope = rememberCoroutineScope()
     val fetchUiState by fetchQandasVModel.fetchedUiState.collectAsState()
+    val snackbar = remember { SnackbarHostState() }
+    var errorHandled by remember { mutableStateOf(false) }
 
-    val qandaClickActions = ClickActions<QANDA>(
-        onLongClick = { saveQandasVModel.saveQandas(it).also { println("Saving Qanda") } },
-        onDoubleTap = { saveQandasVModel.saveQandas(it).also { println("Double tapped") } },
+    val qandaClickActions = ClickActions<InternalQanda>(
+        onLongClick = {
+            scope.launch { saveQandaUseCase.saveQanda(it) }
+            println("LongClick")
+        },
+        onDoubleTap = {
+            scope.launch { saveQandaUseCase.saveQanda(it) }
+            println("DoubleTap")
+        },
     )
 
-    LaunchedEffect(fetchUiState.qandas.isNotEmpty()) {
-        fetchQandasVModel.fetchQandas()
+    LaunchedEffect(true) {
+        if (fetchUiState.qandas.isEmpty()) {
+            fetchQandasVModel.fetchQandas()
+        }
     }
 
-    when {
-        fetchUiState.isLoading -> {
-            CenteredCircularProgressIndicator()
+    LaunchedEffect(fetchUiState.error) {
+        if(!errorHandled && fetchUiState.error != null) {
+            errorHandled = true
+            val result = snackbar.showSnackbar(
+                message = fetchUiState.error!!,
+                actionLabel = "Retry"
+            )
+            if (result == ActionPerformed) {
+                fetchQandasVModel.fetchQandas()
+                errorHandled = false
+            }
         }
-        fetchUiState.error != null -> {
-            Text("ERROR:: ${fetchUiState.error}")
-        }
-        else -> {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .statusBarsPadding()
-                    .padding(16.dp)
-            ) {
+    }
 
-                var rememberCategory by rememberSaveable { mutableStateOf("") }
-                val categories = fetchUiState.qandas.map { it.category }.toSet()
-
-                LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    items(categories.toList()) { selectedCategory ->
-                        FilterChip(
-                            selected = selectedCategory == rememberCategory,
-                            onClick = { rememberCategory = if(selectedCategory == rememberCategory) "" else selectedCategory },
-                            label = { Text(color = Color.White, text = selectedCategory) }
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                QandaList(
-                    qandas = fetchUiState.qandas,
-                    modifier = Modifier.fillMaxWidth(),
-                    filter = { it.category == rememberCategory || rememberCategory.isBlank() },
-                ) { qanda ->
-                    SelectionableQanda(
-                        qanda = qanda,
-                        clickAction = qandaClickActions,
-                    ) { selection ->
-                        QandaComposable(selection)
-                    }
-                }
+    Box(modifier = Modifier.fillMaxSize()){
+        when {
+            fetchUiState.isLoading -> {
+                CenteredCircularProgressIndicator()
             }
 
+            else -> {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .statusBarsPadding()
+                        .padding(16.dp)
+                ) {
+
+                    var rememberCategory by rememberSaveable { mutableStateOf("") }
+                    val categories by remember {
+                        mutableStateOf(fetchUiState.qandas.map { it.category }.toSet())
+                    }
+
+                    LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        items(categories.toList()) { selectedCategory ->
+                            FilterChip(
+                                selected = selectedCategory == rememberCategory,
+                                onClick = {
+                                    rememberCategory =
+                                        if (selectedCategory == rememberCategory) "" else selectedCategory
+                                },
+                                label = { Text(color = Color.White, text = selectedCategory) },
+                                enabled = fetchUiState.qandas.isNotEmpty(),
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    QandaList(
+                        qandas = fetchUiState.qandas,
+                        modifier = Modifier.fillMaxWidth(),
+                        filter = { it.category == rememberCategory || rememberCategory.isBlank() },
+                    ) { qanda ->
+                        SelectionableQanda(
+                            qanda = qanda,
+                            clickAction = qandaClickActions,
+                        ) { selection ->
+                            QandaComposable(selection)
+                        }
+                    }
+                }
+
+            }
         }
+
+        SnackbarHost(
+            hostState = snackbar,
+            modifier = Modifier.align(Alignment.Center).padding(16.dp)
+        )
     }
 }
 
@@ -110,9 +154,9 @@ fun CenteredCircularProgressIndicator(){
 
 @Composable
 fun SelectionableQanda(
-    qanda: QANDA,
-    clickAction: ClickActions<QANDA>? = null,
-    block: @Composable (q: QANDA) -> Unit
+    qanda: InternalQanda,
+    clickAction: ClickActions<InternalQanda>? = null,
+    block: @Composable (q: InternalQanda) -> Unit
 ){
     Box(
         modifier = Modifier.pointerInput(Unit) {
