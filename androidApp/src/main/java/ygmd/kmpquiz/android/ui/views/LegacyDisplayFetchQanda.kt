@@ -1,4 +1,4 @@
-package ygmd.kmpquiz.android.ui.model
+package ygmd.kmpquiz.android.ui.views
 
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -16,7 +15,6 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.SnackbarResult.ActionPerformed
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -32,21 +30,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.ViewModel
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
-import ygmd.kmpquiz.android.ui.composable.QandaComposable
-import ygmd.kmpquiz.android.ui.composable.QandaList
-import ygmd.kmpquiz.android.ui.event.ClickActions
+import ygmd.kmpquiz.android.event.ClickActions
 import ygmd.kmpquiz.domain.pojo.InternalQanda
-import ygmd.kmpquiz.domain.useCase.save.SaveQandaUseCase
-import ygmd.kmpquiz.viewModel.FetchQandasVModel
+import ygmd.kmpquiz.viewModel.fetch.FetchQandasVModel
 
 @Composable
-fun DisplayFetchQanda(
+fun LegacyDisplayFetchQanda(
     fetchQandasVModel: FetchQandasVModel = koinViewModel(),
-    saveQandaUseCase: SaveQandaUseCase = koinInject(),
+//    saveQandaUseCase: SaveQandaUseCase = koinInject(),
 ) {
     val scope = rememberCoroutineScope()
     val fetchUiState by fetchQandasVModel.fetchedUiState.collectAsState()
@@ -55,31 +49,23 @@ fun DisplayFetchQanda(
 
     val qandaClickActions = ClickActions<InternalQanda>(
         onLongClick = {
-            scope.launch { saveQandaUseCase.saveQanda(it) }
+//            scope.launch { saveQandaUseCase.saveQanda(it) }
             println("LongClick")
         },
         onDoubleTap = {
-            scope.launch { saveQandaUseCase.saveQanda(it) }
+//            scope.launch { saveQandaUseCase.saveQanda(it) }
             println("DoubleTap")
         },
     )
 
-    LaunchedEffect(true) {
-        if (fetchUiState.qandas.isEmpty()) {
-            fetchQandasVModel.fetchQandas()
-        }
-    }
-
     LaunchedEffect(fetchUiState.error) {
-        if(!errorHandled && fetchUiState.error != null) {
-            errorHandled = true
-            val result = snackbar.showSnackbar(
-                message = fetchUiState.error!!,
-                actionLabel = "Retry"
-            )
-            if (result == ActionPerformed) {
-                fetchQandasVModel.fetchQandas()
-                errorHandled = false
+        fetchUiState.error?.let {
+            if(!errorHandled){
+                errorHandled = true
+                snackbar.showSnackbar(
+                    message = it.errorMessage,
+                    actionLabel = "Retry"
+                )
             }
         }
     }
@@ -98,12 +84,15 @@ fun DisplayFetchQanda(
                         .padding(16.dp)
                 ) {
 
+/*
                     var rememberCategory by rememberSaveable { mutableStateOf("") }
                     val categories by remember {
                         mutableStateOf(fetchUiState.qandas.map { it.category }.toSet())
                     }
 
                     LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+*/
+/*
                         items(categories.toList()) { selectedCategory ->
                             FilterChip(
                                 selected = selectedCategory == rememberCategory,
@@ -115,22 +104,25 @@ fun DisplayFetchQanda(
                                 enabled = fetchUiState.qandas.isNotEmpty(),
                             )
                         }
+*//*
+
                     }
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    QandaList(
-                        qandas = fetchUiState.qandas,
-                        modifier = Modifier.fillMaxWidth(),
-                        filter = { it.category == rememberCategory || rememberCategory.isBlank() },
-                    ) { qanda ->
-                        SelectionableQanda(
-                            qanda = qanda,
-                            clickAction = qandaClickActions,
-                        ) { selection ->
-                            QandaComposable(selection)
-                        }
-                    }
+//                    QandaList(
+//                        qandas = fetchUiState.qandas,
+//                        modifier = Modifier.fillMaxWidth(),
+//                        filter = { it.category == rememberCategory || rememberCategory.isBlank() },
+//                    ) { qanda ->
+//                        SelectionableQanda(
+//                            qanda = qanda,
+//                            clickAction = qandaClickActions,
+//                        ) { selection ->
+//                            QandaComposable(selection)
+//                        }
+//                    }
+*/
                 }
 
             }

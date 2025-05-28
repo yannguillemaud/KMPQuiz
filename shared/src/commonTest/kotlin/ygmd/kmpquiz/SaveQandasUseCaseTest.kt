@@ -1,33 +1,34 @@
 package ygmd.kmpquiz
 
-import io.mockk.every
+import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.mockk
-import io.mockk.verify
+import kotlinx.coroutines.test.runTest
 import ygmd.kmpquiz.domain.pojo.InternalQanda
-import ygmd.kmpquiz.domain.repository.QandaRepository
+import ygmd.kmpquiz.domain.repository.SavedQandaRepository
 import ygmd.kmpquiz.domain.useCase.save.SaveQandaUseCase
 import kotlin.test.Test
 
 class SaveQandasUseCaseTest {
-    private val repository = mockk<QandaRepository>()
+    private val repository = mockk<SavedQandaRepository>()
     private val saveUseCase = SaveQandaUseCase(repository)
 
     @Test
-    fun `should save qanda`(){
+    fun `should save qanda`() = runTest {
         // GIVEN
         val qanda = InternalQanda(
             id = 1,
-            category = "Science",
+            categoryId = 1,
             question = "Question ?",
             answers = listOf("Answers"),
-            correctAnswer = "CorrectAnswer"
+            correctAnswerPosition = 1,
         )
-        every { saveUseCase.saveQanda(any()) } returns Unit
+        coEvery { saveUseCase.saveQanda(any()) } returns Unit
 
         // WHEN
         saveUseCase.saveQanda(qanda)
 
         // THEN
-        verify { repository.save(qanda) }
+        coVerify { repository.saveQanda(qanda) }
     }
 }

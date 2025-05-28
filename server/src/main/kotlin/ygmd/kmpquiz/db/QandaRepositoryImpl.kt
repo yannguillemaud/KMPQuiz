@@ -8,12 +8,11 @@ import org.jetbrains.exposed.sql.deleteAll
 import org.jetbrains.exposed.sql.transactions.transaction
 import ygmd.kmpquiz.db.exposed.QandaEntity
 import ygmd.kmpquiz.db.exposed.QandaEntity.DAO.all
-import ygmd.kmpquiz.db.exposed.QandaEntity.DAO.find
 import ygmd.kmpquiz.db.exposed.QandasTable
 import ygmd.kmpquiz.domain.pojo.InternalQanda
-import ygmd.kmpquiz.domain.repository.QandaRepository
+import ygmd.kmpquiz.domain.repository.SavedQandaRepository
 
-class QandaRepositoryPersistenceImpl: QandaRepository {
+class QandaRepositoryPersistenceImpl: SavedQandaRepository {
     override fun observeQandas(): Flow<List<InternalQanda>> = flow {
         val qandas = withContext(Dispatchers.IO){
             transaction {
@@ -23,7 +22,7 @@ class QandaRepositoryPersistenceImpl: QandaRepository {
         emit(qandas)
     }
 
-    override suspend fun getAll(): List<InternalQanda> {
+    override suspend fun getQandas(): List<InternalQanda> {
         return withContext(Dispatchers.IO){
             transaction {
                 all().map { it.toInternalQanda() }
@@ -38,12 +37,12 @@ class QandaRepositoryPersistenceImpl: QandaRepository {
             }
         }
 
-    override suspend fun saveAll(qandas: List<InternalQanda>): Unit =
+    override suspend fun saveQandas(qandas: List<InternalQanda>): Unit =
         withContext(Dispatchers.IO){
 
         }
 
-    override suspend fun save(qanda: InternalQanda) {
+    override suspend fun saveQanda(qanda: InternalQanda) {
         withContext(Dispatchers.IO){
             transaction {
                 QandaEntity.new {

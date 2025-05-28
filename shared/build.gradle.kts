@@ -28,6 +28,8 @@ kotlin {
             implementation(libs.ktor.client.content.negotiation)
             implementation(libs.ktor.serialization.kotlinx.json)
 
+            implementation(libs.arrow.core)
+
             implementation("co.touchlab:kermit:2.0.5")
         }
 
@@ -36,6 +38,7 @@ kotlin {
             implementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.0")
             implementation("org.assertj:assertj-core:3.25.3")
             implementation("io.mockk:mockk:1.14.2")
+            implementation(libs.ktor.client.mock)
         }
 
         androidMain.dependencies {

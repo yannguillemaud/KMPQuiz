@@ -1,4 +1,4 @@
-package ygmd.kmpquiz.android.ui.model
+package ygmd.kmpquiz.android.ui.views
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column

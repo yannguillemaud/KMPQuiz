@@ -8,7 +8,6 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
 import ygmd.kmpquiz.domain.pojo.InternalQanda
-import ygmd.kmpquiz.domain.useCase.get.GetQandaUseCase
 
 data class GetQandasUiState(
     val isLoading: Boolean = false,
@@ -17,7 +16,7 @@ data class GetQandasUiState(
 )
 
 class GetQandasVModel(
-    private val getQandaUseCase: GetQandaUseCase,
+//    private val getQandaUseCase: GetQandaUseCase,
 ): ViewModel(){
     private val _getQandasState = MutableStateFlow(GetQandasUiState())
     val qandasStateFlow = _getQandasState.asStateFlow()
@@ -28,12 +27,12 @@ class GetQandasVModel(
 
     private fun observe(){
         viewModelScope.launch {
-            getQandaUseCase.getAll()
-                .onStart {  _getQandasState.value = _getQandasState.value.copy(isLoading = true) }
-                .catch { _getQandasState.value = GetQandasUiState(error = it.message) }
-                .collect {
-                    _getQandasState.value = GetQandasUiState(qandas = it, isLoading = false)
-                }
+//            getQandaUseCase.getAll()
+//                .onStart {  _getQandasState.value = _getQandasState.value.copy(isLoading = true) }
+//                .catch { _getQandasState.value = GetQandasUiState(error = it.message) }
+//                .collect {
+//                    _getQandasState.value = GetQandasUiState(qandas = it, isLoading = false)
+//                }
         }
     }
 }

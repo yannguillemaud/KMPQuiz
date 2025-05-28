@@ -29,10 +29,10 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import ygmd.kmpquiz.domain.pojo.InternalQanda
-import ygmd.kmpquiz.domain.pojo.Quiz
+import ygmd.kmpquiz.domain.pojo.InternalQandaCategory
 
 @Composable
-fun QuizList(list: List<Quiz>, block: @Composable (quiz: Quiz) -> Unit){
+fun QuizList(list: List<InternalQandaCategory>, block: @Composable (quiz: InternalQandaCategory) -> Unit){
     LazyColumn {
         list.forEach { item { block(it) } }
     }
@@ -63,7 +63,7 @@ fun QandaList(
 fun QandaComposable(qanda: InternalQanda) {
     val question = qanda.question
     val answers = qanda.answers
-    val correctAnswer = qanda.correctAnswer
+    val correctAnswer = qanda.answers[qanda.correctAnswerPosition]
 
     var selectedAnswer by remember { mutableStateOf<String?>(null) }
 

@@ -1,45 +1,37 @@
 package ygmd.kmpquiz.domain.useCase.fetch
 
-import io.ktor.client.*
-import io.ktor.client.request.*
-import io.ktor.client.statement.*
+import io.ktor.client.HttpClient
+import io.ktor.client.request.get
+import io.ktor.client.statement.HttpResponse
+import io.ktor.client.statement.bodyAsText
+import io.ktor.http.isSuccess
+import kotlinx.io.IOException
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import ygmd.kmpquiz.domain.pojo.InternalQanda
+import kotlin.Result.Companion.failure
+import kotlin.Result.Companion.success
 
 class OpenTriviaFetchQanda(
-    private val client: HttpClient
-): FetchQandas {
-    private val json = Json { ignoreUnknownKeys = true }
-    private var cachedResult: Result<List<InternalQanda>>? = null
-
+    private val client: HttpClient,
+) : FetchQandaService {
+    // TODO improve with sealed class for responses
     override suspend fun fetch(): Result<List<InternalQanda>> =
-        cachedResult ?: kotlin.runCatching {
-            val response: String = fetchBrut()
-            val qandas: List<InternalQanda> = decode(response)
-            val success = Result.success(qandas)
-            cachedResult = success
-            return success
-        }
-
-
-    private suspend fun fetchBrut(): String =
         try {
-            client.get(OpenTriviaDb.DEFAULT_URL)
-                .bodyAsText()
-        } catch (e: Exception){
-            throw RuntimeException(e)
+            val response: HttpResponse = client.get(OpenTriviaProperties.DEFAULT_URL)
+            if(response.status.isSuccess().not()) throw IOException()
+            val fetchedQandas = processResponse(response)
+            success(fetchedQandas)
+        } catch(serializationException: SerializationException){
+            failure(serializationException)
+        } catch (iaException: IllegalArgumentException) {
+            failure(iaException)
         }
 
-    private fun decode(brut: String): List<InternalQanda> {
-        return try {
-            val dto = json.decodeFromString<QuizResultDto>(brut)
-            dto.toQandas()
-        } catch (error: SerializationException){
-            println("Error when fetching: $error")
-            error("Fetching failed: $brut")
-        }
+    private suspend fun processResponse(response: HttpResponse): List<InternalQanda> {
+        val body = response.bodyAsText()
+        val result = Json.decodeFromString<TriviaApiResponse>(body)
+        val fetchedQandas = result.results.map { it.toInternal() }
+        return fetchedQandas
     }
 }
-
-private fun QuizResultDto.toQandas(): List<InternalQanda> = results.map { it.toQanda() }

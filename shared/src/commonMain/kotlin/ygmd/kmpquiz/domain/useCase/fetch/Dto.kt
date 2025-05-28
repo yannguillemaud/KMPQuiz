@@ -4,7 +4,7 @@ import kotlinx.serialization.Serializable
 import ygmd.kmpquiz.domain.pojo.InternalQanda
 
 @Serializable
-data class QuizResultDto(
+data class TriviaApiResponse(
     val response_code: Int,
     val results: List<QANDADto>
 )
@@ -18,19 +18,51 @@ class QANDADto(
     val correct_answer: String,
     val incorrect_answers: List<String>
 ){
-    fun toQanda(): InternalQanda {
+    fun toInternal(): InternalQanda {
+        val allAnswers =
+            if(incorrect_answers.size == 1) incorrect_answers.asBooleanAnswers()
+            else (incorrect_answers + correct_answer).map { it.unescaped() }
+
         return InternalQanda(
-            id = IDGenerator.nextId(),
+            category = category.sanitized(),
+            difficulty = difficulty,
             question = question.unescaped(),
-            correctAnswer = correct_answer.unescaped(),
-            answers = if(type == "boolean") incorrect_answers.asBooleanAnswers()
-                else (incorrect_answers + correct_answer).map { it.unescaped() },
-            category = category.unescaped().toInternalCategory()
+            answers = allAnswers,
+            correctAnswerPosition = allAnswers.indexOf(correct_answer)
         )
     }
 
     override fun toString(): String {
-        return "QANDADto(type='$type', difficulty='$difficulty', category='$category', question='$question', correct_answer='$correct_answer', incorrect_answers=$incorrect_answers)"
+        return "QANDADto(" +
+                "type='$type', " +
+                "difficulty='$difficulty', " +
+                "category='$category', " +
+                "question='$question', " +
+                "correct_answer='$correct_answer', " +
+                "incorrect_answers=$incorrect_answers" +
+                ")"
+    }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as QANDADto
+
+        if (type != other.type) return false
+        if (category != other.category) return false
+        if (question != other.question) return false
+        if (correct_answer != other.correct_answer) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = type.hashCode()
+        result = 31 * result + category.hashCode()
+        result = 31 * result + question.hashCode()
+        result = 31 * result + correct_answer.hashCode()
+        return result
     }
 }
 
@@ -42,9 +74,4 @@ private fun List<String>.asBooleanAnswers(): List<String> = listOf(
         .replaceFirstChar { it.uppercase() }
 )
 
-private fun String.toInternalCategory(): String = this.replace("Entertainment: ", "")
-
-object IDGenerator {
-    private var id: Long = 0
-    fun nextId() = id++
-}
+private fun String.sanitized(): String = this.replace("Entertainment: ", "")

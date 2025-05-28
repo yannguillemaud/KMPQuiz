@@ -1,71 +1,70 @@
 package ygmd.kmpquiz
 
-import io.mockk.every
+import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.mockk
-import io.mockk.verify
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions
 import ygmd.kmpquiz.domain.pojo.InternalQanda
-import ygmd.kmpquiz.domain.repository.QandaRepository
-import ygmd.kmpquiz.domain.useCase.save.GetSavedQandaUseCase
+import ygmd.kmpquiz.domain.repository.SavedQandaRepository
 import kotlin.test.Test
 
 class GetQandasUseCaseTest {
-    private val repository = mockk<QandaRepository>()
-    private val getQandasUseCase = GetSavedQandaUseCase(repository)
+    private val repository = mockk<SavedQandaRepository>()
+    private val getQandasUseCase = GetQandaUseCase(repository)
 
     @Test
     fun `should save qanda`() = runTest {
         // GIVEN
         val qanda = InternalQanda(
             id = 1,
-            category = "Science",
+            categoryId = 1,
             question = "Question ?",
             answers = listOf("Answers"),
-            correctAnswer = "CorrectAnswer"
+            correctAnswerPosition = 3,
         )
-        every { repository.observeQandas() } returns flowOf(listOf(qanda))
+        coEvery { repository.getQandas() } returns flowOf(listOf(qanda))
 
         // WHEN
         val savedQandas = getQandasUseCase.getAll().first()
 
         // THEN
-        verify { repository.observeQandas() }
+        coVerify { repository.getQandas() }
         Assertions.assertThat(savedQandas).isEqualTo(listOf(qanda))
     }
 
     @Test
-    fun `should get qanda if exists`(){
+    fun `should get qanda if exists`() = runTest {
         // GIVEN
         val qanda = InternalQanda(
             id = 1,
-            category = "Science",
+            categoryId = 1,
             question = "Question ?",
             answers = listOf("Answers"),
-            correctAnswer = "CorrectAnswer"
+            correctAnswerPosition = 1,
         )
-        every { repository.findById(any()) } returns qanda
+        coEvery { repository.findById(any()) } returns qanda
 
         // WHEN
         val find = getQandasUseCase.find(1)
 
         // THEN
-        verify { repository.findById(1) }
+        coVerify { repository.findById(1) }
         Assertions.assertThat(find).isEqualTo(qanda)
     }
 
     @Test
-    fun `should get null if not exists`(){
+    fun `should get null if not exists`() = runTest {
         // GIVEN
-        every { repository.findById(any()) } returns null
+        coEvery { repository.findById(any()) } returns null
 
         // WHEN
         val find = getQandasUseCase.find(1)
 
         // THEN
-        verify { repository.findById(1) }
+        coVerify { repository.findById(1) }
         Assertions.assertThat(find).isNull()
     }
 }

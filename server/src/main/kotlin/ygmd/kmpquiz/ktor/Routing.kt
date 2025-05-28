@@ -12,10 +12,10 @@ import io.ktor.server.routing.post
 import io.ktor.server.routing.routing
 import org.koin.ktor.ext.inject
 import ygmd.kmpquiz.domain.pojo.InternalQanda
-import ygmd.kmpquiz.domain.repository.QandaRepository
+import ygmd.kmpquiz.domain.repository.SavedQandaRepository
 
 fun Application.routes() {
-    val repository: QandaRepository by inject()
+    val repository: SavedQandaRepository by inject()
 
     install(StatusPages){
         exception<Throwable> { call, cause ->
@@ -26,7 +26,7 @@ fun Application.routes() {
 
     routing {
         get("/qandas") {
-            val internalQandas = repository.getAll()
+            val internalQandas = repository.getQandas()
             val dtos = internalQandas.map { it.toDto() }
             call.respond(dtos)
         }
@@ -35,7 +35,7 @@ fun Application.routes() {
             val qanda = call.receive<QandaDto>()
             val internalQanda = qanda.toInternalQanda()
             try {
-                repository.save(internalQanda)
+                repository.saveQanda(internalQanda)
                 call.respond(HttpStatusCode.Created, "QANDA saved successfully")
             } catch (e: Exception) {
                 call.respond(HttpStatusCode.InternalServerError, "Failed to save QANDA: ${e.localizedMessage}")
