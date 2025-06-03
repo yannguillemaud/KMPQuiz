@@ -6,7 +6,7 @@ data class InternalQanda(
     val question: String,
     val answers: List<String>,
     val correctAnswerPosition: Int,
-    val difficulty: String? = null,
+    val difficulty: String,
 )
 
 fun InternalQanda.correctAnswer(): String = answers[correctAnswerPosition]

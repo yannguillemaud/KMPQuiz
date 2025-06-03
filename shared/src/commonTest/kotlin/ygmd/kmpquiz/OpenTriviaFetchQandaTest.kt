@@ -7,11 +7,10 @@ import io.ktor.http.HttpHeaders.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.HttpStatusCode.Companion.OK
 import io.ktor.http.headers
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
 import ygmd.kmpquiz.domain.useCase.fetch.FetchedQanda
-import ygmd.kmpquiz.domain.useCase.fetch.OpenTriviaFetchQanda
+import ygmd.kmpquiz.domain.fetch.OpenTriviaFetchQanda
 import kotlin.test.Test
 
 class OpenTriviaFetchQandaTest {

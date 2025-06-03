@@ -5,7 +5,7 @@ import kotlinx.coroutines.flow.Flow
 import ygmd.kmpquiz.domain.pojo.InternalQanda
 
 interface QandaRepository {
-    suspend fun getAll(): Flow<Either<OperationError, List<InternalQanda>>>
+    fun getAll(): Flow<List<InternalQanda>>
     suspend fun findById(id: Long): Either<OperationError, InternalQanda>
     suspend fun existsByContentKey(qanda: InternalQanda): Either<OperationError, InternalQanda>
     suspend fun save(qanda: InternalQanda): Either<OperationError, Long>

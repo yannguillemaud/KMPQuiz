@@ -30,6 +30,8 @@ exposedCore = "0.47.1"
 exposedDao = "0.47.1"
 hikaricp = "5.1.0"
 
+composeHotReload = "1.0.0-alpha10"
+
 [libraries]
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version = "1.10.1" }
 androidx-lifecycle-viewmodel = { group = "org.jetbrains.androidx.lifecycle", name = "lifecycle-viewmodel", version.ref = "androidx-lifecycle" }
@@ -93,6 +95,7 @@ kotlinAndroid = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlinMultiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+composeHotReload = { id = "org.jetbrains.compose.hot-reload", version.ref = "composeHotReload"}
 
 room = { id = "androix.room", version.ref = "room" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }

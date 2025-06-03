@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.kotlinAndroid)
     alias(libs.plugins.compose.compiler)
     alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.composeHotReload)
 }
 
 android {
@@ -43,6 +44,7 @@ dependencies {
     implementation(libs.compose.ui.tooling.preview)
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.material3.android)
+    implementation("androidx.compose.material:material-icons-extended:1.6.0")
     debugImplementation(libs.compose.ui.tooling)
     implementation(libs.koin.android)
     implementation(libs.koin.compose.viewmodel)

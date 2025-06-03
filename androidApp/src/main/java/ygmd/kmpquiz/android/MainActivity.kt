@@ -3,55 +3,54 @@ package ygmd.kmpquiz.android
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.Button
-import androidx.compose.material3.Text
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import kotlinx.serialization.Serializable
-import ygmd.kmpquiz.android.ui.QuizTheme
-import ygmd.kmpquiz.android.ui.views.DisplayFetchQanda
-import ygmd.kmpquiz.android.ui.views.DisplaySavedQandas
-import ygmd.kmpquiz.android.ui.views.LegacyDisplayFetchQanda
+import ygmd.kmpquiz.android.ui.composable.StatisticsScreen
+import ygmd.kmpquiz.android.ui.views.fetch.FetchScreen
+import ygmd.kmpquiz.android.ui.views.home.HomeScreen
+import ygmd.kmpquiz.android.ui.views.saved.SavedQandasScreen
+import ygmd.kmpquiz.android.ui.views.theme.QuizTheme
+import ygmd.kmpquiz.viewModel.save.QuizStats
 
-class Main: ComponentActivity(){
+class Main : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            QuizTheme(darkTheme = false)  {
+            QuizTheme(darkTheme = false) {
                 val navController = rememberNavController()
 
-                NavHost(navController = navController, startDestination = Home){
+                NavHost(navController = navController, startDestination = Home) {
                     composable<Home> {
-                        Column(
-                            modifier = Modifier.fillMaxSize(),
-                            verticalArrangement = Arrangement.Center,
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ){
-                            Button(onClick = { navController.navigate(FetchByCategory) }){
-                                Text("Fetch & Answer")
-                            }
-                            Button(onClick = { navController.navigate(FetchSaved) }){
-                                Text("Fetch And Save By Category")
-                            }
-                            Button(onClick = { navController.navigate(FetchAndAnswerScreen) }){
-                                Text("Legacy")
-                            }
-                        }
+                        HomeScreen(
+                            onNavigateToFetch = { navController.navigate(FetchQandas) },
+                            onNavigateToSaved = { navController.navigate(SavedQandas) }
+                        )
                     }
-                    composable<FetchAndAnswerScreen> {
-                        LegacyDisplayFetchQanda()
+
+                    composable<FetchQandas> {
+                        FetchScreen(
+                            onNavigateBack = { navController.popBackStack() }
+                        )
                     }
-                    composable<FetchSaved> {
-                        DisplaySavedQandas()
+
+                    composable<SavedQandas> {
+                        SavedQandasScreen(
+                            onNavigateBack = { navController.popBackStack() },
+                            onStartQuiz = { qandas ->
+                                // TODO: Naviguer vers l'écran de quiz avec les qandas sélectionnés
+                                // navController.navigate(QuizScreen(qandas))
+                            }
+                        )
                     }
-                    composable<FetchByCategory> {
-                        DisplayFetchQanda()
+
+                    composable<Statistics> {
+                        // TODO: Implémenter l'écran de statistiques globales
+                        StatisticsScreen(
+                            stats = QuizStats(), // Données par défaut
+                            onNavigateBack = { navController.popBackStack() }
+                        )
                     }
                 }
             }
@@ -59,14 +58,15 @@ class Main: ComponentActivity(){
     }
 }
 
+// Routes de navigation
 @Serializable
 object Home
 
 @Serializable
-object FetchAndAnswerScreen
+object FetchQandas
 
 @Serializable
-object FetchSaved
+object SavedQandas
 
 @Serializable
-object FetchByCategory
+object Statistics
