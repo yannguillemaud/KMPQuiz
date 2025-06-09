@@ -7,12 +7,12 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import ygmd.kmpquiz.domain.pojo.QuizSession
-import ygmd.kmpquiz.domain.repository.qanda.QandaRepository
+import ygmd.kmpquiz.domain.usecase.QuizUseCase
 import ygmd.kmpquiz.viewModel.quiz.QuizUiState.InProgress
 import ygmd.kmpquiz.viewModel.quiz.QuizUiState.Loading
 
 class QuizViewModel(
-    private val qandaRepository: QandaRepository,
+    private val quizUseCase: QuizUseCase,
     private val logger: Logger,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow<QuizUiState>(Loading)
@@ -20,112 +20,81 @@ class QuizViewModel(
 
     fun startQuiz(qandaIds: List<Long>) {
         viewModelScope.launch {
-            try {
-                val qandas = qandaIds.mapNotNull { id ->
-                    qandaRepository.findById(id).getOrNull()
+            _uiState.value = Loading
+            quizUseCase.start(qandaIds).fold(
+                onSuccess = { session ->
+                    logger.i { "Quiz started with ${session.qandas.size} questions" }
+                    _uiState.value = InProgress(
+                        session = session,
+                        shuffledAnswers = session.currentQanda?.answers?.shuffled() ?: emptyList()
+                    )
+                },
+                onFailure = { error ->
+                    val errorMessage = "Failed to start quiz: ${error.message}"
+                    logger.e { errorMessage }
+                    _uiState.value = QuizUiState.Error(error.message ?: errorMessage)
                 }
-
-                if(qandas.isEmpty()){
-                    _uiState.value = QuizUiState.Error("Aucun quiz trouvé")
-                    return@launch
-                }
-
-                _uiState.value = InProgress(
-                    session = QuizSession(qandas)
-                )
-                updateCurrentQuestion()
-            } catch (e: Exception){
-                logger.e(e){ "Erreur lors du chargement du quiz"}
-                _uiState.value = QuizUiState.Error("Erreur de chargement")
-            }
+            )
         }
     }
 
     fun selectAnswer(answer: String) {
-        when (val currentState = _uiState.value) {
-            is InProgress -> {
-                _uiState.value = currentState.copy(
-                    hasAnswered = true,
-                    selectedAnswer = answer,
-                )
-            }
-
-            is QuizUiState.Error -> {
-                val message = (quizUiState.value as QuizUiState.Error).message
-                logger.w("Error: $message")
-            }
-
-            else -> { /* Should not happen */
-            }
+        val currentState = _uiState.value
+        if (currentState is InProgress && !currentState.hasAnswered) {
+            _uiState.value = currentState.copy(
+                hasAnswered = true,
+                selectedAnswer = answer
+            )
+            logger.d { "Answer selected: $answer" }
         }
     }
 
     fun goToNextQuestion() {
-        when (val currentState = _uiState.value) {
-            is InProgress -> {
-                val session = currentState.session
-                val selectedAnswer = currentState.selectedAnswer
-                    ?: return
-                val updatedSession = session.copy(
-                    userAnswers = session.userAnswers +
-                            (session.currentIndex to selectedAnswer)
-                )
-                if (session.isLastQuestion) {
-                    _uiState.value = QuizUiState.Completed(
-                        session = updatedSession,
-                        results = QuizResult(
-                            questions = updatedSession.userAnswers.size,
-                            score = calculateScore(updatedSession)
-                        )
-                    )
-                    return
-                }
+        val currentState = _uiState.value
+        if (currentState !is InProgress || !currentState.hasAnswered) {
+            logger.w { "Cannot go to next question in current state" }
+            return
+        }
 
-                val nextSession = updatedSession.copy(
-                    currentIndex = updatedSession.currentIndex + 1,
-                )
-                _uiState.value = InProgress(
-                    session = nextSession,
-                    hasAnswered = false,
-                    selectedAnswer = null,
-                )
-            }
+        val session = currentState.session
+        val selectedAnswer = currentState.selectedAnswer ?: return
 
-            is QuizUiState.Error -> {
-                val message = (quizUiState.value as QuizUiState.Error).message
-                logger.w("Error: $message")
-            }
+        val updatedSession = session.copy(
+            userAnswers = session.userAnswers + (session.currentIndex to selectedAnswer)
+        )
 
-            else -> { /* Should not happen */
-            }
+        if (session.isLastQuestion) {
+            // Quiz terminé
+            val results = calculateResults(updatedSession)
+            _uiState.value = QuizUiState.Completed(
+                session = updatedSession,
+                results = results
+            )
+            logger.i { "Quiz completed with score: ${results.score}/${results.questions}" }
+        } else {
+            // Question suivante
+            val nextSession = updatedSession.copy(
+                currentIndex = updatedSession.currentIndex + 1
+            )
+
+            _uiState.value = InProgress(
+                session = nextSession,
+                shuffledAnswers = nextSession.currentQanda?.answers?.shuffled() ?: emptyList(),
+                hasAnswered = false,
+                selectedAnswer = null
+            )
+            logger.d { "Moved to question ${nextSession.currentIndex + 1}/${nextSession.qandas.size}" }
         }
     }
 
-    private fun updateCurrentQuestion() {
-        when (val currentState = _uiState.value) {
-            is InProgress -> {
-                val currentQanda = currentState.session.currentQanda
-                if (currentQanda != null) {
-                    _uiState.value = currentState.copy(
-                        shuffledAnswers = currentQanda.answers.shuffled()
-                    )
-                } else {
-                    _uiState.value = QuizUiState.Error("Question introuvable")
-                }
-            }
-
-            else -> {
-                logger.w("updateCurrentQuestion called in invalid state: ${currentState::class.simpleName}")
-            }
+    private fun calculateResults(session: QuizSession): QuizResult {
+        val correctAnswers = session.userAnswers.count { (index, userAnswer) ->
+            session.qandas.getOrNull(index)?.correctAnswer == userAnswer
         }
-    }
 
-    private fun calculateScore(session: QuizSession): Int {
-        var correctAnswersCount = 0
-        for (userAnswer in session.userAnswers) {
-            val (index, answer) = userAnswer
-            if(session.qandas[index].correctAnswer == answer) correctAnswersCount++
-        }
-        return correctAnswersCount
+        return QuizResult(
+            questions = session.qandas.size,
+            score = correctAnswers
+        )
     }
 }

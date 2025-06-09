@@ -3,63 +3,70 @@ package ygmd.kmpquiz.viewModel.fetch
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import ygmd.kmpquiz.domain.fetch.FetchResult
-import ygmd.kmpquiz.domain.fetch.FetchResult.Success
-import ygmd.kmpquiz.domain.fetch.OpenTriviaFetchQanda
+import ygmd.kmpquiz.domain.pojo.InternalQanda
+import ygmd.kmpquiz.domain.usecase.FetchQandaUseCase
+import ygmd.kmpquiz.domain.usecase.FetchResult
+import ygmd.kmpquiz.domain.usecase.GetQandasUseCase
+import ygmd.kmpquiz.mapper.toViewModelError
 import ygmd.kmpquiz.viewModel.QandaUiState
 import ygmd.kmpquiz.viewModel.error.ViewModelError
-import ygmd.kmpquiz.viewModel.save.DownloadState
-import ygmd.kmpquiz.viewModel.save.SaveQandasState
+import ygmd.kmpquiz.viewModel.save.DownloadState.Downloaded
+import ygmd.kmpquiz.viewModel.save.DownloadState.NotDownloaded
+
+// États internes pour séparer l'API du state final
+private sealed class FetchApiState {
+    data object Idle : FetchApiState()
+    data object Loading : FetchApiState()
+    data object Success : FetchApiState()
+    data class Error(val error: ViewModelError) : FetchApiState()
+}
 
 class FetchQandasViewModel(
-    private val fetchQandasUseCase: OpenTriviaFetchQanda,
+    private val fetchQandaUseCase: FetchQandaUseCase,
+    private val getQandasUseCase: GetQandasUseCase,
 ) : ViewModel() {
 
-    private val _fetchedState = MutableStateFlow<FetchState>(FetchState.Idle)
-    private val _savedState = MutableStateFlow(SaveQandasState())
+    private val _fetchQandas = MutableStateFlow<List<InternalQanda>>(emptyList())
+    private val _fetchState = MutableStateFlow<FetchApiState>(FetchApiState.Idle)
 
-    val fetchState = combine(_fetchedState, _savedState) { fetchState, saveState ->
-        when (fetchState) {
-            is FetchState.Success -> {
-                println("DEBUG: Success state with ${fetchState.availableQandas.size} qandas")
+    val fetchState: StateFlow<FetchState> = combine(
+        _fetchQandas,
+        _fetchState,
+        getQandasUseCase.execute(),
+    ) { fetchedQandas, apiState, savedQandas ->
+        when (apiState) {
+            is FetchApiState.Idle -> FetchState.Idle
+            is FetchApiState.Loading -> FetchState.Loading
+            is FetchApiState.Error -> FetchState.Error(apiState.error)
 
-                // Création de la liste complète avec état de téléchargement mis à jour
-                val updatedQandas = fetchState.availableQandas.map { qandaUiState ->
-                    val isSaved = saveState.savedQandas.any { saved ->
-                        saved.contentKey == qandaUiState.qanda.contentKey
+            is FetchApiState.Success -> {
+                if (fetchedQandas.isEmpty()) FetchState.Idle
+                else {
+                    val qandasWithState = fetchedQandas.map { fetched ->
+                        val isAlradySaved = savedQandas.any { saved ->
+                            saved.contentKey == fetched.contentKey
+                        }
+
+                        QandaUiState(
+                            qanda = fetched,
+                            downloadState = if (isAlradySaved) Downloaded else NotDownloaded
+                        )
                     }
-                    qandaUiState.copy(
-                        downloadState = if (isSaved) DownloadState.Downloaded else DownloadState.NotDownloaded
-                    )
+
+                    FetchState.Success(qandasWithState)
                 }
-
-                FetchState.Success(
-                    qandasWithState = updatedQandas // Assurez-vous que cette propriété existe et est peuplée
-                )
-            }
-
-            is FetchState.Loading -> {
-                println("DEBUG: Loading state")
-                FetchState.Loading
-            }
-
-            is FetchState.Error -> {
-                println("DEBUG: Error state: ${fetchState.error.errorMessage}")
-                fetchState.copy(
-                    lastSuccessfulData = saveState.savedQandas.map {
-                        QandaUiState(it, DownloadState.Downloaded)
-                    }
-                )
-            }
-
-            FetchState.Idle -> {
-                println("DEBUG: Idle state")
-                FetchState.Idle
             }
         }
-    }
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5_000),
+        initialValue = FetchState.Idle
+    )
 
     init {
         fetchQandas()
@@ -67,42 +74,15 @@ class FetchQandasViewModel(
 
     fun fetchQandas() {
         viewModelScope.launch {
-            _fetchedState.value = FetchState.Loading
+            _fetchState.value = FetchApiState.Loading
 
-            try {
-                when (val result = fetchQandasUseCase.fetch()) {
-                    is Success -> {
-                        _fetchedState.value = FetchState.Success(
-                            result.data.map { fetched ->
-                                QandaUiState(
-                                    qanda = fetched,
-                                    downloadState = _savedState.value.savedQandas.firstOrNull { saved ->
-                                        saved.contentKey == fetched.contentKey()
-                                    }?.let { DownloadState.Downloaded }
-                                        ?: DownloadState.NotDownloaded
-                                )
-                            }
-                        )
-                    }
-
-                    is FetchResult.Error,
-                    is FetchResult.RateLimit,
-                    is FetchResult.ApiError -> {
-                        _fetchedState.value = FetchState.Error(
-                            ViewModelError.FetchError("Retry exceeded"),
-                            lastSuccessfulData = _savedState.value.savedQandas.map {
-                                QandaUiState(
-                                    qanda = it,
-                                    downloadState = DownloadState.Downloaded
-                                )
-                            },
-                        )
-                    }
+            when (val result = fetchQandaUseCase.fetch()) {
+                is FetchResult.Success -> {
+                    _fetchQandas.value = result.data
+                    _fetchState.value = FetchApiState.Success
                 }
-            } catch (e: Exception) {
-                _fetchedState.value = FetchState.Error(
-                    ViewModelError.UnknownError("Unknown error", e)
-                )
+
+                else -> _fetchState.value = FetchApiState.Error(result.toViewModelError())
             }
         }
     }

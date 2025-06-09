@@ -1,7 +1,7 @@
 package ygmd.kmpquiz.domain.usecase
 
-import arrow.core.Either
 import co.touchlab.kermit.Logger
+import ygmd.kmpquiz.domain.error.DomainError
 import ygmd.kmpquiz.domain.pojo.InternalQanda
 import ygmd.kmpquiz.domain.repository.qanda.QandaRepository
 
@@ -15,48 +15,50 @@ class SaveQandasUseCaseImpl(
     private val logger: Logger
 ) : SaveQandasUseCase {
     override suspend fun save(qanda: InternalQanda): Result<Unit> {
-        logger.i { "Trying to save qanda: ${qanda.id}" }
-        return try {
-            when(val result = repository.save(qanda)) {
-                is Either.Left -> {
-                    logger.e { "Failed to save qanda ${qanda.id}: ${result.value}" }
-                    Result.failure(Exception("Failed to save qanda: ${result.value}"))
-                }
-                is Either.Right -> {
-                    logger.i { "Successfully saved qanda: ${qanda.id}" }
-                    Result.success(Unit)
-                }
+        logger.i { "Attempting to save qanda: ${qanda.question.take(50)}..." }
+        val existing = repository.existsByContentKey(qanda)
+        return existing.fold(
+            onSuccess = {
+                logger.w { "Qanda already exists with same content" }
+                Result.failure(DomainError.QandaError.AlreadyExists)
+            },
+            onFailure = {
+                repository.save(qanda).fold(
+                    onSuccess = { id ->
+                        logger.i { "Successfully saved qanda with id: $id" }
+                        Result.success(Unit)
+                    },
+                    onFailure = { error ->
+                        logger.e { "Failed to save qanda: ${error.message}" }
+                        Result.failure(error)
+                    }
+                )
             }
-        } catch (e: Exception) {
-            logger.e(e) { "Exception while saving qanda ${qanda.id}" }
-            Result.failure(e)
-        }
+        )
     }
 
     override suspend fun saveAll(qandas: List<InternalQanda>): Result<Unit> {
-        logger.i { "Trying to save ${qandas.size} qandas" }
-        return try {
-            val failures = mutableListOf<String>()
+        logger.i { "Attempting to save ${qandas.size} qandas" }
 
-            qandas.forEach { qanda ->
-                when (val result = repository.save(qanda)) {
-                    is Either.Right -> { /* Continue */ }
-                    is Either.Left -> {
-                        failures.add("Failed to save qanda ${qanda.id}: ${result.value.message}")
-                    }
-                }
-            }
-
-            if (failures.isEmpty()) {
-                logger.i { "Successfully saved all ${qandas.size} qandas" }
-                Result.success(Unit)
-            } else {
-                logger.e { "Failed to save some qandas: ${failures.joinToString(", ")}" }
-                Result.failure(Exception("Failed to save ${failures.size} out of ${qandas.size} qandas"))
-            }
-        } catch (e: Exception) {
-            logger.e(e) { "Exception while saving qandas batch" }
-            Result.failure(e)
+        if (qandas.isEmpty()) {
+            return Result.success(Unit)
         }
+
+        val uniqueQandas = qandas.distinctBy { it.contentKey }
+
+        if (uniqueQandas.size != qandas.size) {
+            logger.w { "Removed ${qandas.size - uniqueQandas.size} duplicate qandas" }
+        }
+
+        return repository.saveAll(uniqueQandas).fold(
+            onSuccess = {
+                logger.i { "Successfully saved ${uniqueQandas.size} qandas" }
+                Result.success(Unit)
+            },
+            onFailure = { error ->
+                logger.e { "Failed to save qandas: ${error.message}" }
+                Result.failure(error)
+            }
+        )
     }
 }

@@ -1,4 +1,4 @@
-package ygmd.kmpquiz.domain.fetch
+package ygmd.kmpquiz.domain.usecase
 
 import co.touchlab.kermit.Logger
 import io.ktor.client.HttpClient
@@ -20,7 +20,7 @@ class ParseException(message: String, cause: Throwable) : Exception(message, cau
 class OpenTriviaFetchQanda(
     private val client: HttpClient,
     private val logger: Logger,
-) : FetchQandaService {
+) : FetchQandaUseCase {
     override suspend fun fetch(): FetchResult<List<InternalQanda>> {
         return try {
             val response = client.get(OpenTriviaProperties.DEFAULT_URL)
@@ -28,7 +28,7 @@ class OpenTriviaFetchQanda(
             when {
                 response.status.isSuccess() -> {
                     val data = processResponse(response)
-                    logger.i { "Data fetched: $data" }
+                    logger.i { "${data.size} qandas fetched" }
                     FetchResult.Success(data)
                 }
 

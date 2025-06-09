@@ -1,23 +1,15 @@
 package ygmd.kmpquiz.domain.repository.qanda
 
-import arrow.core.Either
-import arrow.core.left
-import arrow.core.right
 import co.touchlab.kermit.Logger
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
+import ygmd.kmpquiz.domain.error.DomainError
+import ygmd.kmpquiz.domain.error.DomainError.PersistenceError.DatabaseError
+import ygmd.kmpquiz.domain.error.DomainError.QandaError.NotFound
 import ygmd.kmpquiz.domain.pojo.InternalQanda
-import ygmd.kmpquiz.domain.repository.qanda.QandaOperationError.AlreadyExists
-import ygmd.kmpquiz.domain.repository.qanda.QandaOperationError.NotFound
 
 val logger = Logger.withTag(InMemoryQandaRepository::class.simpleName.toString())
-
-sealed class QandaOperationError(val message: String) {
-    data class Error(val errorMessage: String) : QandaOperationError(errorMessage)
-    data object AlreadyExists : QandaOperationError("Already exists")
-    data object NotFound : QandaOperationError("Not Found")
-}
 
 class InMemoryQandaRepository : QandaRepository {
     private val _qandasMap = MutableStateFlow<Map<Long, InternalQanda>>(emptyMap())
@@ -27,7 +19,7 @@ class InMemoryQandaRepository : QandaRepository {
     override fun getAll(): Flow<List<InternalQanda>> =
         _qandasMap.map { it.values.toList() }
 
-    override suspend fun save(qanda: InternalQanda): Either<QandaOperationError, Long> {
+    override suspend fun save(qanda: InternalQanda): Result<Long> {
         try {
             if (qanda.id != null) {
                 logger.w { "Qanda already has id: ${qanda.id}" }
@@ -36,66 +28,75 @@ class InMemoryQandaRepository : QandaRepository {
                     logger.w { "Qanda already exists by content key: $contentKey" }
                 }
                 if (qandasMap.containsKey(qanda.id)) {
-                    return AlreadyExists.left()
+                    return Result.failure(DomainError.QandaError.AlreadyExists)
                 }
             }
 
             val newId = IDGenerator.nextId
             val savedQanda = qanda.copy(id = newId)
             _qandasMap.value += (newId to savedQanda)
-            return newId.right()
+            return Result.success(newId)
         } catch (e: Exception) {
             val message = e.message ?: "Unknown error"
-            return QandaOperationError.Error(message).left()
+            return Result.failure(DatabaseError(message))
         }
     }
 
-    override suspend fun saveAll(qandas: List<InternalQanda>): Either<QandaOperationError, Unit> {
+    override suspend fun saveAll(qandas: List<InternalQanda>): Result<Unit> {
         try {
             val conflicts = qandas.filter { it.id != null && qandasMap.containsKey(it.id) }
             if (conflicts.isNotEmpty()) {
                 logger.e { conflicts.joinToString(prefix = "Already exists: [", postfix = "]") }
-                return AlreadyExists.left()
+                return Result.failure(DomainError.QandaError.AlreadyExists)
             }
 
-            val newEntries = qandas.associateBy { IDGenerator.nextId }
+            val newEntries = qandas.associate { qanda ->
+                val newId = IDGenerator.nextId
+                newId to qanda.copy(id = newId)
+            }
             _qandasMap.value += newEntries
-            return Unit.right()
+            return Result.success(Unit)
         } catch (e: Exception) {
             val message = e.message ?: "Unknown error"
-            return QandaOperationError.Error(message).left()
+            return Result.failure(DatabaseError(message))
         }
     }
 
-    override suspend fun update(qanda: InternalQanda): Either<QandaOperationError, Unit> {
-        val id = qanda.id ?: return QandaOperationError.Error("Cannot update Qanda with null ID").left()
+    override suspend fun update(qanda: InternalQanda): Result<Unit> {
+        val id = qanda.id ?: return Result.failure(
+            DatabaseError("Cannot update Qanda with null ID")
+        )
 
         return if (qandasMap.containsKey(id)) {
             _qandasMap.value += (id to qanda)
-            Unit.right()
-        } else NotFound.left()
+            Result.success(Unit)
+        } else Result.failure(NotFound)
     }
 
-    override suspend fun deleteById(id: Long): Either<QandaOperationError, Unit> {
+    override suspend fun deleteById(id: Long): Result<Unit> {
         val toRemove = qandasMap[id]
         return if (toRemove != null) {
             _qandasMap.value -= id
-            Unit.right()
-        } else NotFound.left()
+            Result.success(Unit)
+        } else Result.failure(NotFound)
     }
 
-    override suspend fun deleteAll() {
-        _qandasMap.value = emptyMap()
-    }
+    override suspend fun deleteAll(): Result<Unit> =
+        try {
+            _qandasMap.value = emptyMap()
+            Result.success(Unit)
+        } catch (e: Exception){
+            val message = e.message ?: "Unknown error"
+            Result.failure(DatabaseError(message))
+        }
 
-    override suspend fun findById(id: Long): Either<QandaOperationError, InternalQanda> {
-        return qandasMap[id]?.right() ?: NotFound.left()
-    }
+    override suspend fun findById(id: Long): Result<InternalQanda> =
+        qandasMap[id]?.let { Result.success(it) } ?: Result.failure(NotFound)
 
-    override suspend fun existsByContentKey(qanda: InternalQanda): Either<QandaOperationError, InternalQanda> {
+    override suspend fun existsByContentKey(qanda: InternalQanda): Result<InternalQanda> {
         return qandasMap.values
             .firstOrNull { it.contentKey == qanda.contentKey }
-            ?.right() ?: NotFound.left()
+            ?.let { Result.success(it) } ?: Result.failure(NotFound)
     }
 }
 

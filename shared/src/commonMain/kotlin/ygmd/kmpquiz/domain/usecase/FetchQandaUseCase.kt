@@ -1,4 +1,4 @@
-package ygmd.kmpquiz.domain.fetch
+package ygmd.kmpquiz.domain.usecase
 
 import ygmd.kmpquiz.domain.pojo.InternalQanda
 import java.time.Duration
@@ -10,6 +10,6 @@ sealed class FetchResult<out T>{
     data class Error(val throwable: Throwable): FetchResult<Nothing>()
 }
 
-interface FetchQandaService {
+interface FetchQandaUseCase {
     suspend fun fetch(): FetchResult<List<InternalQanda>>
 }

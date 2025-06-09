@@ -6,13 +6,18 @@ import org.koin.core.KoinApplication
 import org.koin.core.context.startKoin
 import org.koin.core.module.Module
 import org.koin.dsl.module
-import ygmd.kmpquiz.domain.fetch.OpenTriviaFetchQanda
 import ygmd.kmpquiz.domain.repository.cron.CronRepository
 import ygmd.kmpquiz.domain.repository.cron.CronRepositoryImpl
 import ygmd.kmpquiz.domain.repository.qanda.InMemoryQandaRepository
 import ygmd.kmpquiz.domain.repository.qanda.QandaRepository
 import ygmd.kmpquiz.domain.usecase.DeleteQandasUseCase
 import ygmd.kmpquiz.domain.usecase.DeleteQandasUseCaseImpl
+import ygmd.kmpquiz.domain.usecase.FetchQandaUseCase
+import ygmd.kmpquiz.domain.usecase.GetQandasUseCase
+import ygmd.kmpquiz.domain.usecase.GetQandasUseCaseImpl
+import ygmd.kmpquiz.domain.usecase.OpenTriviaFetchQanda
+import ygmd.kmpquiz.domain.usecase.QuizUseCase
+import ygmd.kmpquiz.domain.usecase.QuizUseCaseImpl
 import ygmd.kmpquiz.domain.usecase.SaveQandasUseCase
 import ygmd.kmpquiz.domain.usecase.SaveQandasUseCaseImpl
 import ygmd.kmpquiz.viewModel.fetch.FetchQandasViewModel
@@ -25,68 +30,103 @@ fun initKoin(appModule: Module = module {}): KoinApplication {
         modules(
             appModule,
             coreModule,
-            module {
-                single { Logger.withTag("SharedLogger") }
-            }
+            dataModule,
+            domainModule,
+            presentationModule
         )
     }
 }
 
+// Core - Infrastructure
 val coreModule = module {
-    /*HTTP Provider*/
-    factory {
-        httpClientProvider()
+    single { Logger.withTag("SharedLogger") }
+    factory { httpClientProvider() }
+}
+
+// Data Layer - Repositories & DataSources
+val dataModule = module {
+    // Repositories
+    single<QandaRepository> {
+        InMemoryQandaRepository()
     }
 
-    /*USE CASES*/
+    single<CronRepository> {
+        CronRepositoryImpl()
+    }
+
+    // Remote DataSources
     factory {
         OpenTriviaFetchQanda(
             client = get(),
             logger = get()
         )
     }
+}
 
-    /*VModels*/
-    factory {
-        FetchQandasViewModel(
-            fetchQandasUseCase = get()
-        )
-    }
-    factory {
-        SavedQandasViewModel(
-            qandaRepository = get()
-        )
-    }
-    factory {
-        SettingsViewModel(
-            qandaRepository = get(), cronRepository = get()
-        )
-    }
-    factory {
-        QuizViewModel(
-            logger = get(),
-            qandaRepository = get()
+// Domain Layer - Use Cases
+val domainModule = module {
+    // Qanda Use Cases
+    factory<GetQandasUseCase> {
+        GetQandasUseCaseImpl(
+            repository = get()
         )
     }
 
-    /* DATABASE */
-    single<QandaRepository> {
-        InMemoryQandaRepository()
-    }
-    single<CronRepository> {
-        CronRepositoryImpl()
-    }
-
-    /* USE CASE */
     factory<SaveQandasUseCase> {
         SaveQandasUseCaseImpl(
             repository = get(),
             logger = get()
         )
     }
+
     factory<DeleteQandasUseCase> {
         DeleteQandasUseCaseImpl(
             repository = get(),
+            logger = get()
+        )
+    }
+
+    // Quiz Use Cases
+    factory<QuizUseCase> {
+        QuizUseCaseImpl(
+            repository = get(),
+            logger = get()
+        )
+    }
+
+    // Fetch Use Cases
+    factory<FetchQandaUseCase> {
+        get<OpenTriviaFetchQanda>()
+    }
+}
+
+// Presentation Layer - ViewModels
+val presentationModule = module {
+    factory {
+        FetchQandasViewModel(
+            fetchQandaUseCase = get(),
+            getQandasUseCase = get()
+        )
+    }
+
+    factory {
+        SavedQandasViewModel(
+            getQandasUseCase = get(),
+            saveQandaUseCase = get(),
+            deleteQandasUseCase = get()
+        )
+    }
+
+    factory {
+        SettingsViewModel(
+            qandaRepository = get(),
+            cronRepository = get()
+        )
+    }
+
+    factory {
+        QuizViewModel(
+            quizUseCase = get(),
             logger = get()
         )
     }

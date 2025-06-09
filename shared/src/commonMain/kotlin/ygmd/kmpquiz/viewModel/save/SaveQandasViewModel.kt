@@ -2,79 +2,73 @@ package ygmd.kmpquiz.viewModel.save
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import arrow.core.Either
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import ygmd.kmpquiz.domain.pojo.InternalQanda
-import ygmd.kmpquiz.domain.repository.qanda.QandaRepository
+import ygmd.kmpquiz.domain.usecase.DeleteQandasUseCase
+import ygmd.kmpquiz.domain.usecase.GetQandasUseCase
+import ygmd.kmpquiz.domain.usecase.SaveQandasUseCase
 
 class SavedQandasViewModel(
-    private val qandaRepository: QandaRepository
+    private val getQandasUseCase: GetQandasUseCase,
+    private val saveQandaUseCase: SaveQandasUseCase,
+    private val deleteQandasUseCase: DeleteQandasUseCase
 ) : ViewModel() {
-    val savedState: StateFlow<SavedQandasUiState>
-        get() = qandaRepository.getAll()
-            .map {
-                SavedQandasUiState.Success(
-                    qandas = it,
-                    categories = it.map { qanda -> qanda.category }.distinct()
-                )
-            }
-            .stateIn(
-                scope = viewModelScope,
-                started = SharingStarted.WhileSubscribed(5000),
-                initialValue = SavedQandasUiState.Loading
+
+    val savedState: StateFlow<SavedQandasUiState> = getQandasUseCase.execute()
+        .map { qandas ->
+            SavedQandasUiState.Success(
+                qandas = qandas,
+                categories = qandas.map { it.category }.distinct()
             )
+        }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = SavedQandasUiState.Loading
+        )
 
-
-    fun saveQanda(internalQanda: InternalQanda) {
+    fun saveQanda(qanda: InternalQanda) {
         viewModelScope.launch {
-            try {
-                when (qandaRepository.save(internalQanda)) {
-                    is Either.Left -> { }
-
-                    is Either.Right -> { }
-                }
-            } catch (e: Exception) { }
+            saveQandaUseCase.save(qanda)
+            // Pas besoin de mettre à jour manuellement !
+            // Le Flow se met à jour automatiquement 🎉
         }
     }
 
     fun saveAll(qandas: List<InternalQanda>) {
         viewModelScope.launch {
-            when (qandaRepository.saveAll(qandas)) {
-                is Either.Right -> { }
-                is Either.Left -> { }
-            }
+            saveQandaUseCase.saveAll(qandas)
+            // Idem, mise à jour automatique ! 🎉
         }
     }
 
     fun deleteQanda(qanda: InternalQanda) {
         viewModelScope.launch {
-            when (qandaRepository.deleteById(qanda.id!!)) {
-                is Either.Right -> {}
-                is Either.Left -> {}
-            }
+            deleteQandasUseCase.delete(qanda)
+            // Idem, mise à jour automatique ! 🎉
         }
     }
 
     fun toggleFavorite(qanda: InternalQanda) {
         viewModelScope.launch {
-            // TODO handleToggleFavorite
+            // TODO: Implémenter quand on aura les favoris
         }
     }
 }
 
-// États UI inchangés
+// États UI simplifiés
 sealed class SavedQandasUiState {
-    class Success(
+    data object Loading : SavedQandasUiState()
+
+    data class Success(
         val qandas: List<InternalQanda>,
         val categories: List<String>
     ) : SavedQandasUiState() {
         fun containsContentKey(contentKey: String) =
-            qandas.map { it.contentKey }.any { it == contentKey }
+            qandas.any { it.contentKey == contentKey }
     }
-
-    data object Loading : SavedQandasUiState()
 }
