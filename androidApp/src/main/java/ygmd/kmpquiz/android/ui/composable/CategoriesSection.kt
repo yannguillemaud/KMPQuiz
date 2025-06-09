@@ -21,7 +21,7 @@ import androidx.compose.ui.unit.sp
 @Composable
 fun CategoriesSection(
     categories: List<String>,
-    selectedCategory: String?,
+    selectedCategory: String? = null,
     onCategorySelected: (String) -> Unit
 ) {
     Column {

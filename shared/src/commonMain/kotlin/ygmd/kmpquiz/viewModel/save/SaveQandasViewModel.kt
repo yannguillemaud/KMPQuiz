@@ -10,7 +10,6 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
@@ -18,7 +17,7 @@ import kotlinx.coroutines.launch
 import ygmd.kmpquiz.domain.pojo.InternalQanda
 import ygmd.kmpquiz.domain.pojo.contentKey
 import ygmd.kmpquiz.domain.pojo.correctAnswer
-import ygmd.kmpquiz.domain.repository.QandaRepository
+import ygmd.kmpquiz.domain.repository.qanda.QandaRepository
 
 class SavedQandasViewModel(
     private val qandaRepository: QandaRepository
@@ -33,32 +32,10 @@ class SavedQandasViewModel(
     // État UI réactif basé sur le Flow du repository
     val savedState: StateFlow<SavedQandasUiState>
         get() = qandaRepository.getAll()
-            .combine(_favorites) { qandas, favorites ->
-                println("🔄 savedState recalculé - ${qandas.size} qandas") // LOG
-                try {
-                    if (qandas.isEmpty()) {
-                        SavedQandasUiState.Success(
-                            qandas = emptyList(),
-                            categories = emptyList()
-                        )
-                    } else {
-                        val categories = qandas.map { it.category }.distinct().sorted()
-                        SavedQandasUiState.Success(
-                            qandas = qandas,
-                            categories = categories
-                        )
-                    }
-                } catch (e: Exception) {
-                    SavedQandasUiState.Error(
-                        message = "Erreur lors du chargement: ${e.message}"
-                    )
-                }
-            }
-            .catch { exception ->
-                emit(
-                    SavedQandasUiState.Error(
-                        message = "Impossible de charger vos quiz: ${exception.message}"
-                    )
+            .map {
+                SavedQandasUiState.Success(
+                    qandas = it,
+                    categories = it.map { qanda -> qanda.category }.distinct()
                 )
             }
             .stateIn(
@@ -75,41 +52,20 @@ class SavedQandasViewModel(
         viewModelScope.launch {
             try {
                 when (val result = qandaRepository.save(internalQanda)) {
-                    is Either.Left -> {
-//                        _savedState.value = _savedState.value.copy(
-//                            error = ViewModelError.SaveError(result.value.message)
-//                        )
-                    }
+                    is Either.Left -> { }
 
-                    is Either.Right -> {
-//                        val currentSaved = _savedState.value.savedQandas
-//                        _savedState.value = _savedState.value.copy(
-//                            savedQandas = currentSaved + internalQanda
-//                        )
-                    }
+                    is Either.Right -> { }
                 }
-            } catch (e: Exception) {
-//                _savedState.value = _savedState.value.copy(
-//                    error = ViewModelError.UnknownError("Unkown error", e)
-//                )
-            }
+            } catch (e: Exception) { }
         }
     }
 
     fun saveAll(qandas: List<InternalQanda>) {
         viewModelScope.launch {
             when (val result = qandaRepository.saveAll(qandas)) {
-                is Either.Right -> {
-//                    _savedState.value = _savedState.value.copy(
-//                        savedQandas = _savedState.value.savedQandas + qandas
-//                    )
-                }
+                is Either.Right -> { }
 
-                is Either.Left -> {
-//                    _savedState.value = _savedState.value.copy(
-//                        error = ViewModelError.SaveError(result.value.message)
-//                    )
-                }
+                is Either.Left -> { }
             }
         }
     }
@@ -118,14 +74,12 @@ class SavedQandasViewModel(
         viewModelScope.launch {
             try {
                 when (qandaRepository.deleteById(qanda.id!!)) {
-                    is arrow.core.Either.Right -> {
-                        // Le Flow se met à jour automatiquement
-                        // Supprimer des favoris si nécessaire
+                    is Either.Right -> {
                         val currentFavorites = _favorites.value
                         _favorites.value = currentFavorites - qanda.contentKey()
                     }
 
-                    is arrow.core.Either.Left -> {
+                    is Either.Left -> {
                         _errorEvents.emit("Impossible de supprimer ce quiz")
                     }
                 }
@@ -360,8 +314,6 @@ class SavedQandasViewModel(
 
 // États UI inchangés
 sealed class SavedQandasUiState {
-    data object Loading : SavedQandasUiState()
-
     class Success(
         val qandas: List<InternalQanda>,
         val categories: List<String>
@@ -370,9 +322,7 @@ sealed class SavedQandasUiState {
             qandas.map { it.contentKey() }.any { it == contentKey }
     }
 
-    data class Error(
-        val message: String
-    ) : SavedQandasUiState()
+    data object Loading : SavedQandasUiState()
 }
 
 // Modèle pour les statistiques inchangé

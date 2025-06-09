@@ -1,4 +1,4 @@
-package ygmd.kmpquiz.domain.repository
+package ygmd.kmpquiz.domain.repository.qanda
 
 import arrow.core.Either
 import arrow.core.left
@@ -9,15 +9,15 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
 import ygmd.kmpquiz.domain.pojo.InternalQanda
 import ygmd.kmpquiz.domain.pojo.contentKey
-import ygmd.kmpquiz.domain.repository.OperationError.AlreadyExists
-import ygmd.kmpquiz.domain.repository.OperationError.NotFound
+import ygmd.kmpquiz.domain.repository.qanda.QandaOperationError.AlreadyExists
+import ygmd.kmpquiz.domain.repository.qanda.QandaOperationError.NotFound
 
 val logger = Logger.withTag(InMemoryQandaRepository::class.simpleName.toString())
 
-sealed class OperationError(val message: String) {
-    data class Error(val errorMessage: String) : OperationError(errorMessage)
-    data object AlreadyExists : OperationError("Already exists")
-    data object NotFound : OperationError("Not Found")
+sealed class QandaOperationError(val message: String) {
+    data class Error(val errorMessage: String) : QandaOperationError(errorMessage)
+    data object AlreadyExists : QandaOperationError("Already exists")
+    data object NotFound : QandaOperationError("Not Found")
 }
 
 class InMemoryQandaRepository : QandaRepository {
@@ -28,7 +28,7 @@ class InMemoryQandaRepository : QandaRepository {
     override fun getAll(): Flow<List<InternalQanda>> =
         _qandasMap.map { it.values.toList() }
 
-    override suspend fun save(qanda: InternalQanda): Either<OperationError, Long> {
+    override suspend fun save(qanda: InternalQanda): Either<QandaOperationError, Long> {
         try {
             if (qanda.id != null) {
                 logger.w { "Qanda already has id: ${qanda.id}" }
@@ -47,11 +47,11 @@ class InMemoryQandaRepository : QandaRepository {
             return newId.right()
         } catch (e: Exception) {
             val message = e.message ?: "Unknown error"
-            return OperationError.Error(message).left()
+            return QandaOperationError.Error(message).left()
         }
     }
 
-    override suspend fun saveAll(qandas: List<InternalQanda>): Either<OperationError, Unit> {
+    override suspend fun saveAll(qandas: List<InternalQanda>): Either<QandaOperationError, Unit> {
         try {
             val conflicts = qandas.filter { it.id != null && qandasMap.containsKey(it.id) }
             if (conflicts.isNotEmpty()) {
@@ -64,12 +64,12 @@ class InMemoryQandaRepository : QandaRepository {
             return Unit.right()
         } catch (e: Exception) {
             val message = e.message ?: "Unknown error"
-            return OperationError.Error(message).left()
+            return QandaOperationError.Error(message).left()
         }
     }
 
-    override suspend fun update(qanda: InternalQanda): Either<OperationError, Unit> {
-        val id = qanda.id ?: return OperationError.Error("Cannot update Qanda with null ID").left()
+    override suspend fun update(qanda: InternalQanda): Either<QandaOperationError, Unit> {
+        val id = qanda.id ?: return QandaOperationError.Error("Cannot update Qanda with null ID").left()
 
         return if (qandasMap.containsKey(id)) {
             _qandasMap.value += (id to qanda)
@@ -77,7 +77,7 @@ class InMemoryQandaRepository : QandaRepository {
         } else NotFound.left()
     }
 
-    override suspend fun deleteById(id: Long): Either<OperationError, Unit> {
+    override suspend fun deleteById(id: Long): Either<QandaOperationError, Unit> {
         val toRemove = qandasMap[id]
         return if (toRemove != null) {
             _qandasMap.value -= id
@@ -89,11 +89,11 @@ class InMemoryQandaRepository : QandaRepository {
         _qandasMap.value = emptyMap()
     }
 
-    override suspend fun findById(id: Long): Either<OperationError, InternalQanda> {
+    override suspend fun findById(id: Long): Either<QandaOperationError, InternalQanda> {
         return qandasMap[id]?.right() ?: NotFound.left()
     }
 
-    override suspend fun existsByContentKey(qanda: InternalQanda): Either<OperationError, InternalQanda> {
+    override suspend fun existsByContentKey(qanda: InternalQanda): Either<QandaOperationError, InternalQanda> {
         return qandasMap.values
             .firstOrNull { it.contentKey() == qanda.contentKey() }
             ?.right() ?: NotFound.left()

@@ -10,7 +10,8 @@ import kotlinx.serialization.Serializable
 import ygmd.kmpquiz.android.ui.composable.StatisticsScreen
 import ygmd.kmpquiz.android.ui.views.fetch.FetchScreen
 import ygmd.kmpquiz.android.ui.views.home.HomeScreen
-import ygmd.kmpquiz.android.ui.views.saved.SavedQandasScreen
+import ygmd.kmpquiz.android.ui.views.saved.SavedScreen
+import ygmd.kmpquiz.android.ui.views.settings.SettingsScreen
 import ygmd.kmpquiz.android.ui.views.theme.QuizTheme
 import ygmd.kmpquiz.viewModel.save.QuizStats
 
@@ -24,19 +25,21 @@ class Main : ComponentActivity() {
                 NavHost(navController = navController, startDestination = Home) {
                     composable<Home> {
                         HomeScreen(
-                            onNavigateToFetch = { navController.navigate(FetchQandas) },
-                            onNavigateToSaved = { navController.navigate(SavedQandas) }
+                            onNavigateToFetch = { navController.navigate(Fetch) },
+                            onNavigateToSaved = { navController.navigate(Saved) },
+                            onNavigateToStats = { navController.navigate(Statistics) },
+                            onNavigateToParams = { navController.navigate(Settings) }
                         )
                     }
 
-                    composable<FetchQandas> {
+                    composable<Fetch> {
                         FetchScreen(
                             onNavigateBack = { navController.popBackStack() }
                         )
                     }
 
-                    composable<SavedQandas> {
-                        SavedQandasScreen(
+                    composable<Saved> {
+                        SavedScreen(
                             onNavigateBack = { navController.popBackStack() },
                             onStartQuiz = { qandas ->
                                 // TODO: Naviguer vers l'écran de quiz avec les qandas sélectionnés
@@ -48,7 +51,14 @@ class Main : ComponentActivity() {
                     composable<Statistics> {
                         // TODO: Implémenter l'écran de statistiques globales
                         StatisticsScreen(
-                            stats = QuizStats(), // Données par défaut
+                            stats = QuizStats(),
+                            onNavigateBack = { navController.popBackStack() }
+                        )
+                    }
+
+                    composable<Settings> {
+                        // TODO: Implémenter l'écran de statistiques globales
+                        SettingsScreen(
                             onNavigateBack = { navController.popBackStack() }
                         )
                     }
@@ -63,10 +73,13 @@ class Main : ComponentActivity() {
 object Home
 
 @Serializable
-object FetchQandas
+object Fetch
 
 @Serializable
-object SavedQandas
+object Saved
 
 @Serializable
 object Statistics
+
+@Serializable
+object Settings

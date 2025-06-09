@@ -3,7 +3,7 @@ package ygmd.kmpquiz.domain.usecase
 import arrow.core.Either
 import co.touchlab.kermit.Logger
 import ygmd.kmpquiz.domain.pojo.InternalQanda
-import ygmd.kmpquiz.domain.repository.QandaRepository
+import ygmd.kmpquiz.domain.repository.qanda.QandaRepository
 
 interface SaveQandasUseCase {
     suspend fun save(qanda: InternalQanda): Result<Unit>

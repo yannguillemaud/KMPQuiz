@@ -1,7 +1,7 @@
 package ygmd.kmpquiz.domain.dao
 
 import ygmd.kmpquiz.domain.pojo.InternalQanda
-import ygmd.kmpquiz.domain.repository.QandaRepository
+import ygmd.kmpquiz.domain.repository.qanda.QandaRepository
 
 // TODO - use with SQLDelight
 class SavedQandasDAOImpl(

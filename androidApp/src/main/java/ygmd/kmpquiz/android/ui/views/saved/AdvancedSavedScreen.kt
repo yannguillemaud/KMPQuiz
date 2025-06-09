@@ -75,7 +75,7 @@ import ygmd.kmpquiz.viewModel.save.SavedQandasUiState
 import ygmd.kmpquiz.viewModel.save.SavedQandasViewModel
 
 @Composable
-fun SavedQandasScreen(
+fun SavedScreen(
     viewModel: SavedQandasViewModel = koinViewModel(),
     onNavigateBack: () -> Unit = {},
     onStartQuiz: (List<InternalQanda>) -> Unit = {}
@@ -108,17 +108,13 @@ fun SavedQandasScreen(
         )
 
         when (val state = uiState) {
-            is SavedQandasUiState.Loading -> {
-                MinimalLoadingSection()
-            }
-
             is SavedQandasUiState.Success -> {
                 if (state.qandas.isEmpty()) {
                     MinimalEmptyStateSection(
                         onExploreQuiz = { /* TODO: Navigate to fetch */ }
                     )
                 } else {
-                    // Filtrage identique à votre logique
+                    // Filtrage
                     val filteredQandas = state.qandas.filter { qanda ->
                         val matchesSearch =
                             if (searchQuery.isBlank()) true
@@ -199,9 +195,9 @@ fun SavedQandasScreen(
                 }
             }
 
-            is SavedQandasUiState.Error -> {
+            else -> {
                 MinimalErrorSection(
-                    error = state.message,
+                    error = "Error when retrieving saved qandas",
                     onRetry = {
                         // TODO: viewModel.loadSavedQandas()
                     }

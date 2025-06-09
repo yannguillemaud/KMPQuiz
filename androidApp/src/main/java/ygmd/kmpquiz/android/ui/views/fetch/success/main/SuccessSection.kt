@@ -58,7 +58,6 @@ fun SuccessSection(
             // Headers avec catégories
             CategoriesSection(
                 categories = filteredQandas.map { it.qanda.category },
-                selectedCategory = null,
                 onCategorySelected = {
                     if (!selectedCategories.contains(it))
                         selectedCategories += it
