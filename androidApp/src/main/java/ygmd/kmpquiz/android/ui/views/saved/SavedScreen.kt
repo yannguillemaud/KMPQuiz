@@ -69,7 +69,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.koin.compose.viewmodel.koinViewModel
 import ygmd.kmpquiz.android.ui.composable.CategoriesSection
-import ygmd.kmpquiz.android.ui.composable.MinimalStatsCard
+import ygmd.kmpquiz.android.ui.composable.StatsCard
 import ygmd.kmpquiz.domain.pojo.InternalQanda
 import ygmd.kmpquiz.viewModel.save.SavedQandasUiState
 import ygmd.kmpquiz.viewModel.save.SavedQandasViewModel
@@ -78,7 +78,7 @@ import ygmd.kmpquiz.viewModel.save.SavedQandasViewModel
 fun SavedScreen(
     viewModel: SavedQandasViewModel = koinViewModel(),
     onNavigateBack: () -> Unit = {},
-    onStartQuiz: (List<InternalQanda>) -> Unit = {}
+    onStartQuiz: (List<Long>) -> Unit = {}
 ) {
     val uiState by viewModel.savedState.collectAsState()
     var isGridView by remember { mutableStateOf(false) }
@@ -93,7 +93,7 @@ fun SavedScreen(
             .background(Color(0xFFF8F9FA))
     ) {
         // Header épuré
-        MinimalTopBar(
+        TopBar(
             isGridView = isGridView,
             showSearchBar = showSearchBar,
             searchQuery = searchQuery,
@@ -128,8 +128,7 @@ fun SavedScreen(
                         matchesSearch && matchesCategory
                     }
 
-                    Box(modifier = Modifier.fillMaxSize())
-                    {
+                    Box(modifier = Modifier.fillMaxSize()) {
                         Column(modifier = Modifier.fillMaxSize()) {
                             LazyColumn(
                                 modifier = Modifier.fillMaxSize(),
@@ -137,47 +136,35 @@ fun SavedScreen(
                                 verticalArrangement = Arrangement.spacedBy(16.dp)
                             ) {
                                 // Filtres catégories
-                                if (!showSearchBar && state.categories.isNotEmpty()) {
-                                    item {
-                                        CategoriesSection(
-                                            categories = state.categories,
-                                            selectedCategory = selectedCategory,
-                                            onCategorySelected = {
-                                                selectedCategory =
-                                                    if (selectedCategory == it) null else it
-                                            }
-                                        )
-                                    }
+                                item {
+                                    CategoriesSection(
+                                        categories = state.categories,
+                                        selectedCategory = selectedCategory,
+                                        onCategorySelected = {
+                                            selectedCategory =
+                                                if (selectedCategory == it) null else it
+                                        }
+                                    )
                                 }
 
                                 // Liste des quiz
-                                if (isGridView) {
-                                    // TODO: Implémenter la vue grille dans LazyVerticalStaggeredGrid séparée
-                                    // Pour le moment, utilisation de la vue liste
-                                    items(filteredQandas) { qanda ->
-                                        MinimalQuizCard(
-                                            qanda = qanda,
-                                            onClick = { onStartQuiz(listOf(qanda)) },
-                                            onDelete = { viewModel.deleteQanda(qanda) },
-                                            onFavoriteToggle = { viewModel.toggleFavorite(qanda) }
-                                        )
-                                    }
-                                } else {
-                                    items(filteredQandas) { qanda ->
-                                        MinimalQuizCard(
-                                            qanda = qanda,
-                                            onClick = { onStartQuiz(listOf(qanda)) },
-                                            onDelete = { viewModel.deleteQanda(qanda) },
-                                            onFavoriteToggle = { viewModel.toggleFavorite(qanda) }
-                                        )
-                                    }
+                                items(filteredQandas) { qanda ->
+                                    QuizCard(
+                                        qanda = qanda,
+                                        onClick = {
+                                            println("Quiz: $qanda")
+                                            onStartQuiz(listOfNotNull(qanda.id))
+                                        },
+                                        onDelete = { viewModel.deleteQanda(qanda) },
+                                        onFavoriteToggle = { viewModel.toggleFavorite(qanda) }
+                                    )
                                 }
                             }
                         }
 
                         // Statistiques compactes
                         if (!showSearchBar && selectedCategory == null) {
-                            MinimalStatsCard(
+                            StatsCard(
                                 modifier = Modifier
                                     .align(alignment = Alignment.BottomCenter)
                                     .fillMaxWidth()
@@ -187,7 +174,9 @@ fun SavedScreen(
                                 // TODO
                                 favorites = 0,
                                 onStartRandomQuiz = {
-                                    onStartQuiz(state.qandas.shuffled().take(1))
+                                    val qandas = state.qandas.shuffled().take(1)
+                                    val ids = qandas.mapNotNull { it.id }
+                                    onStartQuiz(ids)
                                 },
                             )
                         }
@@ -209,7 +198,7 @@ fun SavedScreen(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MinimalTopBar(
+fun TopBar(
     isGridView: Boolean,
     showSearchBar: Boolean,
     searchQuery: String,
@@ -370,7 +359,7 @@ fun MinimalStatItem(label: String, value: String) {
 }
 
 @Composable
-fun MinimalQuizCard(
+fun QuizCard(
     qanda: InternalQanda,
     onClick: () -> Unit,
     onDelete: () -> Unit,

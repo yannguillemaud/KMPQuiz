@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import ygmd.kmpquiz.domain.cron.CronExpression
 import ygmd.kmpquiz.domain.cron.CronPreset
-import ygmd.kmpquiz.domain.repository.CronRepository
+import ygmd.kmpquiz.domain.repository.cron.CronRepository
 import ygmd.kmpquiz.domain.repository.qanda.QandaRepository
 
 class SettingsViewModel(

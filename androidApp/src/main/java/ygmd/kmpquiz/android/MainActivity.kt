@@ -6,14 +6,14 @@ import androidx.activity.compose.setContent
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.toRoute
 import kotlinx.serialization.Serializable
-import ygmd.kmpquiz.android.ui.composable.StatisticsScreen
 import ygmd.kmpquiz.android.ui.views.fetch.FetchScreen
 import ygmd.kmpquiz.android.ui.views.home.HomeScreen
+import ygmd.kmpquiz.android.ui.views.quiz.QuizScreen
 import ygmd.kmpquiz.android.ui.views.saved.SavedScreen
 import ygmd.kmpquiz.android.ui.views.settings.SettingsScreen
 import ygmd.kmpquiz.android.ui.views.theme.QuizTheme
-import ygmd.kmpquiz.viewModel.save.QuizStats
 
 class Main : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -41,24 +41,31 @@ class Main : ComponentActivity() {
                     composable<Saved> {
                         SavedScreen(
                             onNavigateBack = { navController.popBackStack() },
-                            onStartQuiz = { qandas ->
-                                // TODO: Naviguer vers l'écran de quiz avec les qandas sélectionnés
-                                // navController.navigate(QuizScreen(qandas))
+                            onStartQuiz = { qandaIds ->
+                                navController.navigate(Quiz(qandaIds))
                             }
                         )
                     }
 
                     composable<Statistics> {
                         // TODO: Implémenter l'écran de statistiques globales
-                        StatisticsScreen(
-                            stats = QuizStats(),
-                            onNavigateBack = { navController.popBackStack() }
-                        )
+//                        StatisticsScreen(
+//                            stats = QuizStats(),
+//                            onNavigateBack = { navController.popBackStack() }
+//                        )
                     }
 
                     composable<Settings> {
                         // TODO: Implémenter l'écran de statistiques globales
                         SettingsScreen(
+                            onNavigateBack = { navController.popBackStack() }
+                        )
+                    }
+
+                    composable<Quiz> { backStackEntry ->
+                        val quiz = backStackEntry.toRoute<Quiz>()
+                        QuizScreen(
+                            qandaIds = quiz.qandaIds,
                             onNavigateBack = { navController.popBackStack() }
                         )
                     }
@@ -83,3 +90,6 @@ object Statistics
 
 @Serializable
 object Settings
+
+@Serializable
+data class Quiz(val qandaIds: List<Long>)

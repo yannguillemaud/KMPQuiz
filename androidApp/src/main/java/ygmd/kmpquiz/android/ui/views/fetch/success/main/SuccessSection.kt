@@ -19,7 +19,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import ygmd.kmpquiz.android.ui.composable.CategoriesSection
-import ygmd.kmpquiz.domain.pojo.contentKey
 import ygmd.kmpquiz.viewModel.QandaUiState
 import ygmd.kmpquiz.viewModel.fetch.FetchQandasViewModel
 import ygmd.kmpquiz.viewModel.fetch.FetchState
@@ -46,7 +45,7 @@ fun SuccessSection(
                 .filter {
                     when(val saved = savedState){
                         is SavedQandasUiState.Success -> {
-                            !saved.containsContentKey(it.qanda.contentKey())
+                            !saved.containsContentKey(it.qanda.contentKey)
                         } else -> true
                     }
                 }
@@ -76,7 +75,7 @@ fun SuccessSection(
                 // Liste des quiz disponibles
                 items(
                     items = filteredQandas,
-                    key = { it.qanda.contentKey() }
+                    key = { it.qanda.contentKey }
                 ) {
                     QandaFetchCard(
                         qandaState = it,

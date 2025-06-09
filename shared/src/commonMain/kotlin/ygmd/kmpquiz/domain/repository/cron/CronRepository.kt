@@ -1,4 +1,4 @@
-package ygmd.kmpquiz.domain.repository
+package ygmd.kmpquiz.domain.repository.cron
 
 import arrow.core.Either
 import arrow.core.left

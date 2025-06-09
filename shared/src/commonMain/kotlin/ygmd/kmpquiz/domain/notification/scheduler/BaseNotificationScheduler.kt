@@ -6,7 +6,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
 import ygmd.kmpquiz.domain.notification.QandaNotification
-import ygmd.kmpquiz.domain.repository.CronRepository
+import ygmd.kmpquiz.domain.repository.cron.CronRepository
 import ygmd.kmpquiz.domain.repository.notification.NotificationRepository
 import ygmd.kmpquiz.domain.repository.qanda.QandaRepository
 

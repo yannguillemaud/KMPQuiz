@@ -29,7 +29,7 @@ import ygmd.kmpquiz.android.ui.views.saved.MinimalStatItem
 
 
 @Composable
-fun MinimalStatsCard(
+fun StatsCard(
     totalQuiz: Int,
     categories: Int,
     favorites: Int,

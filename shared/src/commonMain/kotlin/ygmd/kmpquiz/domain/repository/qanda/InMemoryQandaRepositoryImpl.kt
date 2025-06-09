@@ -8,7 +8,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
 import ygmd.kmpquiz.domain.pojo.InternalQanda
-import ygmd.kmpquiz.domain.pojo.contentKey
 import ygmd.kmpquiz.domain.repository.qanda.QandaOperationError.AlreadyExists
 import ygmd.kmpquiz.domain.repository.qanda.QandaOperationError.NotFound
 
@@ -32,8 +31,8 @@ class InMemoryQandaRepository : QandaRepository {
         try {
             if (qanda.id != null) {
                 logger.w { "Qanda already has id: ${qanda.id}" }
-                val contentKey = qanda.contentKey()
-                if (qandasMap.filterValues { it.contentKey() == contentKey }.isNotEmpty()) {
+                val contentKey = qanda.contentKey
+                if (qandasMap.filterValues { it.contentKey == contentKey }.isNotEmpty()) {
                     logger.w { "Qanda already exists by content key: $contentKey" }
                 }
                 if (qandasMap.containsKey(qanda.id)) {
@@ -95,7 +94,7 @@ class InMemoryQandaRepository : QandaRepository {
 
     override suspend fun existsByContentKey(qanda: InternalQanda): Either<QandaOperationError, InternalQanda> {
         return qandasMap.values
-            .firstOrNull { it.contentKey() == qanda.contentKey() }
+            .firstOrNull { it.contentKey == qanda.contentKey }
             ?.right() ?: NotFound.left()
     }
 }

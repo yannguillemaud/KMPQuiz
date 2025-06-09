@@ -27,14 +27,12 @@ class QANDADto(
             if (incorrect_answers.size == 1) incorrect_answers.asBooleanAnswers()
             else (incorrect + correct)
 
-        val correctPosition = allAnswers.indexOf(correct)
-
         return InternalQanda(
             category = category.sanitized().unescaped(),
             difficulty = difficulty,
             question = question.unescaped(),
             answers = allAnswers,
-            correctAnswerPosition = correctPosition
+            correctAnswer = correct_answer,
         )
     }
 

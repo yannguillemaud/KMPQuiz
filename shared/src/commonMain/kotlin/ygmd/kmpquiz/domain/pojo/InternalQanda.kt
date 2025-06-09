@@ -5,10 +5,12 @@ data class InternalQanda(
     val category: String,
     val question: String,
     val answers: List<String>,
-    val correctAnswerPosition: Int,
+    val correctAnswer: String,
     val difficulty: String,
-)
+){
+    @Deprecated("use content key prop", ReplaceWith("contentKey"))
+    fun contentKey(): String = contentKey
 
-fun InternalQanda.correctAnswer(): String = answers[correctAnswerPosition]
-fun InternalQanda.contentKey(): String =
-    "${question.trim().lowercase()}|${correctAnswer().trim().lowercase()}"
+    val contentKey: String
+        get() = "${question.trim().lowercase()}|${correctAnswer.trim().lowercase()}"
+}

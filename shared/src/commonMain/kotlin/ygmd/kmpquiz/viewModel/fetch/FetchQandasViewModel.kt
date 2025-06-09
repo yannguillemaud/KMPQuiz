@@ -8,7 +8,6 @@ import kotlinx.coroutines.launch
 import ygmd.kmpquiz.domain.fetch.FetchResult
 import ygmd.kmpquiz.domain.fetch.FetchResult.Success
 import ygmd.kmpquiz.domain.fetch.OpenTriviaFetchQanda
-import ygmd.kmpquiz.domain.pojo.contentKey
 import ygmd.kmpquiz.viewModel.QandaUiState
 import ygmd.kmpquiz.viewModel.error.ViewModelError
 import ygmd.kmpquiz.viewModel.save.DownloadState
@@ -29,7 +28,7 @@ class FetchQandasViewModel(
                 // Création de la liste complète avec état de téléchargement mis à jour
                 val updatedQandas = fetchState.availableQandas.map { qandaUiState ->
                     val isSaved = saveState.savedQandas.any { saved ->
-                        saved.contentKey() == qandaUiState.qanda.contentKey()
+                        saved.contentKey == qandaUiState.qanda.contentKey
                     }
                     qandaUiState.copy(
                         downloadState = if (isSaved) DownloadState.Downloaded else DownloadState.NotDownloaded
@@ -78,7 +77,7 @@ class FetchQandasViewModel(
                                 QandaUiState(
                                     qanda = fetched,
                                     downloadState = _savedState.value.savedQandas.firstOrNull { saved ->
-                                        saved.contentKey() == fetched.contentKey()
+                                        saved.contentKey == fetched.contentKey()
                                     }?.let { DownloadState.Downloaded }
                                         ?: DownloadState.NotDownloaded
                                 )
