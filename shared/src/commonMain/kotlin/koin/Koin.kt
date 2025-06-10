@@ -119,8 +119,8 @@ val presentationModule = module {
 
     factory {
         SettingsViewModel(
-            qandaRepository = get(),
-            cronRepository = get()
+            cronRepository = get(),
+            getQandasUseCase = get(),
         )
     }
 
