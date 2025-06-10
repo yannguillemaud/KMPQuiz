@@ -10,9 +10,9 @@ import androidx.navigation.toRoute
 import kotlinx.serialization.Serializable
 import ygmd.kmpquiz.android.ui.views.fetch.FetchScreen
 import ygmd.kmpquiz.android.ui.views.home.HomeScreen
+import ygmd.kmpquiz.android.ui.views.notification.NotificationSettingsScreen
 import ygmd.kmpquiz.android.ui.views.quiz.QuizScreen
 import ygmd.kmpquiz.android.ui.views.saved.SavedScreen
-import ygmd.kmpquiz.android.ui.views.settings.SettingsScreen
 import ygmd.kmpquiz.android.ui.views.theme.QuizTheme
 
 class Main : ComponentActivity() {
@@ -57,7 +57,7 @@ class Main : ComponentActivity() {
 
                     composable<Settings> {
                         // TODO: Implémenter l'écran de statistiques globales
-                        SettingsScreen(
+                        NotificationSettingsScreen(
                             onNavigateBack = { navController.popBackStack() }
                         )
                     }

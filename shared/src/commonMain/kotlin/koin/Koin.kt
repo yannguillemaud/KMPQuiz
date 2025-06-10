@@ -6,23 +6,31 @@ import org.koin.core.KoinApplication
 import org.koin.core.context.startKoin
 import org.koin.core.module.Module
 import org.koin.dsl.module
-import ygmd.kmpquiz.domain.repository.cron.CronRepository
-import ygmd.kmpquiz.domain.repository.cron.CronRepositoryImpl
+import ygmd.kmpquiz.domain.repository.notification.NotificationConfigRepository
+import ygmd.kmpquiz.domain.repository.notification.NotificationConfigRepositoryImpl
+import ygmd.kmpquiz.domain.repository.notification.ScheduledNotificationRepository
+import ygmd.kmpquiz.domain.repository.notification.ScheduledNotificationRepositoryImpl
 import ygmd.kmpquiz.domain.repository.qanda.InMemoryQandaRepository
 import ygmd.kmpquiz.domain.repository.qanda.QandaRepository
+import ygmd.kmpquiz.domain.service.NotificationService
+import ygmd.kmpquiz.domain.service.NotificationServiceImpl
 import ygmd.kmpquiz.domain.usecase.DeleteQandasUseCase
 import ygmd.kmpquiz.domain.usecase.DeleteQandasUseCaseImpl
 import ygmd.kmpquiz.domain.usecase.FetchQandaUseCase
 import ygmd.kmpquiz.domain.usecase.GetQandasUseCase
 import ygmd.kmpquiz.domain.usecase.GetQandasUseCaseImpl
+import ygmd.kmpquiz.domain.usecase.NotificationUseCase
+import ygmd.kmpquiz.domain.usecase.NotificationUseCaseImpl
 import ygmd.kmpquiz.domain.usecase.OpenTriviaFetchQanda
 import ygmd.kmpquiz.domain.usecase.QuizUseCase
 import ygmd.kmpquiz.domain.usecase.QuizUseCaseImpl
 import ygmd.kmpquiz.domain.usecase.SaveQandasUseCase
 import ygmd.kmpquiz.domain.usecase.SaveQandasUseCaseImpl
+import ygmd.kmpquiz.viewModel.NotificationTestViewModel
 import ygmd.kmpquiz.viewModel.fetch.FetchQandasViewModel
 import ygmd.kmpquiz.viewModel.quiz.QuizViewModel
 import ygmd.kmpquiz.viewModel.save.SavedQandasViewModel
+import ygmd.kmpquiz.viewModel.settings.NotificationSettingsViewModel
 import ygmd.kmpquiz.viewModel.settings.SettingsViewModel
 
 fun initKoin(appModule: Module = module {}): KoinApplication {
@@ -50,8 +58,27 @@ val dataModule = module {
         InMemoryQandaRepository()
     }
 
-    single<CronRepository> {
-        CronRepositoryImpl()
+    single<NotificationConfigRepository> {
+        NotificationConfigRepositoryImpl(logger = get())
+    }
+
+    single<ScheduledNotificationRepository> {
+        ScheduledNotificationRepositoryImpl(logger = get())
+    }
+
+    single<NotificationService> {
+        NotificationServiceImpl(
+            scheduledRepo = get(),
+            configRepo = get(),
+            qandaRepo = get(),
+            logger = get()
+        )
+    }
+
+    factory<NotificationUseCase> {
+        NotificationUseCaseImpl(
+            notificationService = get()
+        )
     }
 
     // Remote DataSources
@@ -119,8 +146,8 @@ val presentationModule = module {
 
     factory {
         SettingsViewModel(
-            cronRepository = get(),
             getQandasUseCase = get(),
+            notificationConfigRepository = get()
         )
     }
 
@@ -128,6 +155,20 @@ val presentationModule = module {
         QuizViewModel(
             quizUseCase = get(),
             logger = get()
+        )
+    }
+
+    factory {
+        NotificationTestViewModel(
+            notificationUseCase = get()
+        )
+    }
+
+    factory {
+        NotificationSettingsViewModel(
+            configRepository = get(),
+            getQandasUseCase = get(),
+            notificationUseCase = get()
         )
     }
 }

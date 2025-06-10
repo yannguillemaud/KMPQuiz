@@ -3,9 +3,10 @@ package ygmd.kmpquiz.domain.error
 sealed class DomainError(
     override val message: String,
     override val cause: Throwable? = null
-): Exception(message, cause) {
+) : Exception(message, cause) {
     // Erreurs du domaine Qanda
-    sealed class QandaError(message: String, cause: Throwable? = null) : DomainError(message, cause) {
+    sealed class QandaError(message: String, cause: Throwable? = null) :
+        DomainError(message, cause) {
         data object NotFound : QandaError("Qanda not found") {
             private fun readResolve(): Any = NotFound
         }
@@ -19,11 +20,14 @@ sealed class DomainError(
     }
 
     // Erreurs réseau/fetch
-    sealed class NetworkError(message: String, cause: Throwable? = null) : DomainError(message, cause) {
+    sealed class NetworkError(message: String, cause: Throwable? = null) :
+        DomainError(message, cause) {
         data class HttpError(val code: Int, val errorMessage: String) :
             NetworkError("HTTP $code: $errorMessage")
+
         data class ConnectivityError(val errorMessage: String) :
             NetworkError("Connection error: $errorMessage")
+
         data object RateLimited : NetworkError("Rate limit exceeded") {
             private fun readResolve(): Any = RateLimited
         }
@@ -33,15 +37,22 @@ sealed class DomainError(
     }
 
     // Erreurs de persistence
-    sealed class PersistenceError(message: String, cause: Throwable? = null) : DomainError(message, cause) {
+    sealed class PersistenceError(message: String, cause: Throwable? = null) :
+        DomainError(message, cause) {
         data class DatabaseError(val errorMessage: String) :
             PersistenceError("Database error: $errorMessage")
+
         data object ConnectionFailed : PersistenceError("Failed to connect to database") {
             private fun readResolve(): Any = ConnectionFailed
         }
     }
 
     // Erreur générique
-    data class UnknownError(val errorMessage: String, override val cause: Throwable) :
-        DomainError("Unknown error: $errorMessage", cause)
+    data class UnknownError(override val message: String, override val cause: Throwable) :
+        DomainError("Unknown error: $message", cause)
+
+    sealed class CronError(override val message: String, cause: Throwable? = null) :
+        DomainError(message, cause) {
+        data class CronNotExists(val errorMessage: String) : CronError(errorMessage)
+    }
 }

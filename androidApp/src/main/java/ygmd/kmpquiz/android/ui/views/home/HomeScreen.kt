@@ -92,7 +92,7 @@ fun HomeScreen(
                 icon = Icons.Filled.Settings,
                 accentColor = Color(0xFF6B7280),
                 onClick = { onNavigateToParams() },
-                isComingSoon = true
+                isComingSoon = false
             )
         }
 

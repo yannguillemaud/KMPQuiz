@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.compose.compiler)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.composeHotReload)
+    id("org.jetbrains.compose") version "1.8.0"
 }
 
 android {
@@ -50,4 +51,5 @@ dependencies {
     implementation(libs.koin.compose.viewmodel)
     implementation(libs.koin.compose.viewmodel.nav)
     implementation(libs.kotlinx.serialization.json)
+    implementation(libs.kotlinx.datetime)
 }

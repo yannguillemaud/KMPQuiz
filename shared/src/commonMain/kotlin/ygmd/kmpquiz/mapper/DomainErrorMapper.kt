@@ -17,7 +17,9 @@ fun DomainError.toViewModelError(): ViewModelError = when (this) {
     is DomainError.PersistenceError.DatabaseError -> ViewModelError.SaveError("Database error: $errorMessage")
     is DomainError.PersistenceError.ConnectionFailed -> ViewModelError.SaveError("Database connection failed")
 
-    is DomainError.UnknownError -> ViewModelError.UnknownError(errorMessage, cause)
+    is DomainError.CronError.CronNotExists -> ViewModelError.SaveError("Cron does not not exists")
+
+    is DomainError.UnknownError -> ViewModelError.UnknownError(message, cause)
 }
 
 fun <T> FetchResult<T>.toViewModelError(): ViewModelError = when (this) {

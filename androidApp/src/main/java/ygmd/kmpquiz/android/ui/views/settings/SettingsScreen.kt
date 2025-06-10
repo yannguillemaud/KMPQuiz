@@ -3,7 +3,6 @@ package ygmd.kmpquiz.android.ui.views.settings
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import org.koin.compose.viewmodel.koinViewModel
-import ygmd.kmpquiz.viewModel.save.SavedQandasUiState
 import ygmd.kmpquiz.viewModel.save.SavedQandasViewModel
 import ygmd.kmpquiz.viewModel.settings.SettingsViewModel
 
@@ -16,13 +15,5 @@ fun SettingsScreen(
     val savedState = savedQandasViewModel.savedState.collectAsState()
     val settingsState = settingsViewModel.userSettings.collectAsState()
 
-    when(val state = savedState.value){
-        is SavedQandasUiState.Success -> {
-            val crons = settingsState.value.scheduledCrons
-        }
-
-        else -> {
-
-        }
-    }
+    // SOON TM
 }

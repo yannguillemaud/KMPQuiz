@@ -1,10 +1,10 @@
 package ygmd.kmpquiz.domain.notification.scheduler
 
 import kotlinx.coroutines.flow.Flow
-import ygmd.kmpquiz.domain.notification.QandaNotification
+import ygmd.kmpquiz.domain.notification.ScheduledNotification
 
 interface NotificationScheduler {
-    fun getAllNotifications(): Flow<List<QandaNotification>>
-    suspend fun scheduleNotification(notification: QandaNotification)
+    fun getAllNotifications(): Flow<List<ScheduledNotification>>
+    suspend fun scheduleNotification(notification: ScheduledNotification)
     suspend fun cancelNotification(notificationId: String)
 }

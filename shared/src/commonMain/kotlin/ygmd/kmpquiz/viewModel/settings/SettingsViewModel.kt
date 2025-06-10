@@ -8,21 +8,26 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import ygmd.kmpquiz.domain.cron.CronExpression
 import ygmd.kmpquiz.domain.cron.CronPreset
-import ygmd.kmpquiz.domain.repository.cron.CronRepository
+import ygmd.kmpquiz.domain.repository.notification.NotificationConfigRepository
 import ygmd.kmpquiz.domain.usecase.GetQandasUseCase
 
 class SettingsViewModel(
     getQandasUseCase: GetQandasUseCase,
-    cronRepository: CronRepository,
+    notificationConfigRepository: NotificationConfigRepository,
 ) : ViewModel() {
 
     val userSettings: StateFlow<CronSettings> = getQandasUseCase.execute()
-        .combine(cronRepository.getCrons()) { savedQandas, crons ->
+        .combine(notificationConfigRepository.getNotificationConfig()) { savedQandas, configs ->
             val settings: Map<Long, CronExpression> = savedQandas
-                .mapNotNull { qanda -> qanda.id }
-                .associateWith { qandaId ->
-                    crons[qandaId] ?: CronPreset.DAILY.toCronExpression()
-                }
+                .mapNotNull { qanda ->
+                    qanda.id?.let { id ->
+                        val categoryCron = configs.categoryCrons[qanda.category]?.cronExpression
+                        val globalCron = configs.globalCron
+                        val cronFallback = CronPreset.DAILY.toCronExpression()
+                        id to (categoryCron ?: globalCron ?: cronFallback)
+                    }
+                }.toMap()
+
             CronSettings(settings)
         }.stateIn(
             scope = viewModelScope,

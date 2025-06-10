@@ -5,6 +5,7 @@ class CronExpression private constructor(
     val hour: String = "*",
     val day: String = "*",
     val month: String = "*",
+    val dayOfWeek: String = "*"
 ) {
     companion object CronFactory {
         class CronBuilder {
@@ -16,6 +17,8 @@ class CronExpression private constructor(
                 set(value) { field = value; validateField(value, DAYS_RANGE, "days") }
             var month: String = "*"
                 set(value) { field = value; validateField(value, MONTHS_RANGE, "months") }
+            var dayOfWeek: String = "*"
+                set(value) { field = value; validateField(value, DAYS_OF_WEEK_RANGE, "days of week") }
 
             private fun validateField(value: String, range: LongRange, fieldName: String) {
                 if (value == "*") return
@@ -40,23 +43,25 @@ class CronExpression private constructor(
             private val HOURS_RANGE = 0L..23
             private val DAYS_RANGE = 1L..31
             private val MONTHS_RANGE = 1L..12
+            private val DAYS_OF_WEEK_RANGE = 1L..7
 
             fun build(): CronExpression = CronExpression(
-                minute, hour, day, month
+                minute, hour, day, month, dayOfWeek
             )
         }
 
         fun parse(expression: String): CronExpression {
             val parts = expression.split(" ")
-            if(parts.size != 4) throw IllegalArgumentException("Invalid format: $expression")
+            if(parts.size != 5) throw IllegalArgumentException("Invalid format: $expression")
             return CronBuilder().apply {
                 minute = parts[0]
                 hour = parts[1]
                 day = parts[2]
                 month = parts[3]
+                dayOfWeek = parts[4]
             }.build()
         }
     }
 
-    override fun toString(): String = "$minute $hour $day $month"
+    override fun toString(): String = "$minute $hour $day $month $dayOfWeek"
 }
