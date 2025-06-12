@@ -3,7 +3,7 @@ package ygmd.kmpquiz.viewModel.quiz
 import ygmd.kmpquiz.domain.pojo.QuizSession
 
 sealed class QuizUiState {
-    data object Loading : QuizUiState()
+    data object Idle : QuizUiState()
 
     data class InProgress(
         val session: QuizSession,

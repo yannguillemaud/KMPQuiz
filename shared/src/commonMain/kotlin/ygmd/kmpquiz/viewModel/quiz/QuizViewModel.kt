@@ -3,24 +3,26 @@ package ygmd.kmpquiz.viewModel.quiz
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import co.touchlab.kermit.Logger
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import ygmd.kmpquiz.domain.pojo.QuizSession
 import ygmd.kmpquiz.domain.usecase.QuizUseCase
 import ygmd.kmpquiz.viewModel.quiz.QuizUiState.InProgress
-import ygmd.kmpquiz.viewModel.quiz.QuizUiState.Loading
+import ygmd.kmpquiz.viewModel.quiz.QuizUiState.Idle
 
 class QuizViewModel(
     private val quizUseCase: QuizUseCase,
     private val logger: Logger,
 ) : ViewModel() {
-    private val _uiState = MutableStateFlow<QuizUiState>(Loading)
+    private val _uiState = MutableStateFlow<QuizUiState>(Idle)
     val quizUiState = _uiState.asStateFlow()
 
     fun startQuiz(qandaIds: List<Long>) {
         viewModelScope.launch {
-            _uiState.value = Loading
+            _uiState.value = Idle
             quizUseCase.start(qandaIds).fold(
                 onSuccess = { session ->
                     logger.i { "Quiz started with ${session.qandas.size} questions" }
@@ -63,7 +65,7 @@ class QuizViewModel(
             userAnswers = session.userAnswers + (session.currentIndex to selectedAnswer)
         )
 
-        if (session.isLastQuestion) {
+        if (session.isComplete) {
             // Quiz terminé
             val results = calculateResults(updatedSession)
             _uiState.value = QuizUiState.Completed(

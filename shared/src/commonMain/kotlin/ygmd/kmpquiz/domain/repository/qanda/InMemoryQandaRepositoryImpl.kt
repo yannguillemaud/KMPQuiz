@@ -1,5 +1,6 @@
 package ygmd.kmpquiz.domain.repository.qanda
 
+import androidx.compose.ui.util.fastFilterNotNull
 import co.touchlab.kermit.Logger
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -20,46 +21,28 @@ class InMemoryQandaRepository : QandaRepository {
         _qandasMap.map { it.values.toList() }
 
     override suspend fun save(qanda: InternalQanda): Result<Long> {
-        try {
-            if (qanda.id != null) {
-                logger.w { "Qanda already has id: ${qanda.id}" }
-                val contentKey = qanda.contentKey
-                if (qandasMap.filterValues { it.contentKey == contentKey }.isNotEmpty()) {
-                    logger.w { "Qanda already exists by content key: $contentKey" }
-                }
-                if (qandasMap.containsKey(qanda.id)) {
-                    return Result.failure(DomainError.QandaError.AlreadyExists)
-                }
-            }
-
-            val newId = IDGenerator.nextId
-            val savedQanda = qanda.copy(id = newId)
-            _qandasMap.value += (newId to savedQanda)
-            return Result.success(newId)
-        } catch (e: Exception) {
-            val message = e.message ?: "Unknown error"
-            return Result.failure(DatabaseError(message))
+        if (qanda.id != null) {
+            logger.w { "Qanda already has id: ${qanda.id}" }
         }
+
+        val newId = IDGenerator.nextId
+        val savedQanda = qanda.copy(id = newId)
+        _qandasMap.value += (newId to savedQanda)
+        return Result.success(newId)
     }
 
     override suspend fun saveAll(qandas: List<InternalQanda>): Result<Unit> {
-        try {
-            val conflicts = qandas.filter { it.id != null && qandasMap.containsKey(it.id) }
-            if (conflicts.isNotEmpty()) {
-                logger.e { conflicts.joinToString(prefix = "Already exists: [", postfix = "]") }
-                return Result.failure(DomainError.QandaError.AlreadyExists)
-            }
-
-            val newEntries = qandas.associate { qanda ->
-                val newId = IDGenerator.nextId
-                newId to qanda.copy(id = newId)
-            }
-            _qandasMap.value += newEntries
-            return Result.success(Unit)
-        } catch (e: Exception) {
-            val message = e.message ?: "Unknown error"
-            return Result.failure(DatabaseError(message))
+        val conflicts = qandas.mapNotNull { it.id }
+        if (conflicts.isNotEmpty()) {
+            logger.w { "Following qandas already have ids: $conflicts" }
         }
+
+        val newEntries = qandas.associate { qanda ->
+            val newId = IDGenerator.nextId
+            newId to qanda.copy(id = newId)
+        }
+        _qandasMap.value += newEntries
+        return Result.success(Unit)
     }
 
     override suspend fun update(qanda: InternalQanda): Result<Unit> {
@@ -67,10 +50,8 @@ class InMemoryQandaRepository : QandaRepository {
             DatabaseError("Cannot update Qanda with null ID")
         )
 
-        return if (qandasMap.containsKey(id)) {
-            _qandasMap.value += (id to qanda)
-            Result.success(Unit)
-        } else Result.failure(NotFound)
+        _qandasMap.value += (id to qanda)
+        return Result.success(Unit)
     }
 
     override suspend fun deleteById(id: Long): Result<Unit> {
@@ -81,14 +62,10 @@ class InMemoryQandaRepository : QandaRepository {
         } else Result.failure(NotFound)
     }
 
-    override suspend fun deleteAll(): Result<Unit> =
-        try {
-            _qandasMap.value = emptyMap()
-            Result.success(Unit)
-        } catch (e: Exception){
-            val message = e.message ?: "Unknown error"
-            Result.failure(DatabaseError(message))
-        }
+    override suspend fun deleteAll(): Result<Unit> {
+        _qandasMap.value = emptyMap()
+        return Result.success(Unit)
+    }
 
     override suspend fun findById(id: Long): Result<InternalQanda> =
         qandasMap[id]?.let { Result.success(it) } ?: Result.failure(NotFound)

@@ -1,4 +1,4 @@
-package ygmd.kmpquiz.domain.cron
+package ygmd.kmpquiz.cron
 
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test

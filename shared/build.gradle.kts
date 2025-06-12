@@ -38,6 +38,8 @@ kotlin {
             implementation("org.assertj:assertj-core:3.25.3")
             implementation("io.mockk:mockk:1.14.2")
             implementation(libs.ktor.client.mock)
+            implementation("org.junit.jupiter:junit-jupiter:5.7.1")
+            implementation("org.junit.platform:junit-platform-launcher")
         }
 
         androidMain.dependencies {

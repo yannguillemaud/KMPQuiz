@@ -17,6 +17,7 @@ class SaveQandasUseCaseImpl(
     override suspend fun save(qanda: InternalQanda): Result<Unit> {
         logger.i { "Attempting to save qanda: ${qanda.question.take(50)}..." }
         val existing = repository.existsByContentKey(qanda)
+
         return existing.fold(
             onSuccess = {
                 logger.w { "Qanda already exists with same content" }
@@ -40,15 +41,17 @@ class SaveQandasUseCaseImpl(
     override suspend fun saveAll(qandas: List<InternalQanda>): Result<Unit> {
         logger.i { "Attempting to save ${qandas.size} qandas" }
 
-        if (qandas.isEmpty()) {
-            return Result.success(Unit)
+        val alreadyExistingById = qandas.filter { it.id != null }
+        val alreadyExistingByContentKey = qandas.filter { repository.existsByContentKey(it).isSuccess }
+
+        if(alreadyExistingById.isNotEmpty()){
+            logger.w { "Qandas already have ids: ${alreadyExistingById.map { it.id }}" }
+        }
+        if(alreadyExistingByContentKey.isNotEmpty()){
+            logger.w { "Qandas already exist by content key: ${alreadyExistingByContentKey.map { it.id }}" }
         }
 
-        val uniqueQandas = qandas.distinctBy { it.contentKey }
-
-        if (uniqueQandas.size != qandas.size) {
-            logger.w { "Removed ${qandas.size - uniqueQandas.size} duplicate qandas" }
-        }
+        val uniqueQandas = qandas - alreadyExistingById - alreadyExistingByContentKey
 
         return repository.saveAll(uniqueQandas).fold(
             onSuccess = {

@@ -20,12 +20,13 @@ class DeleteQandasUseCaseImpl(
     override suspend fun delete(qanda: InternalQanda): Result<Unit> {
         logger.i { "Deleting qanda with id: ${qanda.id}" }
         val id = qanda.id
-            ?: throw IllegalArgumentException("Impossible to delete qanda without id: $qanda")
+            ?: return failure(IllegalArgumentException("Impossible to delete qanda without id: $qanda"))
+
         return repository.deleteById(id).fold(
             onSuccess = {
                 logger.i { "Successfully deleted qanda ${qanda.id}" }
                 success(Unit)
-                        },
+            },
             onFailure = {
                 logger.e { "Could not delete qanda ${qanda.id}" }
                 val errorMessage = it.message ?: "Unknown error"
