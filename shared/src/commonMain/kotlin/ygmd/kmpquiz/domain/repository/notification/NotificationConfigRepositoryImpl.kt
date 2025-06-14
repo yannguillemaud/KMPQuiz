@@ -4,9 +4,9 @@ import co.touchlab.kermit.Logger
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import ygmd.kmpquiz.domain.cron.CronExpression
-import ygmd.kmpquiz.domain.notification.CategoryNotificationConfig
-import ygmd.kmpquiz.domain.notification.NotificationConfig
+import ygmd.kmpquiz.domain.pojo.cron.CronExpression
+import ygmd.kmpquiz.domain.pojo.notification.CategoryNotificationConfig
+import ygmd.kmpquiz.domain.pojo.notification.NotificationConfig
 
 class NotificationConfigRepositoryImpl(private val logger: Logger) : NotificationConfigRepository {
     private val _notifications = MutableStateFlow(NotificationConfig())

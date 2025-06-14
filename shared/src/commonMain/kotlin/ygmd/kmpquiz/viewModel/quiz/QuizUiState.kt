@@ -1,6 +1,6 @@
 package ygmd.kmpquiz.viewModel.quiz
 
-import ygmd.kmpquiz.domain.pojo.QuizSession
+import ygmd.kmpquiz.domain.pojo.quiz.QuizSession
 
 sealed class QuizUiState {
     data object Idle : QuizUiState()

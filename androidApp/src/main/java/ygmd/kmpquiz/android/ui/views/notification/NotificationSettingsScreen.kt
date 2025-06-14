@@ -50,7 +50,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.koin.compose.viewmodel.koinViewModel
-import ygmd.kmpquiz.domain.cron.CronPreset
+import ygmd.kmpquiz.domain.pojo.cron.CronExpression
+import ygmd.kmpquiz.domain.pojo.cron.CronPreset
+import ygmd.kmpquiz.domain.pojo.notification.CategoryNotificationConfig
 import ygmd.kmpquiz.viewModel.settings.NotificationSettingsViewModel
 
 @Composable
@@ -200,7 +202,7 @@ private fun NotificationSettingsHeader(
 @Composable
 private fun GlobalNotificationCard(
     isEnabled: Boolean,
-    globalCron: ygmd.kmpquiz.domain.cron.CronExpression?,
+    globalCron: CronExpression?,
     onToggleEnabled: (Boolean) -> Unit,
     onUpdateCron: (CronPreset) -> Unit
 ) {
@@ -269,7 +271,7 @@ private fun GlobalNotificationCard(
 @Composable
 private fun CategoryNotificationCard(
     category: String,
-    config: ygmd.kmpquiz.domain.notification.CategoryNotificationConfig?,
+    config: CategoryNotificationConfig?,
     onSetCron: (CronPreset) -> Unit,
     onRemove: () -> Unit
 ) {
@@ -346,7 +348,7 @@ private fun CategoryNotificationCard(
 
 @Composable
 private fun CronSelector(
-    selectedCron: ygmd.kmpquiz.domain.cron.CronExpression?,
+    selectedCron: CronExpression?,
     onCronSelected: (CronPreset) -> Unit,
     label: String
 ) {
@@ -406,7 +408,7 @@ private fun CronSelector(
     }
 }
 
-private fun cronToDisplayText(cron: ygmd.kmpquiz.domain.cron.CronExpression): String {
+private fun cronToDisplayText(cron: CronExpression): String {
     return when (cron.toString()) {
         "0 0 * * *" -> "Tous les jours"
         "0 0 * * 0" -> "Toutes les semaines"

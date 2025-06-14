@@ -2,7 +2,7 @@ package ygmd.kmpquiz.domain.usecase
 
 import co.touchlab.kermit.Logger
 import ygmd.kmpquiz.domain.error.DomainError.PersistenceError.DatabaseError
-import ygmd.kmpquiz.domain.pojo.InternalQanda
+import ygmd.kmpquiz.domain.pojo.qanda.InternalQanda
 import ygmd.kmpquiz.domain.repository.qanda.QandaRepository
 import kotlin.Result.Companion.failure
 import kotlin.Result.Companion.success

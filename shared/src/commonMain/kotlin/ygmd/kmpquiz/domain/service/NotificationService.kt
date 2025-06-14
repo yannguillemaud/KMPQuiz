@@ -8,10 +8,10 @@ import kotlinx.datetime.DateTimePeriod
 import kotlinx.datetime.Instant
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.plus
-import ygmd.kmpquiz.domain.cron.CronExpression
-import ygmd.kmpquiz.domain.cron.CronPreset
-import ygmd.kmpquiz.domain.notification.NotificationStatus
-import ygmd.kmpquiz.domain.notification.ScheduledNotification
+import ygmd.kmpquiz.domain.pojo.cron.CronExpression
+import ygmd.kmpquiz.domain.pojo.cron.CronPreset
+import ygmd.kmpquiz.domain.pojo.notification.NotificationStatus
+import ygmd.kmpquiz.domain.pojo.notification.ScheduledNotification
 import ygmd.kmpquiz.domain.repository.notification.NotificationConfigRepository
 import ygmd.kmpquiz.domain.repository.notification.ScheduledNotificationRepository
 import ygmd.kmpquiz.domain.repository.qanda.QandaRepository
@@ -50,7 +50,7 @@ class NotificationServiceImpl(
 
                 ScheduledNotification(
                     id = notificationId,
-                    qandaId = qanda.id!!,
+                    qandaId = qanda.id,
                     scheduledTime = calculateNextExecutionTime(cronExpression),
                     cronExpression = cronExpression,
                     status = NotificationStatus.PENDING,

@@ -2,11 +2,12 @@ package ygmd.kmpquiz.useCase
 
 import co.touchlab.kermit.Logger
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.Assertions
 import ygmd.kmpquiz.createInternalQanda
+import ygmd.kmpquiz.domain.error.DomainError
 import ygmd.kmpquiz.domain.repository.qanda.QandaRepository
 import ygmd.kmpquiz.domain.usecase.DeleteQandasUseCase
 import ygmd.kmpquiz.domain.usecase.DeleteQandasUseCaseImpl
@@ -14,7 +15,7 @@ import kotlin.test.Test
 
 class DeleteQandaUseCaseImplTest {
     private val repository: QandaRepository = mockk()
-    private val logger: Logger = mockk()
+    private val logger: Logger = mockk(relaxed = true)
     private val useCase: DeleteQandasUseCase = DeleteQandasUseCaseImpl(repository, logger)
 
     @Test
@@ -28,5 +29,34 @@ class DeleteQandaUseCaseImplTest {
 
         // Then
         assertThat(result.isSuccess).isTrue
+        coVerify { repository.deleteById(1) }
+    }
+
+    @Test
+    fun `should return failure when repository throws error`()  = runTest {
+        // Given
+        val qanda = createInternalQanda(id = 1)
+        coEvery { repository.deleteById(any()) } returns Result.failure(DomainError.QandaError.NotFound)
+
+        // When
+        val result = useCase.delete(qanda)
+
+        // Then
+        assertThat(result.isFailure).isTrue()
+        coVerify { repository.deleteById(1) }
+    }
+
+    @Test
+    fun `should return failure when delete qanda without id`()  = runTest {
+        // Given
+        val qanda = createInternalQanda(id = null)
+        coEvery { repository.deleteById(any()) } returns Result.success(Unit)
+
+        // When
+        val result = useCase.delete(qanda)
+
+        // Then
+        assertThat(result.isFailure).isTrue()
+        coVerify(exactly = 0) { repository.deleteById(any()) }
     }
 }

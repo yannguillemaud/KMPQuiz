@@ -37,11 +37,11 @@ import androidx.compose.ui.unit.sp
 
 @Composable
 fun NextQuestionButton(
-    isLastQuestion: Boolean,
+    isComplete: Boolean,
     onClick: () -> Unit
 ) {
-    val buttonText = if (isLastQuestion) "Voir les résultats" else "Question suivante"
-    val icon = if (isLastQuestion) Icons.Filled.Assessment else Icons.AutoMirrored.Filled.ArrowForward
+    val buttonText = if (isComplete) "Voir les résultats" else "Question suivante"
+    val icon = if (isComplete) Icons.Filled.Assessment else Icons.AutoMirrored.Filled.ArrowForward
 
     var isPressed by remember { mutableStateOf(false) }
     val scale by animateFloatAsState(

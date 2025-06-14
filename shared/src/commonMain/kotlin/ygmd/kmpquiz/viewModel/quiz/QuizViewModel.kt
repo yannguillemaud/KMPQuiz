@@ -3,15 +3,13 @@ package ygmd.kmpquiz.viewModel.quiz
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import co.touchlab.kermit.Logger
-import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import ygmd.kmpquiz.domain.pojo.QuizSession
+import ygmd.kmpquiz.domain.pojo.quiz.QuizSession
 import ygmd.kmpquiz.domain.usecase.QuizUseCase
-import ygmd.kmpquiz.viewModel.quiz.QuizUiState.InProgress
 import ygmd.kmpquiz.viewModel.quiz.QuizUiState.Idle
+import ygmd.kmpquiz.viewModel.quiz.QuizUiState.InProgress
 
 class QuizViewModel(
     private val quizUseCase: QuizUseCase,
@@ -20,9 +18,12 @@ class QuizViewModel(
     private val _uiState = MutableStateFlow<QuizUiState>(Idle)
     val quizUiState = _uiState.asStateFlow()
 
+    init {
+        _uiState.value = Idle
+    }
+
     fun startQuiz(qandaIds: List<Long>) {
         viewModelScope.launch {
-            _uiState.value = Idle
             quizUseCase.start(qandaIds).fold(
                 onSuccess = { session ->
                     logger.i { "Quiz started with ${session.qandas.size} questions" }
@@ -53,7 +54,10 @@ class QuizViewModel(
 
     fun goToNextQuestion() {
         val currentState = _uiState.value
-        if (currentState !is InProgress || !currentState.hasAnswered) {
+        if (
+            currentState !is InProgress
+//            || !currentState.hasAnswered
+            ) {
             logger.w { "Cannot go to next question in current state" }
             return
         }
@@ -62,10 +66,11 @@ class QuizViewModel(
         val selectedAnswer = currentState.selectedAnswer ?: return
 
         val updatedSession = session.copy(
-            userAnswers = session.userAnswers + (session.currentIndex to selectedAnswer)
+            userAnswers = session.userAnswers + (session.currentIndex to selectedAnswer),
+            currentIndex = session.currentIndex +1,
         )
 
-        if (session.isComplete) {
+        if (updatedSession.isComplete) {
             // Quiz terminé
             val results = calculateResults(updatedSession)
             _uiState.value = QuizUiState.Completed(
@@ -75,17 +80,13 @@ class QuizViewModel(
             logger.i { "Quiz completed with score: ${results.score}/${results.questions}" }
         } else {
             // Question suivante
-            val nextSession = updatedSession.copy(
-                currentIndex = updatedSession.currentIndex + 1
-            )
-
             _uiState.value = InProgress(
-                session = nextSession,
-                shuffledAnswers = nextSession.currentQanda?.answers?.shuffled() ?: emptyList(),
+                session = updatedSession,
+                shuffledAnswers = updatedSession.currentQanda?.answers?.shuffled() ?: emptyList(),
                 hasAnswered = false,
                 selectedAnswer = null
             )
-            logger.d { "Moved to question ${nextSession.currentIndex + 1}/${nextSession.qandas.size}" }
+            logger.d { "Moved to question ${updatedSession.currentIndex}/${updatedSession.qandas.size}" }
         }
     }
 

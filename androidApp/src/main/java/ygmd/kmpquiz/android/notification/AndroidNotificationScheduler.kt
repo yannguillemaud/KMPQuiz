@@ -4,7 +4,7 @@ import android.app.AlarmManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
-import ygmd.kmpquiz.domain.notification.ScheduledNotification
+import ygmd.kmpquiz.domain.pojo.notification.ScheduledNotification
 
 class AndroidNotificationScheduler(
     private val context: Context

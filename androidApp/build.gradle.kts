@@ -4,7 +4,7 @@ plugins {
     alias(libs.plugins.compose.compiler)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.composeHotReload)
-    id("org.jetbrains.compose") version "1.8.0"
+    alias(libs.plugins.compose.multiplatform)
 }
 
 android {

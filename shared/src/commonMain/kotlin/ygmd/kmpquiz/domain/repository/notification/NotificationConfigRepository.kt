@@ -1,9 +1,9 @@
 package ygmd.kmpquiz.domain.repository.notification
 
 import kotlinx.coroutines.flow.Flow
-import ygmd.kmpquiz.domain.cron.CronExpression
-import ygmd.kmpquiz.domain.notification.CategoryNotificationConfig
-import ygmd.kmpquiz.domain.notification.NotificationConfig
+import ygmd.kmpquiz.domain.pojo.cron.CronExpression
+import ygmd.kmpquiz.domain.pojo.notification.CategoryNotificationConfig
+import ygmd.kmpquiz.domain.pojo.notification.NotificationConfig
 
 interface NotificationConfigRepository {
     fun getNotificationConfig(): Flow<NotificationConfig>

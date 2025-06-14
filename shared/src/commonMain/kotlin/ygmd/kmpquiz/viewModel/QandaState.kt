@@ -1,6 +1,6 @@
 package ygmd.kmpquiz.viewModel
 
-import ygmd.kmpquiz.domain.pojo.InternalQanda
+import ygmd.kmpquiz.domain.pojo.qanda.InternalQanda
 import ygmd.kmpquiz.viewModel.save.DownloadState
 
 enum class QandaStatus {

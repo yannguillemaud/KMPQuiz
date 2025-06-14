@@ -1,14 +1,12 @@
 package ygmd.kmpquiz.domain.repository.qanda
 
-import androidx.compose.ui.util.fastFilterNotNull
 import co.touchlab.kermit.Logger
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
-import ygmd.kmpquiz.domain.error.DomainError
 import ygmd.kmpquiz.domain.error.DomainError.PersistenceError.DatabaseError
 import ygmd.kmpquiz.domain.error.DomainError.QandaError.NotFound
-import ygmd.kmpquiz.domain.pojo.InternalQanda
+import ygmd.kmpquiz.domain.pojo.qanda.InternalQanda
 
 val logger = Logger.withTag(InMemoryQandaRepository::class.simpleName.toString())
 
@@ -70,7 +68,7 @@ class InMemoryQandaRepository : QandaRepository {
     override suspend fun findById(id: Long): Result<InternalQanda> =
         qandasMap[id]?.let { Result.success(it) } ?: Result.failure(NotFound)
 
-    override suspend fun existsByContentKey(qanda: InternalQanda): Result<InternalQanda> {
+    override suspend fun findByContentKey(qanda: InternalQanda): Result<InternalQanda> {
         return qandasMap.values
             .firstOrNull { it.contentKey == qanda.contentKey }
             ?.let { Result.success(it) } ?: Result.failure(NotFound)

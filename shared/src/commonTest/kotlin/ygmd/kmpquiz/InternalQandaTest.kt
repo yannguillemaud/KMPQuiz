@@ -1,29 +1,21 @@
 package ygmd.kmpquiz
 
-import org.assertj.core.api.Assertions
-import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.Test
-import ygmd.kmpquiz.domain.pojo.InternalQanda
+import ygmd.kmpquiz.domain.pojo.qanda.InternalQanda
+import kotlin.test.Test
+import kotlin.test.assertEquals
 
 class InternalQandaTest {
 
     @Test
     fun `contentKey should be normalized and lowercase`() {
         // Given
-        val qanda = InternalQanda(
-            id = 1L,
-            category = "Test",
-            question = "  What Is The Capital?  ",
-            answers = listOf("A", "B"),
-            correctAnswer = "  PARIS  ",
-            difficulty = "Easy"
-        )
+        val qanda = createInternalQanda()
 
         // When
         val contentKey = qanda.contentKey
 
         // Then
-        assertThat(contentKey).isEqualTo("what is the capital?|paris")
+        assertEquals("what is the capital?|paris", contentKey)
     }
 
     @Test
@@ -42,7 +34,7 @@ class InternalQandaTest {
         val contentKey = qanda.contentKey
 
         // Then
-        assertThat(contentKey).isEqualTo("what's 2+2?|4")
+        assertEquals("what's 2+2?|4", contentKey)
     }
 
     @Test
@@ -67,6 +59,6 @@ class InternalQandaTest {
         )
 
         // When & Then
-        assertThat(qanda1.contentKey).isEqualTo(qanda2.contentKey)
+        assertEquals(qanda1.contentKey, qanda2.contentKey)
     }
 }

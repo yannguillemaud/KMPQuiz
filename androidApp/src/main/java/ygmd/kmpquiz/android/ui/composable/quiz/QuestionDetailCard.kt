@@ -37,7 +37,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import ygmd.kmpquiz.domain.pojo.InternalQanda
+import ygmd.kmpquiz.domain.pojo.qanda.InternalQanda
 
 @Composable
 fun QuestionDetailCard(

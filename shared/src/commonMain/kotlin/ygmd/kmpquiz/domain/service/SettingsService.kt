@@ -1,4 +1,4 @@
-package ygmd.kmpquiz
+package ygmd.kmpquiz.domain.service
 
 
 //class SettingsService(

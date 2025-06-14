@@ -1,7 +1,7 @@
 package ygmd.kmpquiz
 
-import ygmd.kmpquiz.domain.pojo.InternalQanda
-import ygmd.kmpquiz.domain.pojo.QuizSession
+import ygmd.kmpquiz.domain.pojo.qanda.InternalQanda
+import ygmd.kmpquiz.domain.pojo.quiz.QuizSession
 
 fun createInternalQanda(
     id: Long? = 1L,

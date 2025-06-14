@@ -1,7 +1,7 @@
 package ygmd.kmpquiz.domain.repository.notification
 
 import kotlinx.coroutines.flow.Flow
-import ygmd.kmpquiz.domain.notification.ScheduledNotification
+import ygmd.kmpquiz.domain.pojo.notification.ScheduledNotification
 
 interface ScheduledNotificationRepository {
     fun getAllScheduledNotifications(): Flow<List<ScheduledNotification>>

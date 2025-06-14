@@ -57,7 +57,7 @@ fun QuizInProgressSection(
         // Footer avec bouton suivant
         if (state.hasAnswered) {
             NextQuestionButton(
-                isLastQuestion = session.isLastQuestion,
+                isComplete = session.isComplete,
                 onClick = onNextQuestion
             )
         }

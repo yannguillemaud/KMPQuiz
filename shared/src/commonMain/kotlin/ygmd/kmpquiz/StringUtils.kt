@@ -1,4 +1,4 @@
-package ygmd.kmpquiz.domain.fetch
+package ygmd.kmpquiz
 
 val htmlEntities = mapOf(
     // Guillemets & ponctuation

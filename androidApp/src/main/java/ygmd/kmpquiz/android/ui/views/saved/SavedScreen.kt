@@ -70,7 +70,7 @@ import androidx.compose.ui.unit.sp
 import org.koin.compose.viewmodel.koinViewModel
 import ygmd.kmpquiz.android.ui.composable.CategoriesSection
 import ygmd.kmpquiz.android.ui.composable.StatsCard
-import ygmd.kmpquiz.domain.pojo.InternalQanda
+import ygmd.kmpquiz.domain.pojo.qanda.InternalQanda
 import ygmd.kmpquiz.viewModel.save.SavedQandasUiState
 import ygmd.kmpquiz.viewModel.save.SavedQandasViewModel
 

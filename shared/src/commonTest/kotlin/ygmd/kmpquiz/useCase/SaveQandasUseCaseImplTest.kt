@@ -5,80 +5,142 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
-import org.assertj.core.api.Assertions.assertThat
-import ygmd.kmpquiz.createInternalQanda
-import ygmd.kmpquiz.domain.error.DomainError.QandaError.AlreadyExists
+import ygmd.kmpquiz.domain.error.DomainError
+import ygmd.kmpquiz.domain.error.DomainError.QandaError.NotFound
+import ygmd.kmpquiz.domain.pojo.qanda.InternalQanda
 import ygmd.kmpquiz.domain.repository.qanda.QandaRepository
-import ygmd.kmpquiz.domain.usecase.SaveQandasUseCase
 import ygmd.kmpquiz.domain.usecase.SaveQandasUseCaseImpl
 import kotlin.test.Test
+import kotlin.test.assertIs
+import kotlin.test.assertTrue
 
-class SaveQandasUseCaseImplTest {
-    private val repository: QandaRepository = mockk<QandaRepository>()
-    private val logger: Logger = mockk(relaxed = true)
-    private val saveUseCase: SaveQandasUseCase = SaveQandasUseCaseImpl(repository, logger)
+class SaveQandasUseCaseTest {
+
+    private val repository = mockk<QandaRepository>()
+    private val logger = Logger.withTag("Test")
+    private val useCase = SaveQandasUseCaseImpl(repository, logger)
+
+    private val sampleQanda = InternalQanda(
+        id = null,
+        category = "Science",
+        question = "What is H2O?",
+        answers = listOf("Water", "Oxygen", "Hydrogen", "Air"),
+        correctAnswer = "Water",
+        difficulty = "easy"
+    )
 
     @Test
-    fun `should save qanda`() = runTest {
+    fun `should save qanda when it doesn't exist`() = runTest {
         // GIVEN
-        val mockedQanda = createInternalQanda()
-
-        coEvery { repository.save(any()) } returns Result.success(1)
+        coEvery { repository.findByContentKey(sampleQanda) } returns Result.failure(NotFound)
+        coEvery { repository.save(sampleQanda) } returns Result.success(123L)
 
         // WHEN
-        saveUseCase.save(mockedQanda)
+        val result = useCase.save(sampleQanda)
 
         // THEN
-        coVerify { repository.save(mockedQanda) }
+        assertTrue(result.isSuccess)
+        coVerify { repository.findByContentKey(sampleQanda) }
+        coVerify { repository.save(sampleQanda) }
     }
 
     @Test
-    fun `should not save qanda when already exists by id`() = runTest {
+    fun `should fail when qanda already exists by content`() = runTest {
         // GIVEN
-        val mockedQanda = createInternalQanda(id = 1)
-        val mockedQanda2 = createInternalQanda(id = 1)
-
-        coEvery { repository.save(mockedQanda2) } returns Result.failure(AlreadyExists)
+        val existingQanda = sampleQanda.copy(id = 456L)
+        coEvery { repository.findByContentKey(sampleQanda) } returns Result.success(existingQanda)
 
         // WHEN
-        saveUseCase.save(mockedQanda)
-
-        val result = saveUseCase.save(mockedQanda2)
+        val result = useCase.save(sampleQanda)
 
         // THEN
-        assertThat(result.isFailure).isTrue
-        assertThat(result.exceptionOrNull())
-            .isNotNull
-            .isInstanceOf(AlreadyExists::class.java)
-
-        coVerify {
-            repository.save(mockedQanda)
-            repository.save(mockedQanda2)
-        }
+        assertTrue(result.isFailure)
+        assertIs<DomainError.QandaError.AlreadyExists>(result.exceptionOrNull())
+        coVerify { repository.findByContentKey(sampleQanda) }
+        coVerify(exactly = 0) { repository.save(any()) }
     }
 
     @Test
-    fun `should not save qanda when already exists by content key`() = runTest {
+    fun `should fail when qanda already exists by id`() = runTest {
         // GIVEN
-        val mockedQanda = createInternalQanda(id = 1)
-        val mockedQanda2 = createInternalQanda(id = null)
-
-        coEvery { repository.save(mockedQanda2) } returns Result.failure(AlreadyExists)
+        val qandaWithId = sampleQanda.copy(id = 123L)
+        coEvery { repository.findById(123L) } returns Result.success(qandaWithId)
 
         // WHEN
-        saveUseCase.save(mockedQanda)
-
-        val result = saveUseCase.save(mockedQanda2)
+        val result = useCase.save(qandaWithId)
 
         // THEN
-        assertThat(result.isFailure).isTrue
-        assertThat(result.exceptionOrNull())
-            .isNotNull
-            .isInstanceOf(AlreadyExists::class.java)
+        assertTrue { result.isFailure }
+        assertIs<DomainError.QandaError.AlreadyExists>(result.exceptionOrNull())
+        coVerify { repository.findById(123L) }
+        coVerify(exactly = 0) { repository.save(any()) }
+    }
 
-        coVerify {
-            repository.save(mockedQanda)
-            repository.save(mockedQanda2)
+    @Test
+    fun `should save all unique qandas`() = runTest {
+        // GIVEN
+        val qandas = listOf(
+            sampleQanda.copy(question = "Question 1"),
+            sampleQanda.copy(question = "Question 2")
+        )
+
+        qandas.forEach { qanda ->
+            coEvery { repository.findByContentKey(qanda) } returns Result.failure(NotFound)
         }
+        coEvery { repository.saveAll(qandas) } returns Result.success(Unit)
+
+        // WHEN
+        val result = useCase.saveAll(qandas)
+
+        // THEN
+        assertTrue(result.isSuccess)
+        coVerify { repository.saveAll(qandas) }
+    }
+
+    @Test
+    fun `should skip existing qandas in saveAll`() = runTest {
+        // GIVEN
+        val existingQanda = sampleQanda.copy(question = "Existing")
+        val newQanda = sampleQanda.copy(question = "New")
+        val qandas = listOf(existingQanda, newQanda)
+
+        coEvery { repository.findByContentKey(existingQanda) } returns Result.success(existingQanda.copy(id = 1L))
+        coEvery { repository.findByContentKey(newQanda) } returns Result.failure(NotFound)
+        coEvery { repository.saveAll(listOf(newQanda)) } returns Result.success(Unit)
+
+        // WHEN
+        val result = useCase.saveAll(qandas)
+
+        // THEN
+        assertTrue(result.isSuccess)
+        coVerify { repository.saveAll(listOf(newQanda)) }
+    }
+
+    @Test
+    fun `should handle empty list in saveAll`() = runTest {
+        // WHEN
+        val result = useCase.saveAll(emptyList())
+
+        // THEN
+        assertTrue(result.isSuccess)
+        coVerify(exactly = 0) { repository.saveAll(any()) }
+    }
+
+    @Test
+    fun `should remove duplicates from input in saveAll`() = runTest {
+        // GIVEN
+        val duplicate1 = sampleQanda.copy(question = "Same")
+        val duplicate2 = sampleQanda.copy(question = "Same") // Même contentKey
+        val qandas = listOf(duplicate1, duplicate2)
+
+        coEvery { repository.findByContentKey(duplicate1) } returns Result.failure(NotFound)
+        coEvery { repository.saveAll(listOf(duplicate1)) } returns Result.success(Unit)
+
+        // WHEN
+        val result = useCase.saveAll(qandas)
+
+        // THEN
+        assertTrue(result.isSuccess)
+        coVerify { repository.saveAll(listOf(duplicate1)) } // Un seul élément sauvé
     }
 }

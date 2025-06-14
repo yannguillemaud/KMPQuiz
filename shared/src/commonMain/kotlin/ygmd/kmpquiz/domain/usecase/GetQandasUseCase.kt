@@ -1,7 +1,7 @@
 package ygmd.kmpquiz.domain.usecase
 
 import kotlinx.coroutines.flow.Flow
-import ygmd.kmpquiz.domain.pojo.InternalQanda
+import ygmd.kmpquiz.domain.pojo.qanda.InternalQanda
 import ygmd.kmpquiz.domain.repository.qanda.QandaRepository
 
 interface GetQandasUseCase {

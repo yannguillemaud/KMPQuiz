@@ -45,7 +45,7 @@ class GetQandasUseCaseTest {
 
         // THEN
         assertThat(qanda.isSuccess).isTrue
-        assertThat { qanda.getOrThrow() }
+        assertThat (qanda.getOrThrow())
             .isEqualTo(mockedQanda)
         coVerify { repository.findById(1) }
     }

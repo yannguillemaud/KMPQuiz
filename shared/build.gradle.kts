@@ -1,6 +1,6 @@
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
-    kotlin("plugin.serialization") version "2.1.20"
+    alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.ksp)
     alias(libs.plugins.androidLibrary)
 }
@@ -29,17 +29,14 @@ kotlin {
 
             implementation(libs.arrow.core)
 
-            implementation("co.touchlab:kermit:2.0.5")
+            implementation(libs.kermit)
         }
 
         commonTest.dependencies {
             implementation(libs.kotlin.test)
-            implementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.0")
-            implementation("org.assertj:assertj-core:3.25.3")
-            implementation("io.mockk:mockk:1.14.2")
+            implementation(libs.kotlinx.coroutines.test)
+            implementation(libs.mockk)
             implementation(libs.ktor.client.mock)
-            implementation("org.junit.jupiter:junit-jupiter:5.7.1")
-            implementation("org.junit.platform:junit-platform-launcher")
         }
 
         androidMain.dependencies {

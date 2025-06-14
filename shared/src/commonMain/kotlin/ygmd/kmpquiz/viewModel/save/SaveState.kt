@@ -1,6 +1,6 @@
 package ygmd.kmpquiz.viewModel.save
 
-import ygmd.kmpquiz.domain.pojo.InternalQanda
+import ygmd.kmpquiz.domain.pojo.qanda.InternalQanda
 import ygmd.kmpquiz.viewModel.error.ViewModelError
 
 data class SaveQandasState(

@@ -3,8 +3,8 @@ package ygmd.kmpquiz.domain.usecase
 import co.touchlab.kermit.Logger
 import ygmd.kmpquiz.domain.error.DomainError.QandaError.NotFound
 import ygmd.kmpquiz.domain.error.DomainError.QandaError.ValidationError
-import ygmd.kmpquiz.domain.pojo.InternalQanda
-import ygmd.kmpquiz.domain.pojo.QuizSession
+import ygmd.kmpquiz.domain.pojo.qanda.InternalQanda
+import ygmd.kmpquiz.domain.pojo.quiz.QuizSession
 import ygmd.kmpquiz.domain.repository.qanda.QandaRepository
 import kotlin.Result.Companion.failure
 import kotlin.Result.Companion.success

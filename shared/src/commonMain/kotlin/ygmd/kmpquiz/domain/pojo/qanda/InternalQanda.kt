@@ -1,4 +1,4 @@
-package ygmd.kmpquiz.domain.pojo
+package ygmd.kmpquiz.domain.pojo.qanda
 
 data class InternalQanda(
     val id: Long? = null,

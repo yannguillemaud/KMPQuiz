@@ -1,7 +1,10 @@
-package ygmd.kmpquiz.mapper
+package ygmd.kmpquiz.domain.error.mapper
 
 import ygmd.kmpquiz.domain.error.DomainError
-import ygmd.kmpquiz.domain.usecase.FetchResult
+import ygmd.kmpquiz.domain.usecase.FailureType.API_ERROR
+import ygmd.kmpquiz.domain.usecase.FailureType.NETWORK_ERROR
+import ygmd.kmpquiz.domain.usecase.FailureType.RATE_LIMIT
+import ygmd.kmpquiz.domain.usecase.FetchQandaUseCase.FetchResult
 import ygmd.kmpquiz.viewModel.error.ViewModelError
 
 fun DomainError.toViewModelError(): ViewModelError = when (this) {
@@ -23,8 +26,10 @@ fun DomainError.toViewModelError(): ViewModelError = when (this) {
 }
 
 fun <T> FetchResult<T>.toViewModelError(): ViewModelError = when (this) {
-    is FetchResult.ApiError -> ViewModelError.NetworkError("API Error $code: $message")
-    is FetchResult.RateLimit -> ViewModelError.NetworkError("Rate limit exceeded")
-    is FetchResult.Error -> ViewModelError.UnknownError("Network error", throwable)
     is FetchResult.Success -> throw IllegalStateException("Success should not be mapped to error")
+    is FetchResult.Failure -> when(this.type){
+        RATE_LIMIT ->  ViewModelError.NetworkError("Rate limit exceeded")
+        API_ERROR -> ViewModelError.NetworkError("API Error: ${this.message}")
+        NETWORK_ERROR -> ViewModelError.UnknownError("Network error", this.cause ?: RuntimeException())
+    }
 }

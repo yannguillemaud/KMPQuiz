@@ -7,8 +7,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.datetime.Clock
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
-import ygmd.kmpquiz.domain.notification.NotificationStatus
-import ygmd.kmpquiz.domain.notification.ScheduledNotification
+import ygmd.kmpquiz.domain.pojo.notification.NotificationStatus
+import ygmd.kmpquiz.domain.pojo.notification.ScheduledNotification
 
 class ScheduledNotificationRepositoryImpl(
     private val logger: Logger

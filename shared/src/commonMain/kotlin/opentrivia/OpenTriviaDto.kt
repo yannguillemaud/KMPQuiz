@@ -1,8 +1,8 @@
-package ygmd.kmpquiz.domain.fetch.opentrivia
+package opentrivia
 
 import kotlinx.serialization.Serializable
-import ygmd.kmpquiz.domain.fetch.unescaped
-import ygmd.kmpquiz.domain.pojo.InternalQanda
+import ygmd.kmpquiz.domain.pojo.qanda.InternalQanda
+import ygmd.kmpquiz.unescaped
 
 @Serializable
 data class TriviaApiResponse(
@@ -70,12 +70,13 @@ class QANDADto(
     }
 }
 
-private fun List<String>.asBooleanAnswers(): List<String> = listOf(
-    first(),
-    first().toBoolean()
-        .not()
-        .toString()
-        .replaceFirstChar { it.uppercase() }
-)
+private fun List<String>.asBooleanAnswers(): List<String> {
+    if (isEmpty()) throw IllegalArgumentException("List is empty, cannot transform as boolean answers")
+
+    return listOf(
+        first(),
+        first().toBoolean().not().toString().replaceFirstChar { it.uppercase() }
+    )
+}
 
 private fun String.sanitized(): String = this.replace("Entertainment: ", "")

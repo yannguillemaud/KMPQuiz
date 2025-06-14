@@ -37,7 +37,7 @@ fun QuizScreen(
             .statusBarsPadding()
     ) {
         when(val state = uiState){
-            is QuizUiState.Loading -> QuizLoadingSection()
+            is QuizUiState.Idle -> QuizLoadingSection()
             is QuizUiState.InProgress -> QuizInProgressSection(
                 state = state,
                 onAnswerSelected = viewModel::selectAnswer,

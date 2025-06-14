@@ -2,7 +2,7 @@ package ygmd.kmpquiz.domain.usecase
 
 import co.touchlab.kermit.Logger
 import ygmd.kmpquiz.domain.error.DomainError
-import ygmd.kmpquiz.domain.pojo.InternalQanda
+import ygmd.kmpquiz.domain.pojo.qanda.InternalQanda
 import ygmd.kmpquiz.domain.repository.qanda.QandaRepository
 
 interface SaveQandasUseCase {
@@ -16,14 +16,26 @@ class SaveQandasUseCaseImpl(
 ) : SaveQandasUseCase {
     override suspend fun save(qanda: InternalQanda): Result<Unit> {
         logger.i { "Attempting to save qanda: ${qanda.question.take(50)}..." }
-        val existing = repository.existsByContentKey(qanda)
 
-        return existing.fold(
-            onSuccess = {
-                logger.w { "Qanda already exists with same content" }
+        // Vérification par ID si présent
+        qanda.id?.let { id ->
+            repository.findById(id).fold(
+                onSuccess = {
+                    logger.w { "Qanda already exists with id: $id" }
+                    return Result.failure(DomainError.QandaError.AlreadyExists)
+                },
+                onFailure = { /* OK, n'existe pas par ID */ }
+            )
+        }
+
+        // Vérification par contenu
+        return repository.findByContentKey(qanda).fold(
+            onSuccess = { existingQanda ->
+                logger.w { "Qanda already exists with same content: ${existingQanda.id}" }
                 Result.failure(DomainError.QandaError.AlreadyExists)
             },
             onFailure = {
+                // N'existe pas, on peut sauvegarder
                 repository.save(qanda).fold(
                     onSuccess = { id ->
                         logger.i { "Successfully saved qanda with id: $id" }
@@ -38,24 +50,50 @@ class SaveQandasUseCaseImpl(
         )
     }
 
+
     override suspend fun saveAll(qandas: List<InternalQanda>): Result<Unit> {
         logger.i { "Attempting to save ${qandas.size} qandas" }
 
-        val alreadyExistingById = qandas.filter { it.id != null }
-        val alreadyExistingByContentKey = qandas.filter { repository.existsByContentKey(it).isSuccess }
-
-        if(alreadyExistingById.isNotEmpty()){
-            logger.w { "Qandas already have ids: ${alreadyExistingById.map { it.id }}" }
-        }
-        if(alreadyExistingByContentKey.isNotEmpty()){
-            logger.w { "Qandas already exist by content key: ${alreadyExistingByContentKey.map { it.id }}" }
+        if (qandas.isEmpty()) {
+            return Result.success(Unit)
         }
 
-        val uniqueQandas = qandas - alreadyExistingById - alreadyExistingByContentKey
+        val uniqueQandas = qandas.distinctBy { it.contentKey }
+        if (uniqueQandas.size != qandas.size) {
+            logger.w { "Removed ${qandas.size - uniqueQandas.size} duplicate qandas from input" }
+        }
 
-        return repository.saveAll(uniqueQandas).fold(
+        val qandasToSave = mutableListOf<InternalQanda>()
+        var existingCount = 0
+
+        uniqueQandas.forEach { qanda ->
+            val alreadyExists = when {
+                // Vérifier par ID si présent
+                qanda.id != null -> repository.findById(qanda.id).isSuccess
+                // Sinon vérifier par contenu
+                else -> repository.findByContentKey(qanda).isSuccess
+            }
+
+            if (alreadyExists) {
+                existingCount++
+                logger.d { "Skipping existing qanda: ${qanda.question.take(30)}..." }
+            } else {
+                qandasToSave.add(qanda)
+            }
+        }
+
+        if (existingCount > 0) {
+            logger.i { "Skipped $existingCount existing qandas" }
+        }
+
+        if (qandasToSave.isEmpty()) {
+            logger.i { "No new qandas to save" }
+            return Result.success(Unit)
+        }
+
+        return repository.saveAll(qandasToSave).fold(
             onSuccess = {
-                logger.i { "Successfully saved ${uniqueQandas.size} qandas" }
+                logger.i { "Successfully saved ${qandasToSave.size} qandas" }
                 Result.success(Unit)
             },
             onFailure = { error ->

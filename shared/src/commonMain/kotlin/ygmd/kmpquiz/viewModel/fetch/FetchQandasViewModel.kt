@@ -8,11 +8,11 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import ygmd.kmpquiz.domain.pojo.InternalQanda
+import ygmd.kmpquiz.domain.error.mapper.toViewModelError
+import ygmd.kmpquiz.domain.pojo.qanda.InternalQanda
 import ygmd.kmpquiz.domain.usecase.FetchQandaUseCase
-import ygmd.kmpquiz.domain.usecase.FetchResult
+import ygmd.kmpquiz.domain.usecase.FetchQandaUseCase.FetchResult
 import ygmd.kmpquiz.domain.usecase.GetQandasUseCase
-import ygmd.kmpquiz.mapper.toViewModelError
 import ygmd.kmpquiz.viewModel.QandaUiState
 import ygmd.kmpquiz.viewModel.error.ViewModelError
 import ygmd.kmpquiz.viewModel.save.DownloadState.Downloaded
