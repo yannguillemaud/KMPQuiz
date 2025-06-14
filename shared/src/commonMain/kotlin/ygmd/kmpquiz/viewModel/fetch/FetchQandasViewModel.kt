@@ -10,8 +10,9 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import ygmd.kmpquiz.domain.error.mapper.toViewModelError
 import ygmd.kmpquiz.domain.pojo.qanda.InternalQanda
-import ygmd.kmpquiz.domain.usecase.FetchQandaUseCase
-import ygmd.kmpquiz.domain.usecase.FetchQandaUseCase.FetchResult
+import ygmd.kmpquiz.domain.pojo.qanda.toInternalQanda
+import ygmd.kmpquiz.domain.service.FetchQanda
+import ygmd.kmpquiz.domain.service.FetchResult
 import ygmd.kmpquiz.domain.usecase.GetQandasUseCase
 import ygmd.kmpquiz.viewModel.QandaUiState
 import ygmd.kmpquiz.viewModel.error.ViewModelError
@@ -27,7 +28,7 @@ private sealed class FetchApiState {
 }
 
 class FetchQandasViewModel(
-    private val fetchQandaUseCase: FetchQandaUseCase,
+    private val fetchQandaUseCase: FetchQanda,
     private val getQandasUseCase: GetQandasUseCase,
 ) : ViewModel() {
 
@@ -78,7 +79,7 @@ class FetchQandasViewModel(
 
             when (val result = fetchQandaUseCase.fetch()) {
                 is FetchResult.Success -> {
-                    _fetchQandas.value = result.data
+                    _fetchQandas.value = result.data.map { it.toInternalQanda() }
                     _fetchState.value = FetchApiState.Success
                 }
 

@@ -9,7 +9,7 @@ arrowCore = "1.2.0"
 exposedCoreVersion = "0.45.0"
 exposedDaoVersion = "0.45.0"
 hikaricpVersion = "5.1.0"
-compose = "1.8.2"
+compose = "1.8.0"
 
 androidx-lifecycle = "2.9.0"
 

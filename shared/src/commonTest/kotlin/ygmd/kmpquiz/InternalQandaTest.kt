@@ -15,7 +15,7 @@ class InternalQandaTest {
         val contentKey = qanda.contentKey
 
         // Then
-        assertEquals("what is the capital?|paris", contentKey)
+        assertEquals("what is the capital of france?|paris", contentKey)
     }
 
     @Test

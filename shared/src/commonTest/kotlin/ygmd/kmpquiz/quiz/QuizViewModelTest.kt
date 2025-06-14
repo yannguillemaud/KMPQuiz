@@ -10,19 +10,23 @@ import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
-import org.assertj.core.api.Assertions.assertThat
 import ygmd.kmpquiz.createInternalQanda
 import ygmd.kmpquiz.createQuizSession
 import ygmd.kmpquiz.domain.usecase.QuizUseCase
 import ygmd.kmpquiz.viewModel.quiz.QuizUiState
+import ygmd.kmpquiz.viewModel.quiz.QuizUiState.Completed
 import ygmd.kmpquiz.viewModel.quiz.QuizUiState.InProgress
 import ygmd.kmpquiz.viewModel.quiz.QuizViewModel
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
+import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertIs
+import kotlin.test.assertNotEquals
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 class QuizViewModelTest {
     private val quizUseCase: QuizUseCase = mockk()
@@ -47,11 +51,10 @@ class QuizViewModelTest {
     }
 
     @Test
-    fun `should have Idle state initially`(){
+    fun `should have Idle state initially`() {
         // Given - setUp
         // Then
-        assertThat(viewModel.quizUiState.value)
-            .isInstanceOf(QuizUiState.Idle::class.java)
+        assertIs<QuizUiState.Idle>(viewModel.quizUiState.value)
     }
 
     @Test
@@ -72,16 +75,11 @@ class QuizViewModelTest {
 
         // Then
         val currentState = viewModel.quizUiState.value
-        assertThat(currentState)
-            .isInstanceOf(InProgress::class.java)
-
-        val inProgressState = currentState as InProgress
-        assertThat(inProgressState.session).isEqualTo(mockSession)
-        assertThat(inProgressState.hasAnswered).isFalse
-        assertThat(inProgressState.selectedAnswer).isNull()
-        assertThat(inProgressState.shuffledAnswers).containsExactlyInAnyOrder(
-            "A", "B", "C"
-        )
+        assertIs<InProgress>(currentState)
+        assertEquals(mockSession, currentState.session)
+        assertFalse { currentState.hasAnswered }
+        assertNull(currentState.selectedAnswer)
+        assertEquals(setOf("A", "B", "C"), currentState.shuffledAnswers.toSet())
 
         coVerify { quizUseCase.start(qandaIds) }
     }
@@ -100,10 +98,8 @@ class QuizViewModelTest {
 
         // Then
         val currentState = viewModel.quizUiState.value
-        assertThat(currentState).isInstanceOf(QuizUiState.Error::class.java)
-
-        val errorState = currentState as QuizUiState.Error
-        assertThat(errorState.message).isEqualTo(errorMessage)
+        assertIs<QuizUiState.Error>(currentState)
+        assertEquals(errorMessage, currentState.message)
     }
 
     @Test
@@ -122,9 +118,7 @@ class QuizViewModelTest {
 
         // Then
         val inProgressState = viewModel.quizUiState.value as InProgress
-        assertThat(inProgressState.shuffledAnswers)
-            .hasSize(4)
-            .containsExactlyInAnyOrder("A", "B", "C", "D")
+        assertEquals(setOf("A", "B", "C", "D"), inProgressState.shuffledAnswers.toSet())
     }
 
     @Test
@@ -143,10 +137,9 @@ class QuizViewModelTest {
         viewModel.startQuiz(qandaIds)
 
         // Then
-        val inProgressState = viewModel.quizUiState.value as InProgress
-        assertThat(inProgressState.session.qandas).hasSize(2)
-        assertThat(inProgressState.session.qandas[0].category).isEqualTo("Science")
-        assertThat(inProgressState.session.qandas[1].category).isEqualTo("History")
+        val state = viewModel.quizUiState.value
+        assertIs<InProgress>(state)
+        assertContentEquals(listOf("Science", "History"), state.session.qandas.map { it.category })
     }
 
     @Test
@@ -187,15 +180,19 @@ class QuizViewModelTest {
         viewModel.goToNextQuestion()
 
         // Then
-        val completedState = viewModel.quizUiState.value as QuizUiState.Completed
-        assertThat(completedState.results.score).isEqualTo(2)
-        assertThat(completedState.results.questions).isEqualTo(3)
+        val state = viewModel.quizUiState.value
+        assertIs<Completed>(state)
+        assertEquals(2, state.results.score)
+        assertEquals(3, state.results.questions)
 
         // Vérifier que les réponses sont bien enregistrées
-        assertThat(completedState.session.userAnswers)
-            .containsEntry(0, "4")
-            .containsEntry(1, "London")
-            .containsEntry(2, "Jupiter")
+        assertEquals(
+            expected = mapOf(
+                0 to "4",
+                1 to "London",
+                2 to "Jupiter"
+            ), actual = state.session.userAnswers
+        )
     }
 
     @Test
@@ -211,9 +208,10 @@ class QuizViewModelTest {
         viewModel.startQuiz(qandaIds)
 
         // Then
-        val inProgressState = viewModel.quizUiState.value as InProgress
-        assertThat(inProgressState.session.qandas.first().id).isNull()
-        assertThat(inProgressState.session.qandas.first().question).isNotEmpty()
+        val state = viewModel.quizUiState.value
+        assertIs<InProgress>(state)
+        assertNull(state.session.qandas.first().id)
+        assertNotEquals("", state.session.qandas.first().question)
     }
 
     @Test
@@ -229,8 +227,9 @@ class QuizViewModelTest {
         viewModel.startQuiz(qandaIds)
 
         // Then
-        val inProgressState = viewModel.quizUiState.value as InProgress
-        assertThat(inProgressState.shuffledAnswers).isEmpty()
+        val state = viewModel.quizUiState.value
+        assertIs<InProgress>(state)
+        assertEquals(emptyList(), state.shuffledAnswers)
     }
 
     @Test
@@ -249,8 +248,9 @@ class QuizViewModelTest {
         viewModel.startQuiz(qandaIds)
 
         // Then
-        val inProgressState = viewModel.quizUiState.value as InProgress
-        assertThat(inProgressState.shuffledAnswers).containsExactly("OnlyAnswer")
+        val state = viewModel.quizUiState.value
+        assertIs<InProgress>(state)
+        assertEquals(listOf("OnlyAnswer"), state.shuffledAnswers)
     }
 
     @Test
@@ -269,18 +269,21 @@ class QuizViewModelTest {
 
         // When
         viewModel.startQuiz(qandaIds)
-        val stateAfterStart = viewModel.quizUiState.value as InProgress
+        val stateAfterStart = viewModel.quizUiState.value
 
         viewModel.selectAnswer("Paris")
-        val stateAfterAnswer = viewModel.quizUiState.value as InProgress
+        val stateAfterAnswer = viewModel.quizUiState.value
 
         viewModel.goToNextQuestion()
-        val stateAfterCompletion = viewModel.quizUiState.value as QuizUiState.Completed
+        val stateAfterCompletion = viewModel.quizUiState.value
 
         // Then - Les données de la question restent intactes
-        assertThat(stateAfterStart.session.qandas.first()).isEqualTo(originalQanda)
-        assertThat(stateAfterAnswer.session.qandas.first()).isEqualTo(originalQanda)
-        assertThat(stateAfterCompletion.session.qandas.first()).isEqualTo(originalQanda)
+        assertIs<InProgress>(stateAfterStart)
+        assertIs<InProgress>(stateAfterAnswer)
+        assertIs<Completed>(stateAfterCompletion)
+        assertEquals(originalQanda, stateAfterStart.session.qandas.first())
+        assertEquals(originalQanda, stateAfterAnswer.session.qandas.first())
+        assertEquals(originalQanda, stateAfterCompletion.session.qandas.first())
     }
 
     @Test
@@ -300,39 +303,50 @@ class QuizViewModelTest {
         viewModel.startQuiz(qandaIds)
 
         // Question 1 (index 0)
-        assertThat((viewModel.quizUiState.value as InProgress).session.currentQanda?.question).isEqualTo("Q1")
-        assertThat((viewModel.quizUiState.value as InProgress).session.isComplete).isFalse()
+        val state = viewModel.quizUiState.value
+        assertIs<InProgress>(state)
+        assertEquals("Q1", state.session.currentQanda?.question)
+        assertFalse { state.session.isComplete }
 
         viewModel.selectAnswer("Answer1")
         viewModel.goToNextQuestion()
 
         // Question 2 (index 1)
-        val state2 = viewModel.quizUiState.value as InProgress
-        assertThat(state2.session.currentQanda?.question).isEqualTo("Q2")
-        assertThat(state2.session.isComplete).isFalse()
-        assertThat(state2.session.userAnswers).containsEntry(0, "Answer1")
+        val state2 = viewModel.quizUiState.value
+        assertIs<InProgress>(state2)
+        assertEquals("Q2", state2.session.currentQanda?.question)
+        assertFalse { state2.session.isComplete }
+        assertEquals(mapOf(0 to "Answer1"), state2.session.userAnswers)
 
         viewModel.selectAnswer("Answer2")
         viewModel.goToNextQuestion()
 
         // Question 3 (index 2 - dernière question)
-        val state3 = viewModel.quizUiState.value as InProgress
-        assertThat(state3.session.currentQanda?.question).isEqualTo("Q3")
-        assertThat(state3.session.isComplete).isFalse() // Encore une question à répondre
-        assertThat(state3.session.userAnswers)
-            .containsEntry(0, "Answer1")
-            .containsEntry(1, "Answer2")
+        val state3 = viewModel.quizUiState.value
+        assertIs<InProgress>(state3)
+        assertEquals("Q3", state3.session.currentQanda?.question)
+        assertFalse { state3.session.isComplete } // Encore une question à répondre
+        assertEquals(
+            mapOf(
+                0 to "Answer1",
+                1 to "Answer2",
+            ), state3.session.userAnswers
+        )
 
         viewModel.selectAnswer("Answer3")
         viewModel.goToNextQuestion()
 
         // Quiz terminé (index 3 == size)
-        val completedState = viewModel.quizUiState.value as QuizUiState.Completed
-        assertThat(completedState.session.isComplete).isTrue()
-        assertThat(completedState.session.userAnswers)
-            .containsEntry(0, "Answer1")
-            .containsEntry(1, "Answer2")
-            .containsEntry(2, "Answer3")
+        val completedState = viewModel.quizUiState.value
+        assertIs<Completed>(completedState)
+        assertTrue { completedState.session.isComplete }
+        assertEquals(
+            mapOf(
+                0 to "Answer1",
+                1 to "Answer2",
+                2 to "Answer3",
+            ), completedState.session.userAnswers
+        )
     }
 
     @Test
@@ -350,19 +364,23 @@ class QuizViewModelTest {
         viewModel.startQuiz(qandaIds)
 
         // Question 1 (index 0) - pas terminé
-        assertThat((viewModel.quizUiState.value as InProgress).session.isComplete).isFalse()
+        val state = viewModel.quizUiState.value
+        assertIs<InProgress>(state)
+        assertFalse { state.session.isComplete }
 
         viewModel.selectAnswer("Answer1")
         viewModel.goToNextQuestion()
 
         // Question 2 (index 1) - dernière question mais pas encore terminé
-        assertThat((viewModel.quizUiState.value as InProgress).session.isComplete).isFalse()
+        assertIs<InProgress>(state)
+        assertFalse { state.session.isComplete }
 
         viewModel.selectAnswer("Answer2")
         viewModel.goToNextQuestion()
 
         // Quiz terminé (index 2 == size)
-        assertThat(viewModel.quizUiState.value).isInstanceOf(QuizUiState.Completed::class.java)
+        val completedState = viewModel.quizUiState.value
+        assertIs<Completed>(completedState)
     }
 
     @Test
@@ -390,6 +408,6 @@ class QuizViewModelTest {
         viewModel.goToNextQuestion()
 
         // Quiz terminé (index 1 == size)
-        assertIs<QuizUiState.Completed>(viewModel.quizUiState.value)
+        assertIs<Completed>(viewModel.quizUiState.value)
     }
 }

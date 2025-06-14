@@ -12,20 +12,22 @@ import ygmd.kmpquiz.domain.repository.notification.ScheduledNotificationReposito
 import ygmd.kmpquiz.domain.repository.notification.ScheduledNotificationRepositoryImpl
 import ygmd.kmpquiz.domain.repository.qanda.InMemoryQandaRepository
 import ygmd.kmpquiz.domain.repository.qanda.QandaRepository
+import ygmd.kmpquiz.domain.service.FetchQanda
 import ygmd.kmpquiz.domain.service.NotificationService
 import ygmd.kmpquiz.domain.service.NotificationServiceImpl
+import ygmd.kmpquiz.domain.service.QandaSource
 import ygmd.kmpquiz.domain.usecase.DeleteQandasUseCase
 import ygmd.kmpquiz.domain.usecase.DeleteQandasUseCaseImpl
-import ygmd.kmpquiz.domain.usecase.FetchQandaUseCase
+import ygmd.kmpquiz.domain.usecase.FetchQandasUseCase
 import ygmd.kmpquiz.domain.usecase.GetQandasUseCase
 import ygmd.kmpquiz.domain.usecase.GetQandasUseCaseImpl
 import ygmd.kmpquiz.domain.usecase.NotificationUseCase
 import ygmd.kmpquiz.domain.usecase.NotificationUseCaseImpl
-import ygmd.kmpquiz.domain.usecase.OpenTriviaFetchQanda
 import ygmd.kmpquiz.domain.usecase.QuizUseCase
 import ygmd.kmpquiz.domain.usecase.QuizUseCaseImpl
 import ygmd.kmpquiz.domain.usecase.SaveQandasUseCase
 import ygmd.kmpquiz.domain.usecase.SaveQandasUseCaseImpl
+import ygmd.kmpquiz.infra.OpenTriviaFetcher
 import ygmd.kmpquiz.viewModel.NotificationTestViewModel
 import ygmd.kmpquiz.viewModel.fetch.FetchQandasViewModel
 import ygmd.kmpquiz.viewModel.quiz.QuizViewModel
@@ -83,7 +85,7 @@ val dataModule = module {
 
     // Remote DataSources
     factory {
-        OpenTriviaFetchQanda(
+        OpenTriviaFetcher(
             client = get(),
             logger = get()
         )
@@ -122,8 +124,13 @@ val domainModule = module {
     }
 
     // Fetch Use Cases
-    factory<FetchQandaUseCase> {
-        get<OpenTriviaFetchQanda>()
+    factory<FetchQanda> {
+        FetchQandasUseCase(
+            fetchers = mapOf(
+                QandaSource.OPEN_TRIVIA to get<OpenTriviaFetcher>()
+                // todo image api
+            )
+        )
     }
 }
 

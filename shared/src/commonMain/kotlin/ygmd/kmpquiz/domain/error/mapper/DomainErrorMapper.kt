@@ -1,10 +1,11 @@
 package ygmd.kmpquiz.domain.error.mapper
 
 import ygmd.kmpquiz.domain.error.DomainError
-import ygmd.kmpquiz.domain.usecase.FailureType.API_ERROR
-import ygmd.kmpquiz.domain.usecase.FailureType.NETWORK_ERROR
-import ygmd.kmpquiz.domain.usecase.FailureType.RATE_LIMIT
-import ygmd.kmpquiz.domain.usecase.FetchQandaUseCase.FetchResult
+import ygmd.kmpquiz.domain.service.FailureType.API_ERROR
+import ygmd.kmpquiz.domain.service.FailureType.ERROR
+import ygmd.kmpquiz.domain.service.FailureType.NETWORK_ERROR
+import ygmd.kmpquiz.domain.service.FailureType.RATE_LIMIT
+import ygmd.kmpquiz.domain.service.FetchResult
 import ygmd.kmpquiz.viewModel.error.ViewModelError
 
 fun DomainError.toViewModelError(): ViewModelError = when (this) {
@@ -31,5 +32,6 @@ fun <T> FetchResult<T>.toViewModelError(): ViewModelError = when (this) {
         RATE_LIMIT ->  ViewModelError.NetworkError("Rate limit exceeded")
         API_ERROR -> ViewModelError.NetworkError("API Error: ${this.message}")
         NETWORK_ERROR -> ViewModelError.UnknownError("Network error", this.cause ?: RuntimeException())
+        ERROR -> ViewModelError.UnknownError("Unknown error", this.cause ?: RuntimeException())
     }
 }

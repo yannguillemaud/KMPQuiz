@@ -1,10 +1,13 @@
 package ygmd.kmpquiz.quiz
 
-import org.assertj.core.api.Assertions.assertThat
 import ygmd.kmpquiz.createInternalQanda
 import ygmd.kmpquiz.createQuizSession
 import ygmd.kmpquiz.domain.pojo.quiz.QuizSession
 import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 class QuizSessionTest {
 
@@ -20,7 +23,7 @@ class QuizSessionTest {
         val session = QuizSession(qandas = sampleQandas, currentIndex = 1)
 
         // When & Then
-        assertThat(session.currentQanda?.question).isEqualTo("Q2")
+        assertEquals("Q2", session.currentQanda?.question)
     }
 
     @Test
@@ -29,7 +32,7 @@ class QuizSessionTest {
         val session = QuizSession(qandas = sampleQandas, currentIndex = 5)
 
         // When & Then
-        assertThat(session.currentQanda).isNull()
+        assertNull(session.currentQanda)
     }
 
     @Test
@@ -40,9 +43,9 @@ class QuizSessionTest {
         val session3 = QuizSession(qandas = sampleQandas, currentIndex = 2) // Dernière question
 
         // When & Then
-        assertThat(session1.isComplete).isFalse()
-        assertThat(session2.isComplete).isFalse()
-        assertThat(session3.isComplete).isFalse()
+        assertFalse { session1.isComplete }
+        assertFalse { session2.isComplete }
+        assertFalse { session3.isComplete }
     }
 
     @Test
@@ -51,7 +54,7 @@ class QuizSessionTest {
         val session = QuizSession(qandas = sampleQandas, currentIndex = 3) // Index == size
 
         // When & Then
-        assertThat(session.isComplete).isTrue()
+        assertTrue { session.isComplete }
     }
 
     @Test
@@ -63,7 +66,7 @@ class QuizSessionTest {
         )
 
         // When & Then
-        assertThat(session.isComplete).isTrue()
+        assertTrue { session.isComplete }
     }
 
     @Test
@@ -74,9 +77,9 @@ class QuizSessionTest {
         val session3 = QuizSession(qandas = sampleQandas, currentIndex = 3) // Au-delà (index 4 > size 3)
 
         // When & Then
-        assertThat(session1.isComplete).isFalse() // Encore une question valide à afficher
-        assertThat(session2.isComplete).isTrue()  // Toutes les questions ont été vues
-        assertThat(session3.isComplete).isTrue()  // Au-delà de la fin
+        assertFalse { session1.isComplete } // Encore une question valide à afficher
+        assertTrue { session2.isComplete }  // Toutes les questions ont été vues
+        assertTrue { session3.isComplete }  // Au-delà de la fin
     }
 
     @Test
@@ -85,8 +88,8 @@ class QuizSessionTest {
         val session = QuizSession(qandas = emptyList(), currentIndex = 0)
 
         // When & Then
-        assertThat(session.currentQanda).isNull()
-        assertThat(session.isComplete).isTrue()
+        assertNull(session.currentQanda)
+        assertTrue { session.isComplete }
     }
 
     @Test
@@ -97,10 +100,10 @@ class QuizSessionTest {
         val session2 = QuizSession(qandas = singleQuestion, currentIndex = 1) // Question terminée
 
         // When & Then
-        assertThat(session1.currentQanda?.question).isEqualTo("Single Q")
-        assertThat(session1.isComplete).isFalse()
+        assertEquals("Single Q", session1.currentQanda?.question)
+        assertFalse { session1.isComplete }
 
-        assertThat(session2.currentQanda).isNull()
-        assertThat(session2.isComplete).isTrue()
+        assertNull(session2.currentQanda)
+        assertTrue { session2.isComplete }
     }
 }

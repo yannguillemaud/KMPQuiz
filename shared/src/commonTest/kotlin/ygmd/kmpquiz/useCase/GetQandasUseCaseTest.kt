@@ -6,13 +6,14 @@ import io.mockk.mockk
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
-import org.assertj.core.api.Assertions.assertThat
 import ygmd.kmpquiz.createInternalQanda
 import ygmd.kmpquiz.domain.repository.qanda.QandaRepository
 import ygmd.kmpquiz.domain.usecase.GetQandasUseCase
 import ygmd.kmpquiz.domain.usecase.GetQandasUseCaseImpl
 import kotlin.Result.Companion.success
 import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 class GetQandasUseCaseTest {
     private val repository = mockk<QandaRepository>()
@@ -25,12 +26,10 @@ class GetQandasUseCaseTest {
         coEvery { repository.getAll() } returns flowOf(listOf(mockedQanda))
 
         // WHEN
-        val qanda = getQandasUseCase.execute().first()
+        val qandas = getQandasUseCase.execute().first()
 
         // THEN
-        assertThat(qanda)
-            .hasSize(1)
-            .isEqualTo(listOf(mockedQanda))
+        assertEquals(listOf(mockedQanda), qandas)
         coVerify { repository.getAll() }
     }
 
@@ -41,12 +40,11 @@ class GetQandasUseCaseTest {
         coEvery { repository.findById(any()) } returns success(mockedQanda)
 
         // WHEN
-        val qanda = getQandasUseCase.getByid(1)
+        val result = getQandasUseCase.getByid(1)
 
         // THEN
-        assertThat(qanda.isSuccess).isTrue
-        assertThat (qanda.getOrThrow())
-            .isEqualTo(mockedQanda)
+        assertTrue { result.isSuccess }
+        assertEquals (mockedQanda, result.getOrThrow())
         coVerify { repository.findById(1) }
     }
 
@@ -59,7 +57,7 @@ class GetQandasUseCaseTest {
         val find = getQandasUseCase.getByid(1)
 
         // THEN
-        assertThat(find.isFailure).isTrue
+        assertTrue { find.isFailure }
         coVerify { repository.findById(1) }
     }
 }
