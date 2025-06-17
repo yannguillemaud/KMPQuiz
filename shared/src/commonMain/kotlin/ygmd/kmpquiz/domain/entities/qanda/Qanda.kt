@@ -32,16 +32,9 @@ data class Qanda(
 }
 
 
-sealed interface QuestionType {
-    val contextKey: String
-
-    data class TextQuestion(val text: String) : QuestionType {
-        override val contextKey: String = text.lowercase()
-    }
-
-    data class ImageQuestion(val text: String, val image: Image) : QuestionType {
-        override val contextKey: String = "$text|${image.url}".lowercase()
-    }
+sealed class QuestionType(val contextKey: String) {
+    data class TextQuestion(val text: String) : QuestionType(text.lowercase())
+    data class ImageQuestion(val text: String, val image: Image) : QuestionType("$text|${image.url}")
 }
 
 sealed interface AnswerContent {

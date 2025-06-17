@@ -1,17 +1,17 @@
-package opentrivia
+package ygmd.kmpquiz.infra.OpenTrivia
 
 import kotlinx.serialization.Serializable
 import ygmd.kmpquiz.domain.entities.qanda.InternalQanda
 import ygmd.kmpquiz.unescaped
 
 @Serializable
-data class TriviaApiResponse(
+data class OpenTriviaApiResponse(
     val response_code: Int,
-    val results: List<QANDADto>
+    val results: List<OpenTriviaQandaDto>
 )
 
 @Serializable
-class QANDADto(
+class OpenTriviaQandaDto(
     val type: String,
     val difficulty: String,
     val category: String,
@@ -51,7 +51,7 @@ class QANDADto(
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
 
-        other as QANDADto
+        other as OpenTriviaQandaDto
 
         if (type != other.type) return false
         if (category != other.category) return false
