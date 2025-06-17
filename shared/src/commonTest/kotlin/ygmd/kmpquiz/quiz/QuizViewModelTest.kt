@@ -10,7 +10,7 @@ import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
-import ygmd.kmpquiz.createInternalQanda
+import ygmd.kmpquiz.createQanda
 import ygmd.kmpquiz.createQuizSession
 import ygmd.kmpquiz.domain.usecase.QuizUseCase
 import ygmd.kmpquiz.viewModel.quiz.QuizUiState
@@ -63,8 +63,8 @@ class QuizViewModelTest {
         val qandaIds = listOf(1L, 2L, 3L)
         val mockSession = createQuizSession(
             qandas = listOf(
-                createInternalQanda(id = 1L, answers = listOf("A", "B", "C")),
-                createInternalQanda(id = 2L, answers = listOf("X", "Y", "Z"))
+                createQanda(id = 1L, answers = listOf("A", "B", "C"), correctAnswer = "A"),
+                createQanda(id = 2L, answers = listOf("X", "Y", "Z"), correctAnswer = "Z")
             )
         )
 
@@ -79,7 +79,6 @@ class QuizViewModelTest {
         assertEquals(mockSession, currentState.session)
         assertFalse { currentState.hasAnswered }
         assertNull(currentState.selectedAnswer)
-        assertEquals(setOf("A", "B", "C"), currentState.shuffledAnswers.toSet())
 
         coVerify { quizUseCase.start(qandaIds) }
     }
@@ -103,32 +102,13 @@ class QuizViewModelTest {
     }
 
     @Test
-    fun `startQuiz should shuffle answers correctly`() = runTest {
-        // Given
-        val qandaIds = listOf(1L)
-        val qanda = createInternalQanda(
-            answers = listOf("A", "B", "C", "D")
-        )
-        val session = createQuizSession(qandas = listOf(qanda))
-
-        coEvery { quizUseCase.start(qandaIds) } returns Result.success(session)
-
-        // When
-        viewModel.startQuiz(qandaIds)
-
-        // Then
-        val inProgressState = viewModel.quizUiState.value as InProgress
-        assertEquals(setOf("A", "B", "C", "D"), inProgressState.shuffledAnswers.toSet())
-    }
-
-    @Test
     fun `should handle qanda with different difficulties and categories`() = runTest {
         // Given
         val qandaIds = listOf(1L, 2L)
         val session = createQuizSession(
             qandas = listOf(
-                createInternalQanda(category = "Science", difficulty = "Hard"),
-                createInternalQanda(category = "History", difficulty = "Easy")
+                createQanda(category = "Science", difficulty = "Hard"),
+                createQanda(category = "History", difficulty = "Easy")
             )
         )
         coEvery { quizUseCase.start(qandaIds) } returns Result.success(session)
@@ -148,17 +128,17 @@ class QuizViewModelTest {
         val qandaIds = listOf(1L, 2L, 3L)
         val session = createQuizSession(
             qandas = listOf(
-                createInternalQanda(
+                createQanda(
                     question = "What is 2+2?",
                     correctAnswer = "4",
                     answers = listOf("3", "4", "5", "6")
                 ),
-                createInternalQanda(
+                createQanda(
                     question = "Capital of France?",
                     correctAnswer = "Paris",
                     answers = listOf("London", "Paris", "Berlin", "Madrid")
                 ),
-                createInternalQanda(
+                createQanda(
                     question = "Largest planet?",
                     correctAnswer = "Jupiter",
                     answers = listOf("Earth", "Jupiter", "Mars", "Saturn")
@@ -199,7 +179,7 @@ class QuizViewModelTest {
     fun `should handle qanda with null id`() = runTest {
         // Given
         val qandaIds = listOf(1L)
-        val qandaWithNullId = createInternalQanda(id = null)
+        val qandaWithNullId = createQanda(id = null)
         val session = createQuizSession(qandas = listOf(qandaWithNullId))
 
         coEvery { quizUseCase.start(qandaIds) } returns Result.success(session)
@@ -215,48 +195,9 @@ class QuizViewModelTest {
     }
 
     @Test
-    fun `should handle qanda with empty answers list`() = runTest {
-        // Given
-        val qandaIds = listOf(1L)
-        val qandaWithEmptyAnswers = createInternalQanda(answers = emptyList())
-        val session = createQuizSession(qandas = listOf(qandaWithEmptyAnswers))
-
-        coEvery { quizUseCase.start(qandaIds) } returns Result.success(session)
-
-        // When
-        viewModel.startQuiz(qandaIds)
-
-        // Then
-        val state = viewModel.quizUiState.value
-        assertIs<InProgress>(state)
-        assertEquals(emptyList(), state.shuffledAnswers)
-    }
-
-    @Test
-    fun `should handle qanda with single answer`() = runTest {
-        // Given
-        val qandaIds = listOf(1L)
-        val qandaWithSingleAnswer = createInternalQanda(
-            answers = listOf("OnlyAnswer"),
-            correctAnswer = "OnlyAnswer"
-        )
-        val session = createQuizSession(qandas = listOf(qandaWithSingleAnswer))
-
-        coEvery { quizUseCase.start(qandaIds) } returns Result.success(session)
-
-        // When
-        viewModel.startQuiz(qandaIds)
-
-        // Then
-        val state = viewModel.quizUiState.value
-        assertIs<InProgress>(state)
-        assertEquals(listOf("OnlyAnswer"), state.shuffledAnswers)
-    }
-
-    @Test
     fun `should maintain qanda integrity throughout quiz flow`() = runTest {
         // Given
-        val originalQanda = createInternalQanda(
+        val originalQanda = createQanda(
             id = 42L,
             category = "TestCategory",
             question = "Original Question?",
@@ -292,9 +233,9 @@ class QuizViewModelTest {
         val qandaIds = listOf(1L, 2L, 3L)
         val session = createQuizSession(
             qandas = listOf(
-                createInternalQanda(id = 1L, question = "Q1", correctAnswer = "A1"),
-                createInternalQanda(id = 2L, question = "Q2", correctAnswer = "A2"),
-                createInternalQanda(id = 3L, question = "Q3", correctAnswer = "A3")
+                createQanda(id = 1L, question = "Q1", answers = listOf("A1", "A2", "A3"), correctAnswer = "A1"),
+                createQanda(id = 2L, question = "Q2", answers = listOf("A1", "A2", "A3"), correctAnswer = "A2"),
+                createQanda(id = 3L, question = "Q3", answers = listOf("A1", "A2", "A3"), correctAnswer = "A3")
             ),
             currentIndex = 0
         )
@@ -355,8 +296,8 @@ class QuizViewModelTest {
         val qandaIds = listOf(1L, 2L)
         val session = createQuizSession(
             qandas = listOf(
-                createInternalQanda(id = 1L),
-                createInternalQanda(id = 2L)
+                createQanda(id = 1L),
+                createQanda(id = 2L)
             )
         )
         coEvery { quizUseCase.start(qandaIds) } returns Result.success(session)
@@ -389,7 +330,7 @@ class QuizViewModelTest {
         val qandaIds = listOf(1L)
         val session = createQuizSession(
             qandas = listOf(
-                createInternalQanda(id = 1L, question = "Single question?")
+                createQanda(id = 1L, question = "Single question?")
             )
         )
         coEvery { quizUseCase.start(qandaIds) } returns Result.success(session)

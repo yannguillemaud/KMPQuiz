@@ -6,7 +6,8 @@ import co.touchlab.kermit.Logger
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import ygmd.kmpquiz.domain.pojo.quiz.QuizSession
+import ygmd.kmpquiz.domain.entities.qanda.AnswerContent
+import ygmd.kmpquiz.domain.entities.quiz.QuizSession
 import ygmd.kmpquiz.domain.usecase.QuizUseCase
 import ygmd.kmpquiz.viewModel.quiz.QuizUiState.Idle
 import ygmd.kmpquiz.viewModel.quiz.QuizUiState.InProgress
@@ -41,7 +42,7 @@ class QuizViewModel(
         }
     }
 
-    fun selectAnswer(answer: String) {
+    fun selectAnswer(answer: AnswerContent) {
         val currentState = _uiState.value
         if (currentState is InProgress && !currentState.hasAnswered) {
             _uiState.value = currentState.copy(
@@ -54,10 +55,7 @@ class QuizViewModel(
 
     fun goToNextQuestion() {
         val currentState = _uiState.value
-        if (
-            currentState !is InProgress
-//            || !currentState.hasAnswered
-            ) {
+        if (currentState !is InProgress) {
             logger.w { "Cannot go to next question in current state" }
             return
         }

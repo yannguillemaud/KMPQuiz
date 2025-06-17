@@ -1,24 +1,24 @@
-package ygmd.kmpquiz.domain.repository.qanda
+package ygmd.kmpquiz.data.repository.qanda
 
 import co.touchlab.kermit.Logger
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
+import ygmd.kmpquiz.domain.entities.qanda.Qanda
 import ygmd.kmpquiz.domain.error.DomainError.PersistenceError.DatabaseError
 import ygmd.kmpquiz.domain.error.DomainError.QandaError.NotFound
-import ygmd.kmpquiz.domain.pojo.qanda.InternalQanda
 
 val logger = Logger.withTag(InMemoryQandaRepository::class.simpleName.toString())
 
 class InMemoryQandaRepository : QandaRepository {
-    private val _qandasMap = MutableStateFlow<Map<Long, InternalQanda>>(emptyMap())
-    private val qandasMap: Map<Long, InternalQanda>
+    private val _qandasMap = MutableStateFlow<Map<Long, Qanda>>(emptyMap())
+    private val qandasMap: Map<Long, Qanda>
         get() = _qandasMap.value
 
-    override fun getAll(): Flow<List<InternalQanda>> =
+    override fun getAll(): Flow<List<Qanda>> =
         _qandasMap.map { it.values.toList() }
 
-    override suspend fun save(qanda: InternalQanda): Result<Long> {
+    override suspend fun save(qanda: Qanda): Result<Long> {
         if (qanda.id != null) {
             logger.w { "Qanda already has id: ${qanda.id}" }
         }
@@ -29,7 +29,7 @@ class InMemoryQandaRepository : QandaRepository {
         return Result.success(newId)
     }
 
-    override suspend fun saveAll(qandas: List<InternalQanda>): Result<Unit> {
+    override suspend fun saveAll(qandas: List<Qanda>): Result<Unit> {
         val conflicts = qandas.mapNotNull { it.id }
         if (conflicts.isNotEmpty()) {
             logger.w { "Following qandas already have ids: $conflicts" }
@@ -43,7 +43,7 @@ class InMemoryQandaRepository : QandaRepository {
         return Result.success(Unit)
     }
 
-    override suspend fun update(qanda: InternalQanda): Result<Unit> {
+    override suspend fun update(qanda: Qanda): Result<Unit> {
         val id = qanda.id ?: return Result.failure(
             DatabaseError("Cannot update Qanda with null ID")
         )
@@ -65,12 +65,12 @@ class InMemoryQandaRepository : QandaRepository {
         return Result.success(Unit)
     }
 
-    override suspend fun findById(id: Long): Result<InternalQanda> =
+    override suspend fun findById(id: Long): Result<Qanda> =
         qandasMap[id]?.let { Result.success(it) } ?: Result.failure(NotFound)
 
-    override suspend fun findByContentKey(qanda: InternalQanda): Result<InternalQanda> {
+    override suspend fun findByContentKey(qanda: Qanda): Result<Qanda> {
         return qandasMap.values
-            .firstOrNull { it.contentKey == qanda.contentKey }
+            .firstOrNull { it.contextKey == qanda.contextKey }
             ?.let { Result.success(it) } ?: Result.failure(NotFound)
     }
 }

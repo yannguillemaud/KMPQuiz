@@ -1,4 +1,4 @@
-package ygmd.kmpquiz.domain.pojo.cron
+package ygmd.kmpquiz.domain.entities.cron
 
 enum class CronPreset(val expression: String) {
     EVERY_MINUTE("* * * * *"),

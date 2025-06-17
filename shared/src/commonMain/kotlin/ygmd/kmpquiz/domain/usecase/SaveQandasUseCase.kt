@@ -1,20 +1,20 @@
 package ygmd.kmpquiz.domain.usecase
 
 import co.touchlab.kermit.Logger
+import ygmd.kmpquiz.data.repository.qanda.QandaRepository
+import ygmd.kmpquiz.domain.entities.qanda.Qanda
 import ygmd.kmpquiz.domain.error.DomainError
-import ygmd.kmpquiz.domain.pojo.qanda.InternalQanda
-import ygmd.kmpquiz.domain.repository.qanda.QandaRepository
 
 interface SaveQandasUseCase {
-    suspend fun save(qanda: InternalQanda): Result<Unit>
-    suspend fun saveAll(qandas: List<InternalQanda>): Result<Unit>
+    suspend fun save(qanda: Qanda): Result<Unit>
+    suspend fun saveAll(qandas: List<Qanda>): Result<Unit>
 }
 
 class SaveQandasUseCaseImpl(
     private val repository: QandaRepository,
     private val logger: Logger
 ) : SaveQandasUseCase {
-    override suspend fun save(qanda: InternalQanda): Result<Unit> {
+    override suspend fun save(qanda: Qanda): Result<Unit> {
         logger.i { "Attempting to save qanda: ${qanda.question.take(50)}..." }
 
         // Vérification par ID si présent
@@ -51,19 +51,19 @@ class SaveQandasUseCaseImpl(
     }
 
 
-    override suspend fun saveAll(qandas: List<InternalQanda>): Result<Unit> {
+    override suspend fun saveAll(qandas: List<Qanda>): Result<Unit> {
         logger.i { "Attempting to save ${qandas.size} qandas" }
 
         if (qandas.isEmpty()) {
             return Result.success(Unit)
         }
 
-        val uniqueQandas = qandas.distinctBy { it.contentKey }
+        val uniqueQandas = qandas.distinctBy { it.contextKey }
         if (uniqueQandas.size != qandas.size) {
             logger.w { "Removed ${qandas.size - uniqueQandas.size} duplicate qandas from input" }
         }
 
-        val qandasToSave = mutableListOf<InternalQanda>()
+        val qandasToSave = mutableListOf<Qanda>()
         var existingCount = 0
 
         uniqueQandas.forEach { qanda ->

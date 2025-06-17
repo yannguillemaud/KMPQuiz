@@ -1,4 +1,4 @@
-package ygmd.kmpquiz.domain.pojo.notification
+package ygmd.kmpquiz.domain.entities.notification
 
 data class NotificationPermissionState(
     val isGranted: Boolean,

@@ -1,4 +1,4 @@
-package ygmd.kmpquiz.domain.repository.notification
+package ygmd.kmpquiz.data.repository.notification
 
 import co.touchlab.kermit.Logger
 import kotlinx.coroutines.flow.Flow
@@ -7,8 +7,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.datetime.Clock
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
-import ygmd.kmpquiz.domain.pojo.notification.NotificationStatus
-import ygmd.kmpquiz.domain.pojo.notification.ScheduledNotification
+import ygmd.kmpquiz.domain.entities.notification.NotificationStatus
+import ygmd.kmpquiz.domain.entities.notification.ScheduledNotification
 
 class ScheduledNotificationRepositoryImpl(
     private val logger: Logger

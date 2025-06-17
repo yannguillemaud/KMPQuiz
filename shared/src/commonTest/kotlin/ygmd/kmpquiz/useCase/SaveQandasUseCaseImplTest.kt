@@ -5,10 +5,12 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
+import ygmd.kmpquiz.data.repository.qanda.QandaRepository
+import ygmd.kmpquiz.domain.entities.qanda.InternalQanda
+import ygmd.kmpquiz.domain.entities.qanda.QuestionType.TextQuestion
+import ygmd.kmpquiz.domain.entities.qanda.toQanda
 import ygmd.kmpquiz.domain.error.DomainError
 import ygmd.kmpquiz.domain.error.DomainError.QandaError.NotFound
-import ygmd.kmpquiz.domain.pojo.qanda.InternalQanda
-import ygmd.kmpquiz.domain.repository.qanda.QandaRepository
 import ygmd.kmpquiz.domain.usecase.SaveQandasUseCaseImpl
 import kotlin.test.Test
 import kotlin.test.assertIs
@@ -27,7 +29,7 @@ class SaveQandasUseCaseTest {
         answers = listOf("Water", "Oxygen", "Hydrogen", "Air"),
         correctAnswer = "Water",
         difficulty = "easy"
-    )
+    ).toQanda()
 
     @Test
     fun `should save qanda when it doesn't exist`() = runTest {
@@ -80,8 +82,8 @@ class SaveQandasUseCaseTest {
     fun `should save all unique qandas`() = runTest {
         // GIVEN
         val qandas = listOf(
-            sampleQanda.copy(question = "Question 1"),
-            sampleQanda.copy(question = "Question 2")
+            sampleQanda.copy(qandaQuestion = TextQuestion("Question 1")),
+            sampleQanda.copy(qandaQuestion = TextQuestion("Question 2"))
         )
 
         qandas.forEach { qanda ->
@@ -100,8 +102,8 @@ class SaveQandasUseCaseTest {
     @Test
     fun `should skip existing qandas in saveAll`() = runTest {
         // GIVEN
-        val existingQanda = sampleQanda.copy(question = "Existing")
-        val newQanda = sampleQanda.copy(question = "New")
+        val existingQanda = sampleQanda.copy(qandaQuestion = TextQuestion("Existing"))
+        val newQanda = sampleQanda.copy(qandaQuestion = TextQuestion("New"))
         val qandas = listOf(existingQanda, newQanda)
 
         coEvery { repository.findByContentKey(existingQanda) } returns Result.success(existingQanda.copy(id = 1L))
@@ -129,8 +131,8 @@ class SaveQandasUseCaseTest {
     @Test
     fun `should remove duplicates from input in saveAll`() = runTest {
         // GIVEN
-        val duplicate1 = sampleQanda.copy(question = "Same")
-        val duplicate2 = sampleQanda.copy(question = "Same") // Même contentKey
+        val duplicate1 = sampleQanda.copy(qandaQuestion = TextQuestion("Same"))
+        val duplicate2 = sampleQanda.copy(qandaQuestion = TextQuestion("Same")) // Même contentKey
         val qandas = listOf(duplicate1, duplicate2)
 
         coEvery { repository.findByContentKey(duplicate1) } returns Result.failure(NotFound)

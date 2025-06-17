@@ -6,8 +6,8 @@ import io.mockk.mockk
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
-import ygmd.kmpquiz.createInternalQanda
-import ygmd.kmpquiz.domain.repository.qanda.QandaRepository
+import ygmd.kmpquiz.createQanda
+import ygmd.kmpquiz.data.repository.qanda.QandaRepository
 import ygmd.kmpquiz.domain.usecase.GetQandasUseCase
 import ygmd.kmpquiz.domain.usecase.GetQandasUseCaseImpl
 import kotlin.Result.Companion.success
@@ -22,7 +22,7 @@ class GetQandasUseCaseTest {
     @Test
     fun `should get qanda`() = runTest {
         // GIVEN
-        val mockedQanda = createInternalQanda()
+        val mockedQanda = createQanda()
         coEvery { repository.getAll() } returns flowOf(listOf(mockedQanda))
 
         // WHEN
@@ -36,7 +36,7 @@ class GetQandasUseCaseTest {
     @Test
     fun `should get qanda for id`() = runTest {
         // GIVEN
-        val mockedQanda = createInternalQanda(id = 1)
+        val mockedQanda = createQanda(id = 1)
         coEvery { repository.findById(any()) } returns success(mockedQanda)
 
         // WHEN

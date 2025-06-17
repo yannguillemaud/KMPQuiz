@@ -28,10 +28,11 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import ygmd.kmpquiz.domain.entities.qanda.AnswerContent
 
 @Composable
 fun AnswerCard(
-    answer: String,
+    answer: AnswerContent,
     isSelected: Boolean,
     isAnswered: Boolean,
     isCorrect: Boolean?,
@@ -44,16 +45,19 @@ fun AnswerCard(
             Color(0xFF10B981), // Vert
             Color(0xFF047857)  // Vert foncé
         )
+
         isAnswered && isCorrect == false && isSelected -> Triple(
             Color(0xFFFEF2F2), // Rouge très clair
             Color(0xFFEF4444), // Rouge
             Color(0xFFB91C1C)  // Rouge foncé
         )
+
         isSelected && !isAnswered -> Triple(
             Color(0xFFF0F0FF), // Bleu très clair
             Color(0xFF4F46E5), // Bleu primaire
             Color(0xFF3730A3)  // Bleu foncé
         )
+
         else -> Triple(
             Color.White,
             Color(0xFFE5E7EB), // Gris clair
@@ -88,16 +92,17 @@ fun AnswerCard(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Text(
-                text = answer,
-                style = TextStyle(
-                    fontSize = 16.sp,
-                    fontWeight = if (isSelected) FontWeight.Medium else FontWeight.Normal,
-                    color = textColor,
-                    lineHeight = 22.sp
-                ),
-                modifier = Modifier.weight(1f)
-            )
+            if (answer is AnswerContent.TextAnswer)
+                Text(
+                    text = answer.text,
+                    style = TextStyle(
+                        fontSize = 16.sp,
+                        fontWeight = if (isSelected) FontWeight.Medium else FontWeight.Normal,
+                        color = textColor,
+                        lineHeight = 22.sp
+                    ),
+                    modifier = Modifier.weight(1f)
+                )
 
             // Icône d'état
             when {
@@ -107,18 +112,21 @@ fun AnswerCard(
                     tint = Color(0xFF10B981),
                     modifier = Modifier.size(24.dp)
                 )
+
                 isAnswered && isCorrect == false && isSelected -> Icon(
                     imageVector = Icons.Filled.Cancel,
                     contentDescription = "Incorrect",
                     tint = Color(0xFFEF4444),
                     modifier = Modifier.size(24.dp)
                 )
+
                 isSelected && !isAnswered -> Icon(
                     imageVector = Icons.Filled.RadioButtonChecked,
                     contentDescription = "Sélectionné",
                     tint = Color(0xFF4F46E5),
                     modifier = Modifier.size(20.dp)
                 )
+
                 else -> Icon(
                     imageVector = Icons.Filled.RadioButtonUnchecked,
                     contentDescription = "Non sélectionné",

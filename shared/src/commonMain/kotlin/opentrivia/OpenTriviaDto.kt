@@ -1,7 +1,7 @@
 package opentrivia
 
 import kotlinx.serialization.Serializable
-import ygmd.kmpquiz.domain.pojo.qanda.InternalQanda
+import ygmd.kmpquiz.domain.entities.qanda.InternalQanda
 import ygmd.kmpquiz.unescaped
 
 @Serializable
@@ -32,7 +32,7 @@ class QANDADto(
             difficulty = difficulty,
             question = question.unescaped(),
             answers = allAnswers,
-            correctAnswer = correct_answer,
+            correctAnswer = correct,
         )
     }
 

@@ -1,4 +1,4 @@
-package ygmd.kmpquiz.domain.pojo.cron
+package ygmd.kmpquiz.domain.entities.cron
 
 class CronExpression private constructor(
     val minute: String = "*",

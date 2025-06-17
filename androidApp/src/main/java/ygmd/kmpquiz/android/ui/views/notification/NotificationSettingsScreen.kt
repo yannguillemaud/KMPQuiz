@@ -50,9 +50,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.koin.compose.viewmodel.koinViewModel
-import ygmd.kmpquiz.domain.pojo.cron.CronExpression
-import ygmd.kmpquiz.domain.pojo.cron.CronPreset
-import ygmd.kmpquiz.domain.pojo.notification.CategoryNotificationConfig
+import ygmd.kmpquiz.domain.entities.cron.CronExpression
+import ygmd.kmpquiz.domain.entities.cron.CronPreset
+import ygmd.kmpquiz.domain.entities.notification.CategoryNotificationConfig
 import ygmd.kmpquiz.viewModel.settings.NotificationSettingsViewModel
 
 @Composable

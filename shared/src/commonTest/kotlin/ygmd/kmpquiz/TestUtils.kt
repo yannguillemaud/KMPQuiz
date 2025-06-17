@@ -1,33 +1,35 @@
 package ygmd.kmpquiz
 
-import ygmd.kmpquiz.domain.pojo.qanda.InternalQanda
-import ygmd.kmpquiz.domain.pojo.quiz.QuizSession
+import ygmd.kmpquiz.domain.entities.qanda.Qanda
+import ygmd.kmpquiz.domain.entities.qanda.QuestionType
+import ygmd.kmpquiz.domain.entities.qanda.toTextAnswers
+import ygmd.kmpquiz.domain.entities.quiz.QuizSession
 
-fun createInternalQanda(
+fun createQanda(
     id: Long? = 1L,
     category: String = "General",
     question: String = "What is the capital of France?",
     answers: List<String> = listOf("Paris", "London", "Berlin", "Madrid"),
     correctAnswer: String = "Paris",
     difficulty: String = "Easy"
-) = InternalQanda(
+) = Qanda(
     id = id,
     category = category,
-    question = question,
-    answers = answers,
-    correctAnswer = correctAnswer,
-    difficulty = difficulty
+    difficulty = difficulty,
+    qandaQuestion = QuestionType.TextQuestion(question),
+    answers = answers.toTextAnswers(correctAnswer)
 )
 
 fun createQuizSession(
-    qandas: List<InternalQanda> = listOf(createInternalQanda()),
+    qandas: List<Qanda> = listOf(createQanda()),
     currentIndex: Int = 0,
     userAnswers: Map<Int, String> = emptyMap()
+    // TODO replace with Qanda
 ) = QuizSession(qandas, currentIndex, userAnswers)
 
 fun createMultiQuestionSession() = createQuizSession(
     qandas = listOf(
-        createInternalQanda(
+        createQanda(
             id = 1L,
             question = "What is 2+2?",
             answers = listOf("3", "4", "5", "6"),
@@ -35,7 +37,7 @@ fun createMultiQuestionSession() = createQuizSession(
             category = "Math",
             difficulty = "Easy"
         ),
-        createInternalQanda(
+        createQanda(
             id = 2L,
             question = "What is the largest planet?",
             answers = listOf("Earth", "Jupiter", "Saturn", "Mars"),
@@ -43,7 +45,7 @@ fun createMultiQuestionSession() = createQuizSession(
             category = "Science",
             difficulty = "Medium"
         ),
-        createInternalQanda(
+        createQanda(
             id = 3L,
             question = "Who wrote 1984?",
             answers = listOf("Orwell", "Huxley", "Bradbury", "Asimov"),

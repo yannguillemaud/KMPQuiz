@@ -1,8 +1,8 @@
-package ygmd.kmpquiz.domain.pojo.notification
+package ygmd.kmpquiz.domain.entities.notification
 
 import kotlinx.datetime.Instant
-import ygmd.kmpquiz.domain.pojo.cron.CronExpression
-import ygmd.kmpquiz.domain.pojo.cron.CronPreset
+import ygmd.kmpquiz.domain.entities.cron.CronExpression
+import ygmd.kmpquiz.domain.entities.cron.CronPreset
 
 enum class NotificationPriority {
     LOW, NORMAL, HIGH

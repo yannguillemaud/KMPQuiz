@@ -1,15 +1,15 @@
 package ygmd.kmpquiz.domain.usecase
 
 import co.touchlab.kermit.Logger
+import ygmd.kmpquiz.data.repository.qanda.QandaRepository
+import ygmd.kmpquiz.domain.entities.qanda.Qanda
 import ygmd.kmpquiz.domain.error.DomainError.PersistenceError.DatabaseError
-import ygmd.kmpquiz.domain.pojo.qanda.InternalQanda
-import ygmd.kmpquiz.domain.repository.qanda.QandaRepository
 import kotlin.Result.Companion.failure
 import kotlin.Result.Companion.success
 
 interface DeleteQandasUseCase {
-    suspend fun delete(qanda: InternalQanda): Result<Unit>
-    suspend fun deleteAll(qandas: List<InternalQanda>): Result<Unit>
+    suspend fun delete(qanda: Qanda): Result<Unit>
+    suspend fun deleteAll(qandas: List<Qanda>): Result<Unit>
     suspend fun deleteAll(): Result<Unit>
 }
 
@@ -17,7 +17,7 @@ class DeleteQandasUseCaseImpl(
     private val repository: QandaRepository,
     private val logger: Logger
 ) : DeleteQandasUseCase {
-    override suspend fun delete(qanda: InternalQanda): Result<Unit> {
+    override suspend fun delete(qanda: Qanda): Result<Unit> {
         logger.i { "Deleting qanda with id: ${qanda.id}" }
         val id = qanda.id
             ?: return failure(IllegalArgumentException("Impossible to delete qanda without id: $qanda"))
@@ -35,7 +35,7 @@ class DeleteQandasUseCaseImpl(
         )
     }
 
-    override suspend fun deleteAll(qandas: List<InternalQanda>): Result<Unit> {
+    override suspend fun deleteAll(qandas: List<Qanda>): Result<Unit> {
         logger.i { "Deleting ${qandas.size} qandas" }
 
         if (qandas.isEmpty()) {

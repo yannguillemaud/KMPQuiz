@@ -1,7 +1,7 @@
 package ygmd.kmpquiz.cron
 
-import ygmd.kmpquiz.domain.pojo.cron.CronExpression
-import ygmd.kmpquiz.domain.pojo.cron.CronExpression.CronFactory.CronBuilder
+import ygmd.kmpquiz.domain.entities.cron.CronExpression
+import ygmd.kmpquiz.domain.entities.cron.CronExpression.CronFactory.CronBuilder
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith

@@ -6,9 +6,9 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
-import ygmd.kmpquiz.domain.pojo.cron.CronExpression
-import ygmd.kmpquiz.domain.pojo.cron.CronPreset
-import ygmd.kmpquiz.domain.repository.notification.NotificationConfigRepository
+import ygmd.kmpquiz.domain.entities.cron.CronExpression
+import ygmd.kmpquiz.domain.entities.cron.CronPreset
+import ygmd.kmpquiz.data.repository.notification.NotificationConfigRepository
 import ygmd.kmpquiz.domain.usecase.GetQandasUseCase
 
 class SettingsViewModel(

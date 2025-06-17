@@ -1,8 +1,9 @@
 package ygmd.kmpquiz.quiz
 
-import ygmd.kmpquiz.createInternalQanda
+import ygmd.kmpquiz.createQanda
 import ygmd.kmpquiz.createQuizSession
-import ygmd.kmpquiz.domain.pojo.quiz.QuizSession
+import ygmd.kmpquiz.domain.entities.qanda.toInternalQanda
+import ygmd.kmpquiz.domain.entities.quiz.QuizSession
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -12,9 +13,9 @@ import kotlin.test.assertTrue
 class QuizSessionTest {
 
     private val sampleQandas = listOf(
-        createInternalQanda(id = 1L, question = "Q1"),
-        createInternalQanda(id = 2L, question = "Q2"),
-        createInternalQanda(id = 3L, question = "Q3")
+        createQanda(id = 1L, question = "Q1"),
+        createQanda(id = 2L, question = "Q2"),
+        createQanda(id = 3L, question = "Q3")
     )
 
     @Test
@@ -95,7 +96,7 @@ class QuizSessionTest {
     @Test
     fun `edge cases for single question quiz`() {
         // Given
-        val singleQuestion = listOf(createInternalQanda(id = 1L, question = "Single Q"))
+        val singleQuestion = listOf(createQanda(id = 1L, question = "Single Q"))
         val session1 = QuizSession(qandas = singleQuestion, currentIndex = 0) // Question courante
         val session2 = QuizSession(qandas = singleQuestion, currentIndex = 1) // Question terminée
 

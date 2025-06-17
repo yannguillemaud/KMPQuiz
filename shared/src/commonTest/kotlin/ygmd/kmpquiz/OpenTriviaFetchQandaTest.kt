@@ -11,11 +11,12 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
-import ygmd.kmpquiz.domain.pojo.qanda.InternalQanda
-import ygmd.kmpquiz.domain.pojo.qanda.QandaContent
-import ygmd.kmpquiz.domain.pojo.qanda.toInternalQanda
-import ygmd.kmpquiz.domain.service.FailureType
-import ygmd.kmpquiz.domain.service.FetchResult
+import ygmd.kmpquiz.data.repository.service.FailureType
+import ygmd.kmpquiz.data.repository.service.FetchResult
+import ygmd.kmpquiz.domain.entities.qanda.AnswerContent
+import ygmd.kmpquiz.domain.entities.qanda.InternalQanda
+import ygmd.kmpquiz.domain.entities.qanda.Qanda
+import ygmd.kmpquiz.domain.entities.qanda.contains
 import ygmd.kmpquiz.infra.OpenTriviaFetcher
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -71,13 +72,16 @@ class OpenTriviaFetchQandaTest {
         val result = useCase.fetch()
 
         // THEN
-        assertIs<FetchResult.Success<List<QandaContent>>>(result)
+        assertIs<FetchResult.Success<List<Qanda>>>(result)
         assertEquals(2, result.data.size)
 
-        val firstQanda = result.data[0].toInternalQanda()
+        val firstQanda = result.data[0]
         assertEquals("Politics", firstQanda.category)
-        assertEquals("Which US state was the first to allow women to vote in 1869?", firstQanda.question)
-        assertEquals("Wyoming", firstQanda.correctAnswer)
+        assertEquals(
+            "Which US state was the first to allow women to vote in 1869?",
+            firstQanda.question
+        )
+        assertEquals("Wyoming".lowercase(), firstQanda.correctAnswer.contextKey)
         assertEquals("hard", firstQanda.difficulty)
         assertEquals(4, firstQanda.answers.size)
         assertTrue(firstQanda.answers.contains("Wyoming"))
@@ -316,18 +320,18 @@ class OpenTriviaFetchQandaTest {
         val result = useCase.fetch()
 
         // THEN
-        assertIs<FetchResult.Success<List<QandaContent>>>(result)
+        assertIs<FetchResult.Success<List<Qanda>>>(result)
         assertEquals(2, result.data.size)
 
         // Multiple choice question
-        val multipleChoice = result.data[0].toInternalQanda()
-        assertEquals("Wyoming", multipleChoice.correctAnswer)
+        val multipleChoice = result.data[0]
+        assertEquals("Wyoming", (multipleChoice.correctAnswer as AnswerContent.TextAnswer).text)
         assertTrue(multipleChoice.answers.contains("Wyoming"))
         assertEquals(4, multipleChoice.answers.size)
 
         // Boolean question
-        val booleanQuestion = result.data[1].toInternalQanda()
-        assertEquals("True", booleanQuestion.correctAnswer)
+        val booleanQuestion = result.data[1]
+        assertEquals("True", (booleanQuestion.correctAnswer as AnswerContent.TextAnswer).text)
         assertTrue(booleanQuestion.answers.contains("True"))
         assertTrue(booleanQuestion.answers.contains("False"))
         assertEquals(2, booleanQuestion.answers.size)

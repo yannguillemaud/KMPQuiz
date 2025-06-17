@@ -5,9 +5,9 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
-import ygmd.kmpquiz.createInternalQanda
+import ygmd.kmpquiz.createQanda
 import ygmd.kmpquiz.domain.error.DomainError
-import ygmd.kmpquiz.domain.repository.qanda.QandaRepository
+import ygmd.kmpquiz.data.repository.qanda.QandaRepository
 import ygmd.kmpquiz.domain.usecase.DeleteQandasUseCase
 import ygmd.kmpquiz.domain.usecase.DeleteQandasUseCaseImpl
 import kotlin.test.Test
@@ -21,7 +21,7 @@ class DeleteQandaUseCaseImplTest {
     @Test
     fun `should delete qanda successfully`() = runTest {
         // Given
-        val qanda = createInternalQanda(id = 1)
+        val qanda = createQanda(id = 1)
         coEvery { repository.deleteById(any()) } returns Result.success(Unit)
 
         // When
@@ -35,7 +35,7 @@ class DeleteQandaUseCaseImplTest {
     @Test
     fun `should return failure when repository throws error`() = runTest {
         // Given
-        val qanda = createInternalQanda(id = 1)
+        val qanda = createQanda(id = 1)
         coEvery { repository.deleteById(any()) } returns Result.failure(DomainError.QandaError.NotFound)
 
         // When
@@ -49,7 +49,7 @@ class DeleteQandaUseCaseImplTest {
     @Test
     fun `should return failure when delete qanda without id`() = runTest {
         // Given
-        val qanda = createInternalQanda(id = null)
+        val qanda = createQanda(id = null)
         coEvery { repository.deleteById(any()) } returns Result.success(Unit)
 
         // When

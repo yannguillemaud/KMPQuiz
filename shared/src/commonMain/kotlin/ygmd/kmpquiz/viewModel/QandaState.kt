@@ -1,6 +1,6 @@
 package ygmd.kmpquiz.viewModel
 
-import ygmd.kmpquiz.domain.pojo.qanda.InternalQanda
+import ygmd.kmpquiz.domain.entities.qanda.Qanda
 import ygmd.kmpquiz.viewModel.save.DownloadState
 
 enum class QandaStatus {
@@ -18,7 +18,7 @@ enum class Difficulty {
 }
 
 data class QandaUiState(
-    val qanda: InternalQanda,
+    val qanda: Qanda,
     val downloadState: DownloadState,
 ){
     val status: QandaStatus

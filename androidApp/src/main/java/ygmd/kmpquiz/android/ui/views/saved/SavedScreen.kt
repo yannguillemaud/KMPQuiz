@@ -70,7 +70,7 @@ import androidx.compose.ui.unit.sp
 import org.koin.compose.viewmodel.koinViewModel
 import ygmd.kmpquiz.android.ui.composable.CategoriesSection
 import ygmd.kmpquiz.android.ui.composable.StatsCard
-import ygmd.kmpquiz.domain.pojo.qanda.InternalQanda
+import ygmd.kmpquiz.domain.entities.qanda.Qanda
 import ygmd.kmpquiz.viewModel.save.SavedQandasUiState
 import ygmd.kmpquiz.viewModel.save.SavedQandasViewModel
 
@@ -360,7 +360,7 @@ fun MinimalStatItem(label: String, value: String) {
 
 @Composable
 fun QuizCard(
-    qanda: InternalQanda,
+    qanda: Qanda,
     onClick: () -> Unit,
     onDelete: () -> Unit,
     onFavoriteToggle: () -> Unit

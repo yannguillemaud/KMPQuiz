@@ -8,11 +8,10 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import ygmd.kmpquiz.domain.error.mapper.toViewModelError
-import ygmd.kmpquiz.domain.pojo.qanda.InternalQanda
-import ygmd.kmpquiz.domain.pojo.qanda.toInternalQanda
-import ygmd.kmpquiz.domain.service.FetchQanda
-import ygmd.kmpquiz.domain.service.FetchResult
+import ygmd.kmpquiz.data.repository.service.FetchQanda
+import ygmd.kmpquiz.data.repository.service.FetchResult
+import ygmd.kmpquiz.domain.entities.qanda.Qanda
+import ygmd.kmpquiz.domain.error.toViewModelError
 import ygmd.kmpquiz.domain.usecase.GetQandasUseCase
 import ygmd.kmpquiz.viewModel.QandaUiState
 import ygmd.kmpquiz.viewModel.error.ViewModelError
@@ -29,10 +28,10 @@ private sealed class FetchApiState {
 
 class FetchQandasViewModel(
     private val fetchQandaUseCase: FetchQanda,
-    private val getQandasUseCase: GetQandasUseCase,
+    getQandasUseCase: GetQandasUseCase,
 ) : ViewModel() {
 
-    private val _fetchQandas = MutableStateFlow<List<InternalQanda>>(emptyList())
+    private val _fetchQandas = MutableStateFlow<List<Qanda>>(emptyList())
     private val _fetchState = MutableStateFlow<FetchApiState>(FetchApiState.Idle)
 
     val fetchState: StateFlow<FetchState> = combine(
@@ -50,7 +49,7 @@ class FetchQandasViewModel(
                 else {
                     val qandasWithState = fetchedQandas.map { fetched ->
                         val isAlradySaved = savedQandas.any { saved ->
-                            saved.contentKey == fetched.contentKey
+                            saved.contextKey == fetched.contextKey
                         }
 
                         QandaUiState(
@@ -79,7 +78,7 @@ class FetchQandasViewModel(
 
             when (val result = fetchQandaUseCase.fetch()) {
                 is FetchResult.Success -> {
-                    _fetchQandas.value = result.data.map { it.toInternalQanda() }
+                    _fetchQandas.value = result.data
                     _fetchState.value = FetchApiState.Success
                 }
 

@@ -1,6 +1,6 @@
 package ygmd.kmpquiz
 
-import ygmd.kmpquiz.domain.pojo.qanda.InternalQanda
+import ygmd.kmpquiz.domain.entities.qanda.InternalQanda
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -9,10 +9,10 @@ class InternalQandaTest {
     @Test
     fun `contentKey should be normalized and lowercase`() {
         // Given
-        val qanda = createInternalQanda()
+        val qanda = createQanda()
 
         // When
-        val contentKey = qanda.contentKey
+        val contentKey = qanda.contextKey
 
         // Then
         assertEquals("what is the capital of france?|paris", contentKey)

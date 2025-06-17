@@ -1,11 +1,10 @@
-package ygmd.kmpquiz.domain.error.mapper
+package ygmd.kmpquiz.domain.error
 
-import ygmd.kmpquiz.domain.error.DomainError
-import ygmd.kmpquiz.domain.service.FailureType.API_ERROR
-import ygmd.kmpquiz.domain.service.FailureType.ERROR
-import ygmd.kmpquiz.domain.service.FailureType.NETWORK_ERROR
-import ygmd.kmpquiz.domain.service.FailureType.RATE_LIMIT
-import ygmd.kmpquiz.domain.service.FetchResult
+import ygmd.kmpquiz.data.repository.service.FailureType.API_ERROR
+import ygmd.kmpquiz.data.repository.service.FailureType.ERROR
+import ygmd.kmpquiz.data.repository.service.FailureType.NETWORK_ERROR
+import ygmd.kmpquiz.data.repository.service.FailureType.RATE_LIMIT
+import ygmd.kmpquiz.data.repository.service.FetchResult
 import ygmd.kmpquiz.viewModel.error.ViewModelError
 
 fun DomainError.toViewModelError(): ViewModelError = when (this) {

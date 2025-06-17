@@ -9,7 +9,7 @@ import org.jetbrains.exposed.sql.transactions.transaction
 import ygmd.kmpquiz.db.exposed.QandaEntity
 import ygmd.kmpquiz.db.exposed.QandaEntity.DAO.all
 import ygmd.kmpquiz.db.exposed.QandasTable
-import ygmd.kmpquiz.domain.pojo.qanda.InternalQanda
+import ygmd.kmpquiz.domain.entities.qanda.InternalQanda
 import ygmd.kmpquiz.domain.repository.SavedQandaRepository
 
 class QandaRepositoryPersistenceImpl: SavedQandaRepository {

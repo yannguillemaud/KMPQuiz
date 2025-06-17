@@ -9,10 +9,10 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import ygmd.kmpquiz.domain.pojo.notification.CategoryNotificationConfig
-import ygmd.kmpquiz.domain.pojo.notification.NotificationConfig
-import ygmd.kmpquiz.domain.pojo.cron.CronPreset
-import ygmd.kmpquiz.domain.repository.notification.NotificationConfigRepository
+import ygmd.kmpquiz.domain.entities.notification.CategoryNotificationConfig
+import ygmd.kmpquiz.domain.entities.notification.NotificationConfig
+import ygmd.kmpquiz.domain.entities.cron.CronPreset
+import ygmd.kmpquiz.data.repository.notification.NotificationConfigRepository
 import ygmd.kmpquiz.domain.usecase.GetQandasUseCase
 import ygmd.kmpquiz.domain.usecase.NotificationUseCase
 

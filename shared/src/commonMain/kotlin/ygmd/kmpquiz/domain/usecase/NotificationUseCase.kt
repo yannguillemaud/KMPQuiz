@@ -1,7 +1,7 @@
 package ygmd.kmpquiz.domain.usecase
 
 import kotlinx.coroutines.flow.first
-import ygmd.kmpquiz.domain.service.NotificationService
+import ygmd.kmpquiz.data.repository.service.NotificationService
 
 interface NotificationUseCase {
     suspend fun generateAndScheduleNotifications()

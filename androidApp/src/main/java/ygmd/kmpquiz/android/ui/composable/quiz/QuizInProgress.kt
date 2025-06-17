@@ -10,12 +10,13 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import ygmd.kmpquiz.domain.entities.qanda.AnswerContent
 import ygmd.kmpquiz.viewModel.quiz.QuizUiState
 
 @Composable
 fun QuizInProgressSection(
     state: QuizUiState.InProgress,
-    onAnswerSelected: (String) -> Unit,
+    onAnswerSelected: (AnswerContent) -> Unit,
     onNextQuestion: () -> Unit,
     onNavigateBack: () -> Unit,
 ){

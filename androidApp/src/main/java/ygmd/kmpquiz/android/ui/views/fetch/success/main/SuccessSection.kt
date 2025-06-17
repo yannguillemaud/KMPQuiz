@@ -45,7 +45,7 @@ fun SuccessSection(
                 .filter {
                     when(val saved = savedState){
                         is SavedQandasUiState.Success -> {
-                            !saved.containsContentKey(it.qanda.contentKey)
+                            !saved.containsContentKey(it.qanda.contextKey)
                         } else -> true
                     }
                 }
@@ -75,7 +75,7 @@ fun SuccessSection(
                 // Liste des quiz disponibles
                 items(
                     items = filteredQandas,
-                    key = { it.qanda.contentKey }
+                    key = { it.qanda.contextKey }
                 ) {
                     QandaFetchCard(
                         qandaState = it,
@@ -109,6 +109,5 @@ private fun QandaUiState.containsQuery(searchQuery: String): Boolean =
     if (searchQuery.isBlank()) true else {
         val containsInQuestion = qanda.question.contains(searchQuery, ignoreCase = true)
         val containsInCategory = qanda.category.contains(searchQuery, ignoreCase = true)
-        val containsInAnswer = qanda.answers.any { it.contains(searchQuery, ignoreCase = true) }
-        containsInQuestion || containsInCategory || containsInAnswer
+        containsInQuestion || containsInCategory
     }

@@ -7,7 +7,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import ygmd.kmpquiz.domain.pojo.qanda.InternalQanda
+import ygmd.kmpquiz.domain.entities.qanda.Qanda
 import ygmd.kmpquiz.domain.usecase.DeleteQandasUseCase
 import ygmd.kmpquiz.domain.usecase.GetQandasUseCase
 import ygmd.kmpquiz.domain.usecase.SaveQandasUseCase
@@ -31,7 +31,7 @@ class SavedQandasViewModel(
             initialValue = SavedQandasUiState.Loading
         )
 
-    fun saveQanda(qanda: InternalQanda) {
+    fun saveQanda(qanda: Qanda) {
         viewModelScope.launch {
             saveQandaUseCase.save(qanda)
             // Pas besoin de mettre à jour manuellement !
@@ -39,21 +39,21 @@ class SavedQandasViewModel(
         }
     }
 
-    fun saveAll(qandas: List<InternalQanda>) {
+    fun saveAll(qandas: List<Qanda>) {
         viewModelScope.launch {
             saveQandaUseCase.saveAll(qandas)
             // Idem, mise à jour automatique ! 🎉
         }
     }
 
-    fun deleteQanda(qanda: InternalQanda) {
+    fun deleteQanda(qanda: Qanda) {
         viewModelScope.launch {
             deleteQandasUseCase.delete(qanda)
             // Idem, mise à jour automatique ! 🎉
         }
     }
 
-    fun toggleFavorite(qanda: InternalQanda) {
+    fun toggleFavorite(qanda: Qanda) {
         viewModelScope.launch {
             // TODO: Implémenter quand on aura les favoris
         }
@@ -65,10 +65,10 @@ sealed class SavedQandasUiState {
     data object Loading : SavedQandasUiState()
 
     data class Success(
-        val qandas: List<InternalQanda>,
+        val qandas: List<Qanda>,
         val categories: List<String>
     ) : SavedQandasUiState() {
-        fun containsContentKey(contentKey: String) =
-            qandas.any { it.contentKey == contentKey }
+        fun containsContentKey(contextKey: String) =
+            qandas.any { it.contextKey == contextKey }
     }
 }

@@ -37,13 +37,14 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import ygmd.kmpquiz.domain.pojo.qanda.InternalQanda
+import ygmd.kmpquiz.domain.entities.qanda.AnswerContent
+import ygmd.kmpquiz.domain.entities.qanda.Qanda
 
 @Composable
 fun QuestionDetailCard(
     questionIndex: Int,
-    qanda: InternalQanda,
-    userAnswer: String?,
+    qanda: Qanda,
+    userAnswer: AnswerContent?,
     animationDelay: Int = 0
 ) {
     var isVisible by remember { mutableStateOf(false) }

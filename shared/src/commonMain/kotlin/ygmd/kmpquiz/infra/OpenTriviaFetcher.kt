@@ -11,12 +11,12 @@ import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import opentrivia.OpenTriviaUrlBuilder
 import opentrivia.TriviaApiResponse
-import ygmd.kmpquiz.domain.pojo.qanda.QandaContent
-import ygmd.kmpquiz.domain.pojo.qanda.toQandaContent
-import ygmd.kmpquiz.domain.service.FailureType
-import ygmd.kmpquiz.domain.service.FetchResult
-import ygmd.kmpquiz.domain.service.QandaFetcher
-import ygmd.kmpquiz.domain.service.QandaSource
+import ygmd.kmpquiz.domain.entities.qanda.Qanda
+import ygmd.kmpquiz.domain.entities.qanda.toQanda
+import ygmd.kmpquiz.data.repository.service.FailureType
+import ygmd.kmpquiz.data.repository.service.FetchResult
+import ygmd.kmpquiz.data.service.QandaFetcher
+import ygmd.kmpquiz.data.service.QandaSource
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
@@ -30,7 +30,7 @@ class OpenTriviaFetcher(
     private val url = OpenTriviaUrlBuilder()
         .withAmount(50)
 
-    override suspend fun fetch(): FetchResult<List<QandaContent>> {
+    override suspend fun fetch(): FetchResult<List<Qanda>> {
         return try {
             val response = client.get(url.build())
             handleHttpResponse(response)
@@ -44,7 +44,7 @@ class OpenTriviaFetcher(
         }
     }
 
-    private suspend fun handleHttpResponse(response: HttpResponse): FetchResult<List<QandaContent>> {
+    private suspend fun handleHttpResponse(response: HttpResponse): FetchResult<List<Qanda>> {
         return when {
             response.status.isSuccess() -> {
                 processSuccessResponse(response)
@@ -71,7 +71,7 @@ class OpenTriviaFetcher(
         }
     }
 
-    private suspend fun processSuccessResponse(response: HttpResponse): FetchResult<List<QandaContent>> {
+    private suspend fun processSuccessResponse(response: HttpResponse): FetchResult<List<Qanda>> {
         return try {
             val body = response.bodyAsText()
             if (body.isBlank()) {
@@ -94,10 +94,10 @@ class OpenTriviaFetcher(
         }
     }
 
-    private fun handleApiResponse(apiResponse: TriviaApiResponse): FetchResult<List<QandaContent>> {
+    private fun handleApiResponse(apiResponse: TriviaApiResponse): FetchResult<List<Qanda>> {
         return when (apiResponse.response_code) {
             0 -> {
-                val qandas = apiResponse.results.map { it.toInternal().toQandaContent() }
+                val qandas = apiResponse.results.map { it.toInternal().toQanda() }
                 logger.i { "${qandas.size} qandas fetched successfully" }
                 FetchResult.Success(qandas)
             }
