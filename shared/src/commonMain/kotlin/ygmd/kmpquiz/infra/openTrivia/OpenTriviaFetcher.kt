@@ -23,7 +23,7 @@ class OpenTriviaFetcher(
     private val client: HttpClient,
     private val logger: Logger,
 ) : QandaFetcher {
-    override val enabled: Boolean = true
+    override val isEnabled: Boolean = true
 
     private val url = OpenTriviaUrlBuilder().withAmount(50)
 
