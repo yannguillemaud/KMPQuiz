@@ -1,4 +1,4 @@
-package ygmd.kmpquiz.infra.OpenTrivia
+package ygmd.kmpquiz.infra.openTrivia
 
 const val URL = "https://opentdb.com/api.php"
 

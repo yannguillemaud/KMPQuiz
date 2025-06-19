@@ -17,7 +17,7 @@ import ygmd.kmpquiz.domain.entities.qanda.AnswerContent
 import ygmd.kmpquiz.domain.entities.qanda.InternalQanda
 import ygmd.kmpquiz.domain.entities.qanda.Qanda
 import ygmd.kmpquiz.domain.entities.qanda.contains
-import ygmd.kmpquiz.infra.OpenTrivia.OpenTriviaFetcher
+import ygmd.kmpquiz.infra.openTrivia.OpenTriviaFetcher
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs

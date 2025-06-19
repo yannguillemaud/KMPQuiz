@@ -27,7 +27,7 @@ import ygmd.kmpquiz.domain.usecase.QuizUseCase
 import ygmd.kmpquiz.domain.usecase.QuizUseCaseImpl
 import ygmd.kmpquiz.domain.usecase.SaveQandasUseCase
 import ygmd.kmpquiz.domain.usecase.SaveQandasUseCaseImpl
-import ygmd.kmpquiz.infra.OpenTrivia.OpenTriviaFetcher
+import ygmd.kmpquiz.infra.openTrivia.OpenTriviaFetcher
 import ygmd.kmpquiz.viewModel.NotificationTestViewModel
 import ygmd.kmpquiz.viewModel.fetch.FetchQandasViewModel
 import ygmd.kmpquiz.viewModel.quiz.QuizViewModel

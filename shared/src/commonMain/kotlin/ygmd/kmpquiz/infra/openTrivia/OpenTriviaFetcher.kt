@@ -1,4 +1,4 @@
-package ygmd.kmpquiz.infra.OpenTrivia
+package ygmd.kmpquiz.infra.openTrivia
 
 import co.touchlab.kermit.Logger
 import io.ktor.client.HttpClient
