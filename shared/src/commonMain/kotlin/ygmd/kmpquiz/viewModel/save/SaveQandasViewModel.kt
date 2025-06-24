@@ -8,17 +8,17 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import ygmd.kmpquiz.domain.entities.qanda.Qanda
-import ygmd.kmpquiz.domain.usecase.DeleteQandasUseCase
-import ygmd.kmpquiz.domain.usecase.GetQandasUseCase
-import ygmd.kmpquiz.domain.usecase.SaveQandasUseCase
+import ygmd.kmpquiz.application.usecase.qanda.DeleteQandasUseCase
+import ygmd.kmpquiz.application.usecase.qanda.GetQandasUseCase
+import ygmd.kmpquiz.application.usecase.qanda.SaveQandasUseCase
 
 class SavedQandasViewModel(
-    private val getQandasUseCase: GetQandasUseCase,
+    getQandasUseCase: GetQandasUseCase,
     private val saveQandaUseCase: SaveQandasUseCase,
     private val deleteQandasUseCase: DeleteQandasUseCase
 ) : ViewModel() {
 
-    val savedState: StateFlow<SavedQandasUiState> = getQandasUseCase.execute()
+    val savedState: StateFlow<SavedQandasUiState> = getQandasUseCase.observeAll()
         .map { qandas ->
             SavedQandasUiState.Success(
                 qandas = qandas,

@@ -7,9 +7,9 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import ygmd.kmpquiz.createQanda
-import ygmd.kmpquiz.data.repository.qanda.QandaRepository
-import ygmd.kmpquiz.domain.usecase.GetQandasUseCase
-import ygmd.kmpquiz.domain.usecase.GetQandasUseCaseImpl
+import ygmd.kmpquiz.domain.repository.QandaRepository
+import ygmd.kmpquiz.application.usecase.qanda.GetQandasUseCase
+import ygmd.kmpquiz.application.usecase.qanda.GetQandasUseCaseImpl
 import kotlin.Result.Companion.success
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -23,14 +23,14 @@ class GetQandasUseCaseTest {
     fun `should get qanda`() = runTest {
         // GIVEN
         val mockedQanda = createQanda()
-        coEvery { repository.getAll() } returns flowOf(listOf(mockedQanda))
+        coEvery { repository.observeAll() } returns flowOf(listOf(mockedQanda))
 
         // WHEN
-        val qandas = getQandasUseCase.execute().first()
+        val qandas = getQandasUseCase.observeAll().first()
 
         // THEN
         assertEquals(listOf(mockedQanda), qandas)
-        coVerify { repository.getAll() }
+        coVerify { repository.observeAll() }
     }
 
     @Test

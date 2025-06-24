@@ -56,7 +56,6 @@ class Main : ComponentActivity() {
                     }
 
                     composable<Settings> {
-                        // TODO: Implémenter l'écran de statistiques globales
                         NotificationSettingsScreen(
                             onNavigateBack = { navController.popBackStack() }
                         )

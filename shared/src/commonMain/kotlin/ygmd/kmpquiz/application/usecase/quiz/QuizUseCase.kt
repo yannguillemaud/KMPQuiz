@@ -1,11 +1,11 @@
-package ygmd.kmpquiz.domain.usecase
+package ygmd.kmpquiz.application.usecase.quiz
 
 import co.touchlab.kermit.Logger
-import ygmd.kmpquiz.data.repository.qanda.QandaRepository
 import ygmd.kmpquiz.domain.entities.qanda.Qanda
 import ygmd.kmpquiz.domain.entities.quiz.QuizSession
 import ygmd.kmpquiz.domain.error.DomainError.QandaError.NotFound
 import ygmd.kmpquiz.domain.error.DomainError.QandaError.ValidationError
+import ygmd.kmpquiz.domain.repository.QandaRepository
 import kotlin.Result.Companion.failure
 import kotlin.Result.Companion.success
 

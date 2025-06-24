@@ -1,18 +1,18 @@
-package ygmd.kmpquiz.domain.usecase
+package ygmd.kmpquiz.application.usecase.qanda
 
 import co.touchlab.kermit.Logger
-import ygmd.kmpquiz.data.repository.qanda.QandaRepository
 import ygmd.kmpquiz.domain.entities.qanda.Qanda
 import ygmd.kmpquiz.domain.error.DomainError
+import ygmd.kmpquiz.domain.repository.QandaRepository
 
 interface SaveQandasUseCase {
     suspend fun save(qanda: Qanda): Result<Unit>
     suspend fun saveAll(qandas: List<Qanda>): Result<Unit>
 }
 
+private val logger = Logger.withTag("SaveQandasUseCaseImpl")
 class SaveQandasUseCaseImpl(
     private val repository: QandaRepository,
-    private val logger: Logger
 ) : SaveQandasUseCase {
     override suspend fun save(qanda: Qanda): Result<Unit> {
         logger.i { "Attempting to save qanda: ${qanda.question.take(50)}..." }

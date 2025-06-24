@@ -5,13 +5,13 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
-import ygmd.kmpquiz.data.repository.qanda.QandaRepository
+import ygmd.kmpquiz.domain.repository.QandaRepository
 import ygmd.kmpquiz.domain.entities.qanda.InternalQanda
 import ygmd.kmpquiz.domain.entities.qanda.QuestionType.TextQuestion
 import ygmd.kmpquiz.domain.entities.qanda.toQanda
 import ygmd.kmpquiz.domain.error.DomainError
 import ygmd.kmpquiz.domain.error.DomainError.QandaError.NotFound
-import ygmd.kmpquiz.domain.usecase.SaveQandasUseCaseImpl
+import ygmd.kmpquiz.application.usecase.qanda.SaveQandasUseCaseImpl
 import kotlin.test.Test
 import kotlin.test.assertIs
 import kotlin.test.assertTrue

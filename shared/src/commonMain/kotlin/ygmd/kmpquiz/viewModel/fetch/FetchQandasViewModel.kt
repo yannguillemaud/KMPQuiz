@@ -11,8 +11,8 @@ import kotlinx.coroutines.launch
 import ygmd.kmpquiz.data.repository.service.FetchResult
 import ygmd.kmpquiz.domain.entities.qanda.Qanda
 import ygmd.kmpquiz.domain.error.toViewModelError
-import ygmd.kmpquiz.domain.usecase.FetchQandasUseCase
-import ygmd.kmpquiz.domain.usecase.GetQandasUseCase
+import ygmd.kmpquiz.application.usecase.qanda.FetchQandasUseCase
+import ygmd.kmpquiz.application.usecase.qanda.GetQandasUseCase
 import ygmd.kmpquiz.viewModel.QandaUiState
 import ygmd.kmpquiz.viewModel.error.ViewModelError
 import ygmd.kmpquiz.viewModel.save.DownloadState.Downloaded
@@ -37,7 +37,7 @@ class FetchQandasViewModel(
     val fetchState: StateFlow<FetchState> = combine(
         _fetchQandas,
         _fetchState,
-        getQandasUseCase.execute(),
+        getQandasUseCase.observeAll(),
     ) { fetchedQandas, apiState, savedQandas ->
         when (apiState) {
             is FetchApiState.Idle -> FetchState.Idle

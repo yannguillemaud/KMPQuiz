@@ -7,8 +7,7 @@ object OpenTriviaDefaults {
     fun bulkBuilder(amount: Int = 50): OpenTriviaUrlBuilder = OpenTriviaUrlBuilder().withAmount(amount)
 }
 
-class OpenTriviaUrlBuilder(
-) {
+class OpenTriviaUrlBuilder {
     private var amount: Int = 1
         set(value) {
             require(value in 1..50) { "Amount must be between 1 and 50"}

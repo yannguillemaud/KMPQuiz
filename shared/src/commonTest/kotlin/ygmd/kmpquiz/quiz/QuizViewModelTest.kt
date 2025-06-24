@@ -12,7 +12,7 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import ygmd.kmpquiz.createQanda
 import ygmd.kmpquiz.createQuizSession
-import ygmd.kmpquiz.domain.usecase.QuizUseCase
+import ygmd.kmpquiz.application.usecase.quiz.QuizUseCase
 import ygmd.kmpquiz.viewModel.quiz.QuizUiState
 import ygmd.kmpquiz.viewModel.quiz.QuizUiState.Completed
 import ygmd.kmpquiz.viewModel.quiz.QuizUiState.InProgress

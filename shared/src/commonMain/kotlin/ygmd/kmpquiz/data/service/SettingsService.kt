@@ -1,4 +1,4 @@
-package ygmd.kmpquiz.data.repository.service
+package ygmd.kmpquiz.data.service
 
 
 //class SettingsService(

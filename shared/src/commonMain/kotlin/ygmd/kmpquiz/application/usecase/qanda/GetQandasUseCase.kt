@@ -1,18 +1,21 @@
-package ygmd.kmpquiz.domain.usecase
+package ygmd.kmpquiz.application.usecase.qanda
 
 import kotlinx.coroutines.flow.Flow
-import ygmd.kmpquiz.data.repository.qanda.QandaRepository
 import ygmd.kmpquiz.domain.entities.qanda.Qanda
+import ygmd.kmpquiz.domain.repository.QandaRepository
 
 interface GetQandasUseCase {
-    fun execute(): Flow<List<Qanda>>
+    fun observeAll(): Flow<List<Qanda>>
+    suspend fun getAll(): List<Qanda>
     suspend fun getByid(id: Long): Result<Qanda>
 }
 
 class GetQandasUseCaseImpl(
     private val repository: QandaRepository
 ): GetQandasUseCase {
-    override fun execute(): Flow<List<Qanda>> = repository.getAll()
+    override fun observeAll(): Flow<List<Qanda>> = repository.observeAll()
+
+    override suspend fun getAll(): List<Qanda> = repository.getAll()
 
     override suspend fun getByid(id: Long): Result<Qanda> = repository.findById(id)
 }

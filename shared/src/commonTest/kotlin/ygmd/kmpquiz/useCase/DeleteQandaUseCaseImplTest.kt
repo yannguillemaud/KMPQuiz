@@ -7,9 +7,9 @@ import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
 import ygmd.kmpquiz.createQanda
 import ygmd.kmpquiz.domain.error.DomainError
-import ygmd.kmpquiz.data.repository.qanda.QandaRepository
-import ygmd.kmpquiz.domain.usecase.DeleteQandasUseCase
-import ygmd.kmpquiz.domain.usecase.DeleteQandasUseCaseImpl
+import ygmd.kmpquiz.domain.repository.QandaRepository
+import ygmd.kmpquiz.application.usecase.qanda.DeleteQandasUseCase
+import ygmd.kmpquiz.application.usecase.qanda.DeleteQandasUseCaseImpl
 import kotlin.test.Test
 import kotlin.test.assertTrue
 

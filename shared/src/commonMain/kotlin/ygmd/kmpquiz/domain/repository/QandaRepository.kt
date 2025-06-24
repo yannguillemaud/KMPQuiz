@@ -1,10 +1,11 @@
-package ygmd.kmpquiz.data.repository.qanda
+package ygmd.kmpquiz.domain.repository
 
 import kotlinx.coroutines.flow.Flow
 import ygmd.kmpquiz.domain.entities.qanda.Qanda
 
 interface QandaRepository {
-    fun getAll(): Flow<List<Qanda>>
+    fun observeAll(): Flow<List<Qanda>>
+    suspend fun getAll(): List<Qanda>
     suspend fun findById(id: Long): Result<Qanda>
     suspend fun findByContentKey(qanda: Qanda): Result<Qanda>
     suspend fun save(qanda: Qanda): Result<Long>

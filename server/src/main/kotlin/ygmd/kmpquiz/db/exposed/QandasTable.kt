@@ -8,8 +8,8 @@ import org.jetbrains.exposed.dao.id.LongIdTable
 object QandasTable: LongIdTable() {
     val category = varchar("category", 255)
     val question = varchar("question", 255)
-    val answers = varchar("answers", length = 255 * 4)
-    val correctPosition = integer("correct_answer_position")
+    val difficulty = varchar("difficulty", 255)
+    /* TODO */
 }
 
 class QandaEntity(id: EntityID<Long>): LongEntity(id){
@@ -17,6 +17,5 @@ class QandaEntity(id: EntityID<Long>): LongEntity(id){
 
     var category by QandasTable.category
     var question by QandasTable.question
-    var answers by QandasTable.answers
-    var correctPosition by QandasTable.correctPosition
+    var difficulty by QandasTable.difficulty
 }

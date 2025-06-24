@@ -1,7 +1,5 @@
 package koin
 
-import co.touchlab.kermit.Logger
-import network.httpClientProvider
 import org.koin.core.KoinApplication
 import org.koin.core.context.startKoin
 import org.koin.core.module.Module
@@ -14,13 +12,8 @@ fun initKoin(appModule: Module = module {}): KoinApplication {
             infraModule,
             dataModule,
             domainModule,
-            presentationModule
+            viewModelModule,
         )
     }
-}
-
-val infraModule = module {
-    single { Logger.withTag("SharedLogger") }
-    factory { httpClientProvider() }
 }
 

@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import ygmd.kmpquiz.domain.entities.qanda.AnswerContent
 import ygmd.kmpquiz.domain.entities.quiz.QuizSession
-import ygmd.kmpquiz.domain.usecase.QuizUseCase
+import ygmd.kmpquiz.application.usecase.quiz.QuizUseCase
 import ygmd.kmpquiz.viewModel.quiz.QuizUiState.Idle
 import ygmd.kmpquiz.viewModel.quiz.QuizUiState.InProgress
 

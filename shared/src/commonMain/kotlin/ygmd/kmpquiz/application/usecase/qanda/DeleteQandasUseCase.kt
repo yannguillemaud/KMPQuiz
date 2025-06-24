@@ -1,9 +1,9 @@
-package ygmd.kmpquiz.domain.usecase
+package ygmd.kmpquiz.application.usecase.qanda
 
 import co.touchlab.kermit.Logger
-import ygmd.kmpquiz.data.repository.qanda.QandaRepository
 import ygmd.kmpquiz.domain.entities.qanda.Qanda
 import ygmd.kmpquiz.domain.error.DomainError.PersistenceError.DatabaseError
+import ygmd.kmpquiz.domain.repository.QandaRepository
 import kotlin.Result.Companion.failure
 import kotlin.Result.Companion.success
 
@@ -13,9 +13,10 @@ interface DeleteQandasUseCase {
     suspend fun deleteAll(): Result<Unit>
 }
 
+private val logger = Logger.withTag("DeleteQandasUseCase")
+
 class DeleteQandasUseCaseImpl(
     private val repository: QandaRepository,
-    private val logger: Logger
 ) : DeleteQandasUseCase {
     override suspend fun delete(qanda: Qanda): Result<Unit> {
         logger.i { "Deleting qanda with id: ${qanda.id}" }

@@ -4,18 +4,18 @@ import android.app.AlarmManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
-import ygmd.kmpquiz.domain.entities.notification.ScheduledNotification
+import ygmd.kmpquiz.domain.entities.notification.Notification
 
 class AndroidNotificationScheduler(
     private val context: Context
 ) {
     private val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
 
-    fun scheduleNotification(notification: ScheduledNotification) {
+    fun scheduleNotification(notification: Notification) {
         val intent = Intent(context, NotificationReceiver::class.java).apply {
             putExtra("notification_id", notification.id)
             putExtra("qanda_id", notification.qandaId)
-            putExtra("question", notification.category) // On peut ajouter d'autres données
+            putExtra("notification_title", notification.title)
         }
 
         val requestCode = notification.id.hashCode()

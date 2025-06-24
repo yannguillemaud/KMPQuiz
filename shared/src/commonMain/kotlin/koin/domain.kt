@@ -1,15 +1,17 @@
 package koin
 
 import org.koin.dsl.module
-import ygmd.kmpquiz.domain.usecase.DeleteQandasUseCase
-import ygmd.kmpquiz.domain.usecase.DeleteQandasUseCaseImpl
-import ygmd.kmpquiz.domain.usecase.FetchQandasUseCase
-import ygmd.kmpquiz.domain.usecase.GetQandasUseCase
-import ygmd.kmpquiz.domain.usecase.GetQandasUseCaseImpl
-import ygmd.kmpquiz.domain.usecase.QuizUseCase
-import ygmd.kmpquiz.domain.usecase.QuizUseCaseImpl
-import ygmd.kmpquiz.domain.usecase.SaveQandasUseCase
-import ygmd.kmpquiz.domain.usecase.SaveQandasUseCaseImpl
+import ygmd.kmpquiz.application.usecase.cron.GetCronUseCase
+import ygmd.kmpquiz.application.usecase.notification.GetNotificationUseCase
+import ygmd.kmpquiz.application.usecase.qanda.DeleteQandasUseCase
+import ygmd.kmpquiz.application.usecase.qanda.DeleteQandasUseCaseImpl
+import ygmd.kmpquiz.application.usecase.qanda.FetchQandasUseCase
+import ygmd.kmpquiz.application.usecase.qanda.GetQandasUseCase
+import ygmd.kmpquiz.application.usecase.qanda.GetQandasUseCaseImpl
+import ygmd.kmpquiz.application.usecase.qanda.SaveQandasUseCase
+import ygmd.kmpquiz.application.usecase.qanda.SaveQandasUseCaseImpl
+import ygmd.kmpquiz.application.usecase.quiz.QuizUseCase
+import ygmd.kmpquiz.application.usecase.quiz.QuizUseCaseImpl
 
 // Domain Layer - Use Cases
 val domainModule = module {
@@ -23,14 +25,12 @@ val domainModule = module {
     factory<SaveQandasUseCase> {
         SaveQandasUseCaseImpl(
             repository = get(),
-            logger = get()
         )
     }
 
     factory<DeleteQandasUseCase> {
         DeleteQandasUseCaseImpl(
             repository = get(),
-            logger = get()
         )
     }
 
@@ -46,6 +46,18 @@ val domainModule = module {
     factory {
         FetchQandasUseCase(
             fetcher = get()
+        )
+    }
+
+    factory {
+        GetCronUseCase(
+            cronRepository = get()
+        )
+    }
+
+    factory {
+        GetNotificationUseCase(
+//            notificationRepository = get()
         )
     }
 }

@@ -7,16 +7,19 @@ import kotlinx.coroutines.flow.map
 import ygmd.kmpquiz.domain.entities.qanda.Qanda
 import ygmd.kmpquiz.domain.error.DomainError.PersistenceError.DatabaseError
 import ygmd.kmpquiz.domain.error.DomainError.QandaError.NotFound
+import ygmd.kmpquiz.domain.repository.QandaRepository
 
-val logger = Logger.withTag(InMemoryQandaRepository::class.simpleName.toString())
+private val logger = Logger.withTag(InMemoryQandaRepository::class.simpleName.toString())
 
 class InMemoryQandaRepository : QandaRepository {
     private val _qandasMap = MutableStateFlow<Map<Long, Qanda>>(emptyMap())
     private val qandasMap: Map<Long, Qanda>
         get() = _qandasMap.value
 
-    override fun getAll(): Flow<List<Qanda>> =
+    override fun observeAll(): Flow<List<Qanda>> =
         _qandasMap.map { it.values.toList() }
+
+    override suspend fun getAll(): List<Qanda> = _qandasMap.value.values.toList()
 
     override suspend fun save(qanda: Qanda): Result<Long> {
         if (qanda.id != null) {

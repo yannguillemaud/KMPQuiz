@@ -9,7 +9,6 @@ import io.ktor.http.HttpStatusCode.Companion.TooManyRequests
 import io.ktor.http.isSuccess
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
-import ygmd.kmpquiz.data.repository.qanda.logger
 import ygmd.kmpquiz.data.repository.service.FailureType
 import ygmd.kmpquiz.data.repository.service.FetchResult
 import ygmd.kmpquiz.data.service.FetchConfig
@@ -19,9 +18,10 @@ import ygmd.kmpquiz.domain.entities.qanda.toQanda
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
+private val logger = Logger.withTag("OpenTriviaFetcher")
+
 class OpenTriviaFetcher(
     private val client: HttpClient,
-    private val logger: Logger,
 ) : QandaFetcher {
     override val isEnabled: Boolean = true
 

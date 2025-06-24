@@ -1,4 +1,4 @@
-package ygmd.kmpquiz.domain.usecase
+package ygmd.kmpquiz.application.usecase.qanda
 
 import ygmd.kmpquiz.data.repository.service.FetchResult
 import ygmd.kmpquiz.data.service.FetchConfig
