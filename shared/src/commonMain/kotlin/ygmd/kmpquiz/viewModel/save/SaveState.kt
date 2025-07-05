@@ -1,6 +1,5 @@
 package ygmd.kmpquiz.viewModel.save
 
-import ygmd.kmpquiz.domain.entities.qanda.InternalQanda
 import ygmd.kmpquiz.viewModel.error.ViewModelError
 
 data class SaveQandasState(

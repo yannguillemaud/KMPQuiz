@@ -16,7 +16,7 @@ fun createQanda(
     id = id,
     category = category,
     difficulty = difficulty,
-    qandaQuestion = QuestionType.TextQuestion(question),
+    question = QuestionType.TextQuestion(question),
     answers = answers.toTextAnswers(correctAnswer)
 )
 

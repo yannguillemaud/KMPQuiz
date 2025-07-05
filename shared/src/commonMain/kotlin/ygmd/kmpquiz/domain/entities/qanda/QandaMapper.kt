@@ -4,7 +4,7 @@ fun Qanda.toInternalQanda(): InternalQanda =
     InternalQanda(
         id = id,
         category = category,
-        question = with(qandaQuestion) {
+        question = with(question) {
             when (this) {
                 is QuestionType.TextQuestion -> text
                 is QuestionType.ImageQuestion -> image.url
@@ -21,7 +21,7 @@ fun InternalQanda.toQanda(): Qanda {
         id = id,
         category = category,
         difficulty = difficulty,
-        qandaQuestion = QuestionType.TextQuestion(question),
+        question = QuestionType.TextQuestion(question),
         answers = textAnswers
     )
 }

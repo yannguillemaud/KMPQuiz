@@ -13,9 +13,9 @@ interface QuizUseCase {
     suspend fun start(qandasIds: List<Long>): Result<QuizSession>
 }
 
+private val logger = Logger.withTag("QuizUseCaseImpl")
 class QuizUseCaseImpl(
     private val repository: QandaRepository,
-    private val logger: Logger,
 ) : QuizUseCase {
     override suspend fun start(qandasIds: List<Long>): Result<QuizSession> {
         logger.i { "Starting Quiz with ${qandasIds.size} questions" }

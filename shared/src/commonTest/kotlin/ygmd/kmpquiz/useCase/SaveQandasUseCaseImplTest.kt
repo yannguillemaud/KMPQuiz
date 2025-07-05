@@ -6,7 +6,6 @@ import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
 import ygmd.kmpquiz.domain.repository.QandaRepository
-import ygmd.kmpquiz.domain.entities.qanda.InternalQanda
 import ygmd.kmpquiz.domain.entities.qanda.QuestionType.TextQuestion
 import ygmd.kmpquiz.domain.entities.qanda.toQanda
 import ygmd.kmpquiz.domain.error.DomainError
@@ -82,8 +81,8 @@ class SaveQandasUseCaseTest {
     fun `should save all unique qandas`() = runTest {
         // GIVEN
         val qandas = listOf(
-            sampleQanda.copy(qandaQuestion = TextQuestion("Question 1")),
-            sampleQanda.copy(qandaQuestion = TextQuestion("Question 2"))
+            sampleQanda.copy(question = TextQuestion("Question 1")),
+            sampleQanda.copy(question = TextQuestion("Question 2"))
         )
 
         qandas.forEach { qanda ->
@@ -102,8 +101,8 @@ class SaveQandasUseCaseTest {
     @Test
     fun `should skip existing qandas in saveAll`() = runTest {
         // GIVEN
-        val existingQanda = sampleQanda.copy(qandaQuestion = TextQuestion("Existing"))
-        val newQanda = sampleQanda.copy(qandaQuestion = TextQuestion("New"))
+        val existingQanda = sampleQanda.copy(question = TextQuestion("Existing"))
+        val newQanda = sampleQanda.copy(question = TextQuestion("New"))
         val qandas = listOf(existingQanda, newQanda)
 
         coEvery { repository.findByContentKey(existingQanda) } returns Result.success(existingQanda.copy(id = 1L))
@@ -131,8 +130,8 @@ class SaveQandasUseCaseTest {
     @Test
     fun `should remove duplicates from input in saveAll`() = runTest {
         // GIVEN
-        val duplicate1 = sampleQanda.copy(qandaQuestion = TextQuestion("Same"))
-        val duplicate2 = sampleQanda.copy(qandaQuestion = TextQuestion("Same")) // Même contentKey
+        val duplicate1 = sampleQanda.copy(question = TextQuestion("Same"))
+        val duplicate2 = sampleQanda.copy(question = TextQuestion("Same")) // Même contentKey
         val qandas = listOf(duplicate1, duplicate2)
 
         coEvery { repository.findByContentKey(duplicate1) } returns Result.failure(NotFound)

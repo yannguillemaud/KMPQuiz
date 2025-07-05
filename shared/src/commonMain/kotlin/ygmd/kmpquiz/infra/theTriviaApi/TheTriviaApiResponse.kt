@@ -28,24 +28,24 @@ data class TheTriviaApiResponse(
     val type: String
 ) {
     // Propriété calculée pour obtenir les mauvaises réponses typées
-    val typedIncorrectAnswers: List<Answer>
+    val typedIncorrectAnswers: List<TriviaAnswer>
         get() = when (type) {
             "text_choice" -> {
                 Json.decodeFromJsonElement<List<String>>(incorrectAnswers)
-                    .map { Answer.TextAnswer(it) }
+                    .map { TriviaAnswer.TextAnswer(it) }
             }
             "image_choice" -> {
-                Json.decodeFromJsonElement<List<Answer.ImageAnswer>>(incorrectAnswers)
+                Json.decodeFromJsonElement<List<TriviaAnswer.ImageAnswer>>(incorrectAnswers)
             }
             else -> emptyList()
         }
 }
 
 @Serializable
-sealed class Answer {
+sealed class TriviaAnswer {
     @Serializable
     @SerialName("text_choice")
-    data class TextAnswer(val value: String) : Answer()
+    data class TextAnswer(val value: String) : TriviaAnswer()
 
     @Serializable
     @SerialName("image_choice")
@@ -53,5 +53,5 @@ sealed class Answer {
         val url: String,
         val alt: String,
         val description: String? = null
-    ) : Answer()
+    ) : TriviaAnswer()
 }

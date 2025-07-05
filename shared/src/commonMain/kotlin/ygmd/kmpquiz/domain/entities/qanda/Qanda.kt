@@ -1,66 +1,128 @@
 package ygmd.kmpquiz.domain.entities.qanda
 
+import kotlinx.serialization.Serializable
+
+@Serializable
 data class Qanda(
     val id: Long? = null,
-    val category: String,
-    val difficulty: String,
-    val qandaQuestion: QuestionType,
-    val answers: List<AnswerContent>,
+    val metadata: QandaMetadata,
+    val question: QuestionContent,
+    val answers: AnswerSet,
 ) {
     init {
-        require(answers.count { it.isCorrect } == 1) {
-            "Il doit y avoir exactement une réponse correcte"
+        require(answers.hasExactlyOneCorrectAnswer()) {
+            "Une question doit avoir exactement une seule réponse correcte"
         }
     }
 
-    val correctAnswer get() = answers.first { it.isCorrect }
-
     val contextKey: String
-        get() = "${qandaQuestion.contextKey}|${correctAnswer.contextKey}"
+        get() = "${question.contextKey}|${answers.correctAnswer.contextKey}"
 
-    val question: String = when (qandaQuestion) {
-        is QuestionType.TextQuestion -> qandaQuestion.text
-        is QuestionType.ImageQuestion -> qandaQuestion.text
+    val correctAnswer: AnswerContent
+        get() = answers.correctAnswer
+}
+
+@Serializable
+sealed interface QuestionContent {
+    val contextKey: String
+
+    @Serializable
+    data class TextContent(val text: String) : QuestionContent {
+        override val contextKey: String
+            get() = text.lowercase()
     }
 
-    val textAnswers = answers.map { it.contextKey }
-
-    fun checkAnswer(selected: String) = when (correctAnswer) {
-        is AnswerContent.TextAnswer -> selected == (correctAnswer as AnswerContent.TextAnswer).text
-        is AnswerContent.ImageAnswer -> selected == (correctAnswer as AnswerContent.ImageAnswer).image.url
+    @Serializable
+    data class ImageContent(
+        val imageUrl: String,
+        val altText: String? = null
+    ) : QuestionContent {
+        override val contextKey: String
+            get() = imageUrl.normalize()
     }
 }
 
+@Serializable
+data class AnswerSet(
+    val answers: List<AnswerContent>
+) {
+    init {
+        require(answers.isNotEmpty())
+        require(answers.size >= 2)
+    }
 
-sealed class QuestionType(val contextKey: String) {
-    data class TextQuestion(val text: String) : QuestionType(text.lowercase())
-    data class ImageQuestion(val text: String, val image: Image) : QuestionType("$text|${image.url}")
+    val correctAnswer: AnswerContent
+        get() = answers.first { it.isCorrect }
+
+    val incorrectAnswers: List<AnswerContent>
+        get() = answers.filterNot { it.isCorrect }
+
+    val allAnswersText: List<String>
+        get() = answers.map { it.contextKey }
+
+    fun hasExactlyOneCorrectAnswer(): Boolean = answers.count { it.isCorrect } == 1
+    fun shuffled(): AnswerSet = copy(answers = answers.shuffled())
+
+    companion object {
+        fun createMultipleTextChoice(
+            correctAnswer: String,
+            incorrectAnswers: List<String>
+        ): AnswerSet {
+            require(incorrectAnswers.isNotEmpty()) { "Il faut au moins une mauvaise réponse" }
+
+            val allAnswers = listOf(
+                AnswerContent.TextContent(correctAnswer, isCorrect = true)
+            ) + incorrectAnswers.map {
+                AnswerContent.TextContent(it, isCorrect = false)
+            }
+
+            return AnswerSet(allAnswers)
+        }
+
+        fun createTrueFalse(correctAnswer: Boolean): AnswerSet {
+            return AnswerSet(
+                listOf(
+                    AnswerContent.TextContent("True", isCorrect = correctAnswer),
+                    AnswerContent.TextContent("False", isCorrect = !correctAnswer)
+                )
+            )
+        }
 }
 
+@Serializable
 sealed interface AnswerContent {
     val isCorrect: Boolean
     val contextKey: String
 
-    data class TextAnswer(
+    @Serializable
+    data class TextContent(
         val text: String,
-        override val isCorrect: Boolean
+        override val isCorrect: Boolean,
     ) : AnswerContent {
-        override val contextKey: String get() = text.lowercase()
+        init {
+            require(text.isNotBlank())
+        }
+
+        override val contextKey: String
+            get() = text.normalize()
     }
 
-    data class ImageAnswer(
-        val image: Image,
-        override val isCorrect: Boolean
-    ) : AnswerContent {
-        override val contextKey: String get() = image.url.lowercase()
+    @Serializable
+    data class ImageContent(
+        val imageUrl: String,
+        val altText: String? = null,
+        override val isCorrect: Boolean,
+    ): AnswerContent {
+        init {
+            require(imageUrl.isNotBlank())
+        }
+
+        override val contextKey: String
+            get() = imageUrl.normalize()
     }
 }
 
-data class Image(
-    val url: String,
-    val altText: String? = null,
-)
-
-fun List<AnswerContent>.contains(key: String) = any {
-    it.contextKey.equals(key, ignoreCase = true)
-}
+private fun String.normalize(): String =
+    this.trim()
+        .lowercase()
+        .replace(Regex("\\s+"), " ")

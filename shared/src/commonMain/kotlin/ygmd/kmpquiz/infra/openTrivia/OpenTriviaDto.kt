@@ -1,7 +1,6 @@
 package ygmd.kmpquiz.infra.openTrivia
 
 import kotlinx.serialization.Serializable
-import ygmd.kmpquiz.domain.entities.qanda.InternalQanda
 import ygmd.kmpquiz.unescaped
 
 @Serializable

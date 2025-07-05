@@ -8,11 +8,11 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import ygmd.kmpquiz.application.usecase.qanda.FetchQandasUseCase
+import ygmd.kmpquiz.application.usecase.qanda.GetQandasUseCase
 import ygmd.kmpquiz.data.repository.service.FetchResult
 import ygmd.kmpquiz.domain.entities.qanda.Qanda
 import ygmd.kmpquiz.domain.error.toViewModelError
-import ygmd.kmpquiz.application.usecase.qanda.FetchQandasUseCase
-import ygmd.kmpquiz.application.usecase.qanda.GetQandasUseCase
 import ygmd.kmpquiz.viewModel.QandaUiState
 import ygmd.kmpquiz.viewModel.error.ViewModelError
 import ygmd.kmpquiz.viewModel.save.DownloadState.Downloaded
@@ -28,7 +28,7 @@ private sealed class FetchApiState {
 
 class FetchQandasViewModel(
     private val fetchQandaUseCase: FetchQandasUseCase,
-    getQandasUseCase: GetQandasUseCase,
+    private val getQandasUseCase: GetQandasUseCase,
 ) : ViewModel() {
 
     private val _fetchQandas = MutableStateFlow<List<Qanda>>(emptyList())

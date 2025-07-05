@@ -10,7 +10,7 @@ object TheTriviaApiMapper {
             id = null,
             category = category,
             difficulty = difficulty,
-            qandaQuestion = QuestionType.TextQuestion(question.text),
+            question = QuestionType.TextQuestion(this.question.text),
             answers = when (type) {
                 "text_choice" -> typedIncorrectAnswers
                     .map { textOf(it) }
@@ -21,8 +21,8 @@ object TheTriviaApiMapper {
         )
     }
 
-    private fun TheTriviaApiResponse.textOf(it: Answer): AnswerContent.TextAnswer {
-        val value = (it as Answer.TextAnswer).value
+    private fun TheTriviaApiResponse.textOf(it: TriviaAnswer): AnswerContent.TextAnswer {
+        val value = (it as TriviaAnswer.TextAnswer).value
         return AnswerContent.TextAnswer(
             value,
             isCorrect = value == correctAnswer

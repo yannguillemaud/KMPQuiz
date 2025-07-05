@@ -14,7 +14,6 @@ import kotlinx.serialization.json.Json
 import ygmd.kmpquiz.data.repository.service.FailureType
 import ygmd.kmpquiz.data.repository.service.FetchResult
 import ygmd.kmpquiz.domain.entities.qanda.AnswerContent
-import ygmd.kmpquiz.domain.entities.qanda.InternalQanda
 import ygmd.kmpquiz.domain.entities.qanda.Qanda
 import ygmd.kmpquiz.domain.entities.qanda.contains
 import ygmd.kmpquiz.infra.openTrivia.OpenTriviaFetcher

@@ -1,6 +1,5 @@
 package ygmd.kmpquiz
 
-import ygmd.kmpquiz.domain.entities.qanda.InternalQanda
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
