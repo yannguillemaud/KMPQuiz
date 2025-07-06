@@ -1,31 +1,26 @@
 package ygmd.kmpquiz.infra.theTriviaApi
 
-import ygmd.kmpquiz.domain.entities.qanda.AnswerContent
 import ygmd.kmpquiz.domain.entities.qanda.Qanda
-import ygmd.kmpquiz.domain.entities.qanda.QuestionType
+import ygmd.kmpquiz.domain.entities.qanda.QandaMetadata
+import ygmd.kmpquiz.domain.entities.qanda.QuestionContent
 
+/**
+ * TODO
+ * Since TheTriviaApi cannot fetch qandas with image, the mapper will not be continued
+ */
 object TheTriviaApiMapper {
     fun mapToDomain(quizResponse: TheTriviaApiResponse): Qanda = with(quizResponse) {
         return Qanda(
-            id = null,
-            category = category,
-            difficulty = difficulty,
-            question = QuestionType.TextQuestion(this.question.text),
+            question = QuestionContent.TextContent(question.text),
+            metadata = QandaMetadata(
+                category = category,
+                difficulty = difficulty,
+            ),
             answers = when (type) {
-                "text_choice" -> typedIncorrectAnswers
-                    .map { textOf(it) }
-
+                "text_choice" -> TODO()
                 "image_choice" -> TODO()
                 else -> error("Type not handled: $type")
             }
-        )
-    }
-
-    private fun TheTriviaApiResponse.textOf(it: TriviaAnswer): AnswerContent.TextAnswer {
-        val value = (it as TriviaAnswer.TextAnswer).value
-        return AnswerContent.TextAnswer(
-            value,
-            isCorrect = value == correctAnswer
         )
     }
 }

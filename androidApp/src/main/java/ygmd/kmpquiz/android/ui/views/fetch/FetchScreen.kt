@@ -33,6 +33,7 @@ fun FetchScreen(
             .background(Color(0xFFF8F9FA))
             .statusBarsPadding()
     ) {
+/*
         // Header
         FetchTopBar(onNavigateBack = onNavigateBack)
 
@@ -43,14 +44,15 @@ fun FetchScreen(
             }
 
             is FetchState.Success -> {
-                if (state.availableQandas.isEmpty()) {
+                if (state.availableQandas.isEmpty())
                     EmptySection(onRetry = { fetchViewModel.fetchQandas() })
-                } else {
+                else {
                     SuccessSection(
-                        state = state,
-                        fetchQandasViewModel = fetchViewModel,
-                        saveViewModel = saveViewModel,
-                    )
+                            state = state,
+                            fetchQandasViewModel = fetchViewModel,
+                            saveViewModel = saveViewModel,
+                        )
+                    }
                 }
             }
 
@@ -61,5 +63,6 @@ fun FetchScreen(
                 )
             }
         }
+*/
     }
 }

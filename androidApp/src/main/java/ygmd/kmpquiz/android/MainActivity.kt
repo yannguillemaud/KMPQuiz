@@ -27,8 +27,8 @@ class Main : ComponentActivity() {
                         HomeScreen(
                             onNavigateToFetch = { navController.navigate(Fetch) },
                             onNavigateToSaved = { navController.navigate(Saved) },
-                            onNavigateToStats = { navController.navigate(Statistics) },
-                            onNavigateToParams = { navController.navigate(Settings) }
+                            onNavigateToQuiz = { navController.navigate(Quiz) },
+                            onNavigateToNotifications = { navController.navigate(Settings) }
                         )
                     }
 
@@ -47,24 +47,16 @@ class Main : ComponentActivity() {
                         )
                     }
 
-                    composable<Statistics> {
-                        // TODO: Implémenter l'écran de statistiques globales
-//                        StatisticsScreen(
-//                            stats = QuizStats(),
-//                            onNavigateBack = { navController.popBackStack() }
-//                        )
-                    }
-
-                    composable<Settings> {
-                        NotificationSettingsScreen(
-                            onNavigateBack = { navController.popBackStack() }
-                        )
-                    }
-
                     composable<Quiz> { backStackEntry ->
                         val quiz = backStackEntry.toRoute<Quiz>()
                         QuizScreen(
                             qandaIds = quiz.qandaIds,
+                            onNavigateBack = { navController.popBackStack() }
+                        )
+                    }
+
+                    composable<Settings> {
+                        NotificationSettingsScreen(
                             onNavigateBack = { navController.popBackStack() }
                         )
                     }

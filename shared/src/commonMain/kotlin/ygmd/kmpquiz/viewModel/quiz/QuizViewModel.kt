@@ -6,9 +6,9 @@ import co.touchlab.kermit.Logger
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import ygmd.kmpquiz.domain.entities.qanda.AnswerContent
-import ygmd.kmpquiz.domain.entities.quiz.QuizSession
 import ygmd.kmpquiz.application.usecase.quiz.QuizUseCase
+import ygmd.kmpquiz.domain.entities.qanda.AnswerSet.AnswerContent
+import ygmd.kmpquiz.domain.entities.quiz.QuizSession
 import ygmd.kmpquiz.viewModel.quiz.QuizUiState.Idle
 import ygmd.kmpquiz.viewModel.quiz.QuizUiState.InProgress
 
@@ -30,7 +30,7 @@ class QuizViewModel(
                     logger.i { "Quiz started with ${session.qandas.size} questions" }
                     _uiState.value = InProgress(
                         session = session,
-                        shuffledAnswers = session.currentQanda?.answers?.shuffled() ?: emptyList()
+                        shuffledAnswers = session.currentQanda?.answers?.shuffled()
                     )
                 },
                 onFailure = { error ->
@@ -65,7 +65,7 @@ class QuizViewModel(
 
         val updatedSession = session.copy(
             userAnswers = session.userAnswers + (session.currentIndex to selectedAnswer),
-            currentIndex = session.currentIndex +1,
+            currentIndex = session.currentIndex + 1,
         )
 
         if (updatedSession.isComplete) {
@@ -80,7 +80,7 @@ class QuizViewModel(
             // Question suivante
             _uiState.value = InProgress(
                 session = updatedSession,
-                shuffledAnswers = updatedSession.currentQanda?.answers?.shuffled() ?: emptyList(),
+                shuffledAnswers = updatedSession.currentQanda?.answers?.shuffled(),
                 hasAnswered = false,
                 selectedAnswer = null
             )

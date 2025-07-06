@@ -80,38 +80,41 @@ fun SavedScreen(
     onNavigateBack: () -> Unit = {},
     onStartQuiz: (List<Long>) -> Unit = {}
 ) {
-    val uiState by viewModel.savedState.collectAsState()
-    var isGridView by remember { mutableStateOf(false) }
-    var searchQuery by remember { mutableStateOf("") }
-    var showSearchBar by remember { mutableStateOf(false) }
-    var selectedCategory by remember { mutableStateOf<String?>(null) }
+    /*
+        val uiState by viewModel.savedState.collectAsState()
+        var isGridView by remember { mutableStateOf(false) }
+        var searchQuery by remember { mutableStateOf("") }
+        var showSearchBar by remember { mutableStateOf(false) }
+        var selectedCategory by remember { mutableStateOf<String?>(null) }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .statusBarsPadding()
-            .background(Color(0xFFF8F9FA))
-    ) {
-        // Header épuré
-        TopBar(
-            isGridView = isGridView,
-            showSearchBar = showSearchBar,
-            searchQuery = searchQuery,
-            onSearchQueryChange = { searchQuery = it },
-            onToggleSearch = { showSearchBar = !showSearchBar },
-            onToggleView = { isGridView = !isGridView },
-            onNavigateBack = onNavigateBack,
-            totalQuizCount = when (val state = uiState) {
-                is SavedQandasUiState.Success -> state.qandas.size
-                else -> 0
-            }
-        )
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .statusBarsPadding()
+                .background(Color(0xFFF8F9FA))
+        ) {
+            // Header épuré
+            TopBar(
+                isGridView = isGridView,
+                showSearchBar = showSearchBar,
+                searchQuery = searchQuery,
+                onSearchQueryChange = { searchQuery = it },
+                onToggleSearch = { showSearchBar = !showSearchBar },
+                onToggleView = { isGridView = !isGridView },
+                onNavigateBack = onNavigateBack,
+                totalQuizCount = when (val state = uiState) {
+                    is SavedQandasUiState.Success -> state.qandas.size
+                    else -> 0
+                }
+            )
 
-        when (val state = uiState) {
-            is SavedQandasUiState.Success -> {
-                if (state.qandas.isEmpty()) {
-                    MinimalEmptyStateSection(
-                        onExploreQuiz = { /* TODO: Navigate to fetch */ }
+            when (val state = uiState) {
+                is SavedQandasUiState.Success -> {
+                    if (state.qandas.isEmpty()) {
+                        MinimalEmptyStateSection(
+                            onExploreQuiz = { */
+    /* TODO: Navigate to fetch *//*
+ }
                     )
                 } else {
                     // Filtrage
@@ -194,6 +197,7 @@ fun SavedScreen(
             }
         }
     }
+*/
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -404,7 +408,7 @@ fun QuizCard(
                         modifier = Modifier
                             .size(8.dp)
                             .background(
-                                when (qanda.difficulty.lowercase()) {
+                                when (qanda.metadata.difficulty?.lowercase()) {
                                     "easy" -> Color(0xFF10B981)
                                     "medium" -> Color(0xFFF59E0B)
                                     "hard" -> Color(0xFFEF4444)
@@ -414,14 +418,16 @@ fun QuizCard(
                             )
                     )
 
-                    Text(
-                        text = qanda.category,
-                        style = TextStyle(
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Medium,
-                            color = Color(0xFF6B7280)
+                    qanda.metadata.category?.let {
+                        Text(
+                            text = it,
+                            style = TextStyle(
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = Color(0xFF6B7280)
+                            )
                         )
-                    )
+                    }
                 }
 
                 Row(
@@ -447,7 +453,7 @@ fun QuizCard(
 
             // Question
             Text(
-                text = qanda.question,
+                text = qanda.question.text,
                 style = TextStyle(
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Medium,
@@ -466,19 +472,21 @@ fun QuizCard(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = qanda.difficulty.lowercase().replaceFirstChar { it.uppercase() },
-                    style = TextStyle(
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = when (qanda.difficulty.lowercase()) {
-                            "easy" -> Color(0xFF10B981)
-                            "medium" -> Color(0xFFF59E0B)
-                            "hard" -> Color(0xFFEF4444)
-                            else -> Color(0xFF6B7280)
-                        }
+                qanda.metadata.difficulty?.let {
+                    Text(
+                        text = it.lowercase().replaceFirstChar { it.uppercase() },
+                        style = TextStyle(
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = when (it.lowercase()) {
+                                "easy" -> Color(0xFF10B981)
+                                "medium" -> Color(0xFFF59E0B)
+                                "hard" -> Color(0xFFEF4444)
+                                else -> Color(0xFF6B7280)
+                            }
+                        )
                     )
-                )
+                }
 
                 Icon(
                     imageVector = Icons.Filled.PlayArrow,

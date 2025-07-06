@@ -6,11 +6,10 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import ygmd.kmpquiz.domain.entities.qanda.AnswerContent
+import ygmd.kmpquiz.domain.entities.qanda.AnswerSet.AnswerContent
 import ygmd.kmpquiz.viewModel.quiz.QuizUiState
 
 @Composable
@@ -28,7 +27,8 @@ fun QuizInProgressSection(
         QuizHeader(
             currentQuestion = session.currentIndex + 1,
             totalQuestions = session.qandas.size,
-            category = currentQanda.category,
+            // TODO
+            category = currentQanda.metadata.category ?: "NullCategory",
             onNavigateBack = onNavigateBack
         )
 
@@ -41,9 +41,11 @@ fun QuizInProgressSection(
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
             item {
-                QuestionCard(question = currentQanda.question)
+                QuestionCard(question = currentQanda.question.text)
             }
 
+// TODO
+/*
             items(state.shuffledAnswers) { answer ->
                 AnswerCard(
                     answer = answer,
@@ -53,6 +55,7 @@ fun QuizInProgressSection(
                     onClick = { onAnswerSelected(answer) }
                 )
             }
+*/
         }
 
         // Footer avec bouton suivant

@@ -1,6 +1,10 @@
 package ygmd.kmpquiz.infra.openTrivia
 
 import kotlinx.serialization.Serializable
+import ygmd.kmpquiz.domain.entities.qanda.AnswerSet
+import ygmd.kmpquiz.domain.entities.qanda.Qanda
+import ygmd.kmpquiz.domain.entities.qanda.QandaMetadata
+import ygmd.kmpquiz.domain.entities.qanda.QuestionContent
 import ygmd.kmpquiz.unescaped
 
 @Serializable
@@ -18,20 +22,18 @@ class OpenTriviaQandaDto(
     val correct_answer: String,
     val incorrect_answers: List<String>
 ) {
-    fun toInternal(): InternalQanda {
+    fun toQanda(): Qanda {
         val incorrect = incorrect_answers.map { it.unescaped() }
         val correct = correct_answer.unescaped()
+        val isBooleanQuestion = incorrect.size == 1
 
-        val allAnswers =
-            if (incorrect_answers.size == 1) incorrect_answers.asBooleanAnswers()
-            else (incorrect + correct)
-
-        return InternalQanda(
-            category = category.sanitized().unescaped(),
-            difficulty = difficulty,
-            question = question.unescaped(),
-            answers = allAnswers,
-            correctAnswer = correct,
+        return Qanda(
+            question = QuestionContent.TextContent(question),
+            answers = answerSetOf(isBooleanQuestion, correct),
+            metadata = QandaMetadata(
+                category = category.sanitized(),
+                difficulty = difficulty,
+            )
         )
     }
 
@@ -69,13 +71,14 @@ class OpenTriviaQandaDto(
     }
 }
 
-private fun List<String>.asBooleanAnswers(): List<String> {
-    if (isEmpty()) throw IllegalArgumentException("List is empty, cannot transform as boolean answers")
-
-    return listOf(
-        first(),
-        first().toBoolean().not().toString().replaceFirstChar { it.uppercase() }
-    )
+private fun OpenTriviaQandaDto.answerSetOf(
+    isBooleanQuestion: Boolean,
+    correct: String
+): AnswerSet = if (isBooleanQuestion) {
+    AnswerSet.createTrueFalse(correct_answer.toBooleanStrict())
+} else {
+    AnswerSet.createMultipleTextChoice(correct, incorrect_answers)
 }
+
 
 private fun String.sanitized(): String = this.replace("Entertainment: ", "")

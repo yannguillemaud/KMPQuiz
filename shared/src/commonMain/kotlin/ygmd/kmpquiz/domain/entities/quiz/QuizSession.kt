@@ -1,6 +1,6 @@
 package ygmd.kmpquiz.domain.entities.quiz
 
-import ygmd.kmpquiz.domain.entities.qanda.AnswerContent
+import ygmd.kmpquiz.domain.entities.qanda.AnswerSet.AnswerContent
 import ygmd.kmpquiz.domain.entities.qanda.Qanda
 
 data class QuizSession(

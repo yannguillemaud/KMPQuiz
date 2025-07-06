@@ -36,13 +36,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import ygmd.kmpquiz.android.ui.views.theme.difficultyColor
 import ygmd.kmpquiz.viewModel.QandaStatus
-import ygmd.kmpquiz.viewModel.QandaUiState
 
+/*
 @Composable
 fun QandaFetchCard(
-    qandaState: QandaUiState,
+    qandaState: Qanda,
     onSaveClick: () -> Unit
 ) {
     var isPressed by remember { mutableStateOf(false) }
@@ -75,14 +74,16 @@ fun QandaFetchCard(
                             )
                     )
 
-                    Text(
-                        text = qandaState.qanda.category,
-                        style = TextStyle(
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Medium,
-                            color = Color(0xFF6B7280)
+                    qandaState.qanda.metadata.category?.let {
+                        Text(
+                            text = it,
+                            style = TextStyle(
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = Color(0xFF6B7280)
+                            )
                         )
-                    )
+                    }
                 }
 
                 // Indicateur d'état
@@ -145,7 +146,7 @@ fun QandaFetchCard(
 
             // Question
             Text(
-                text = qandaState.qanda.question,
+                text = qandaState.qanda.question.contextKey,
                 style = TextStyle(
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Medium,
@@ -164,15 +165,17 @@ fun QandaFetchCard(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = qandaState.qanda.difficulty.lowercase()
-                        .replaceFirstChar { it.uppercase() },
-                    style = TextStyle(
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = qandaState.difficulty.difficultyColor()
+                qandaState.qanda.metadata.difficulty?.let{
+                    Text(
+                        text = it.lowercase()
+                            .replaceFirstChar { it.uppercase() },
+                        style = TextStyle(
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = qandaState.difficulty.difficultyColor()
+                        )
                     )
-                )
+                }
 
                 Button(
                     onClick = {
@@ -220,4 +223,4 @@ fun QandaFetchCard(
             }
         }
     }
-}
+}*/

@@ -14,7 +14,6 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import ygmd.kmpquiz.viewModel.Difficulty
 
 @Composable
 fun QuizTheme(
@@ -53,13 +52,4 @@ fun QuizTheme(
         shapes = shapes,
         content = content
     )
-}
-
-
-@Composable
-fun Difficulty.difficultyColor() = when (this) {
-    Difficulty.EASY -> Color(0xFF10B981)
-    Difficulty.MEDIUM -> Color(0xFFF59E0B)
-    Difficulty.HARD -> Color(0xFFEF4444)
-    else -> Color(0xFF6B7280)
 }

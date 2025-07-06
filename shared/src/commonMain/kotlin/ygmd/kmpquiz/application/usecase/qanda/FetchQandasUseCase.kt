@@ -8,6 +8,6 @@ import ygmd.kmpquiz.domain.entities.qanda.Qanda
 class FetchQandasUseCase(
     private val fetcher: QandaFetcher,
 ) {
-    suspend operator fun invoke(): FetchResult<List<Qanda>> =
+    suspend fun fetch(): FetchResult<List<Qanda>> =
         fetcher.fetch(FetchConfig())
 }

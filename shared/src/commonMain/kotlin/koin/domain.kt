@@ -38,7 +38,6 @@ val domainModule = module {
     factory<QuizUseCase> {
         QuizUseCaseImpl(
             repository = get(),
-            logger = get()
         )
     }
 

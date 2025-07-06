@@ -10,13 +10,7 @@ enum class QandaStatus {
     ERROR, // Erreur lors de la sauvegarde
 }
 
-enum class Difficulty {
-    HARD,
-    MEDIUM,
-    EASY,
-    UNKNOWN,
-}
-
+/*
 data class QandaUiState(
     val qanda: Qanda,
     val downloadState: DownloadState,
@@ -30,12 +24,4 @@ data class QandaUiState(
 
     val isSaved = status == QandaStatus.SAVED
     val isSaving = status == QandaStatus.DOWNLOADING
-
-    val difficulty: Difficulty
-        get() = when(qanda.difficulty.lowercase()){
-            "easy" -> Difficulty.EASY
-            "medium" -> Difficulty.MEDIUM
-            "hard" -> Difficulty.HARD
-            else -> Difficulty.UNKNOWN
-        }
-}
+}*/

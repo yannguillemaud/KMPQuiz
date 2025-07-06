@@ -1,13 +1,13 @@
 package ygmd.kmpquiz.domain.entities.qanda
 
-import kotlinx.serialization.Serializable
+import ygmd.kmpquiz.domain.entities.qanda.AnswerSet.AnswerContent
 
-@Serializable
+
 data class Qanda(
     val id: Long? = null,
-    val metadata: QandaMetadata,
     val question: QuestionContent,
     val answers: AnswerSet,
+    val metadata: QandaMetadata,
 ) {
     init {
         require(answers.hasExactlyOneCorrectAnswer()) {
@@ -16,33 +16,41 @@ data class Qanda(
     }
 
     val contextKey: String
-        get() = "${question.contextKey}|${answers.correctAnswer.contextKey}"
+        get() = "${question.contextKey}|${correctAnswer.contextKey}"
 
     val correctAnswer: AnswerContent
         get() = answers.correctAnswer
 }
 
-@Serializable
+
+data class QandaMetadata(
+    val category: String?,
+    val difficulty: String?,
+    val tags: Map<String, Any> = emptyMap()
+)
+
+
 sealed interface QuestionContent {
+    val text: String
     val contextKey: String
 
-    @Serializable
-    data class TextContent(val text: String) : QuestionContent {
+    data class TextContent(override val text: String) : QuestionContent {
         override val contextKey: String
-            get() = text.lowercase()
+            get() = text.normalize()
     }
 
-    @Serializable
+
     data class ImageContent(
+        override val text: String,
         val imageUrl: String,
         val altText: String? = null
     ) : QuestionContent {
         override val contextKey: String
-            get() = imageUrl.normalize()
+            get() = "${text}|${imageUrl}".normalize()
     }
 }
 
-@Serializable
+
 data class AnswerSet(
     val answers: List<AnswerContent>
 ) {
@@ -87,42 +95,43 @@ data class AnswerSet(
                 )
             )
         }
-}
-
-@Serializable
-sealed interface AnswerContent {
-    val isCorrect: Boolean
-    val contextKey: String
-
-    @Serializable
-    data class TextContent(
-        val text: String,
-        override val isCorrect: Boolean,
-    ) : AnswerContent {
-        init {
-            require(text.isNotBlank())
-        }
-
-        override val contextKey: String
-            get() = text.normalize()
     }
 
-    @Serializable
-    data class ImageContent(
-        val imageUrl: String,
-        val altText: String? = null,
-        override val isCorrect: Boolean,
-    ): AnswerContent {
-        init {
-            require(imageUrl.isNotBlank())
+
+    sealed interface AnswerContent {
+        val isCorrect: Boolean
+        val contextKey: String
+
+
+        data class TextContent(
+            val text: String,
+            override val isCorrect: Boolean,
+        ) : AnswerContent {
+            init {
+                require(text.isNotBlank())
+            }
+
+            override val contextKey: String
+                get() = text.normalize()
         }
 
-        override val contextKey: String
-            get() = imageUrl.normalize()
+
+        data class ImageContent(
+            val imageUrl: String,
+            val altText: String? = null,
+            override val isCorrect: Boolean,
+        ) : AnswerContent {
+            init {
+                require(imageUrl.isNotBlank())
+            }
+
+            override val contextKey: String
+                get() = imageUrl.normalize()
+        }
     }
 }
 
 private fun String.normalize(): String =
-    this.trim()
+    trim()
         .lowercase()
         .replace(Regex("\\s+"), " ")

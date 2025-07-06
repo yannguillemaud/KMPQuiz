@@ -4,7 +4,7 @@ kotlin = "2.1.21"
 kotlin-coroutines = "1.10.2"
 kotlin-serialization-json = "1.8.1"  # Version correcte pour kotlinx-serialization-json
 
-agp = "8.9.3"
+agp = "8.10.1"
 arrowCore = "1.2.0"
 exposedCoreVersion = "0.45.0"
 exposedDaoVersion = "0.45.0"

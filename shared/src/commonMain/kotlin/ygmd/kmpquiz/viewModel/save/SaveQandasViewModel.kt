@@ -22,7 +22,10 @@ class SavedQandasViewModel(
         .map { qandas ->
             SavedQandasUiState.Success(
                 qandas = qandas,
-                categories = qandas.map { it.category }.distinct()
+                categories = qandas
+                    .map { it.metadata }
+                    .mapNotNull { it.category }
+                    .distinct()
             )
         }
         .stateIn(
@@ -61,14 +64,11 @@ class SavedQandasViewModel(
 }
 
 // États UI simplifiés
-sealed class SavedQandasUiState {
-    data object Loading : SavedQandasUiState()
+sealed interface SavedQandasUiState {
+    data object Loading : SavedQandasUiState
 
     data class Success(
         val qandas: List<Qanda>,
         val categories: List<String>
-    ) : SavedQandasUiState() {
-        fun containsContentKey(contextKey: String) =
-            qandas.any { it.contextKey == contextKey }
-    }
+    ) : SavedQandasUiState
 }

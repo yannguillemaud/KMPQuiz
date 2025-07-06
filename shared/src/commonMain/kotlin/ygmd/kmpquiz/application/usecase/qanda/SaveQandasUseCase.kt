@@ -15,7 +15,7 @@ class SaveQandasUseCaseImpl(
     private val repository: QandaRepository,
 ) : SaveQandasUseCase {
     override suspend fun save(qanda: Qanda): Result<Unit> {
-        logger.i { "Attempting to save qanda: ${qanda.question.take(50)}..." }
+        logger.i { "Attempting to save qanda: ${qanda.question.text.take(50)}..." }
 
         // Vérification par ID si présent
         qanda.id?.let { id ->
@@ -76,7 +76,7 @@ class SaveQandasUseCaseImpl(
 
             if (alreadyExists) {
                 existingCount++
-                logger.d { "Skipping existing qanda: ${qanda.question.take(30)}..." }
+                logger.d { "Skipping existing qanda: ${qanda.question.text.take(30)}..." }
             } else {
                 qandasToSave.add(qanda)
             }

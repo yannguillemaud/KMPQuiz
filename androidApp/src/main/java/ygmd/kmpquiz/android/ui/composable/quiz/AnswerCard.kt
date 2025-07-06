@@ -28,7 +28,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import ygmd.kmpquiz.domain.entities.qanda.AnswerContent
+import ygmd.kmpquiz.domain.entities.qanda.AnswerSet.AnswerContent
 
 @Composable
 fun AnswerCard(
@@ -92,7 +92,7 @@ fun AnswerCard(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            if (answer is AnswerContent.TextAnswer)
+            if (answer is AnswerContent.TextContent)
                 Text(
                     text = answer.text,
                     style = TextStyle(

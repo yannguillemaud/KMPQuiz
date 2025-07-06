@@ -14,7 +14,6 @@ import ygmd.kmpquiz.data.repository.service.FetchResult
 import ygmd.kmpquiz.data.service.FetchConfig
 import ygmd.kmpquiz.data.service.QandaFetcher
 import ygmd.kmpquiz.domain.entities.qanda.Qanda
-import ygmd.kmpquiz.domain.entities.qanda.toQanda
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
@@ -96,7 +95,7 @@ private suspend fun processSuccessResponse(response: HttpResponse): FetchResult<
 private fun handleApiResponse(apiResponse: OpenTriviaApiResponse): FetchResult<List<Qanda>> {
     return when (apiResponse.response_code) {
         0 -> {
-            val qandas = apiResponse.results.map { it.toInternal().toQanda() }
+            val qandas = apiResponse.results.map { it.toQanda() }
             logger.i { "${qandas.size} qandas fetched successfully" }
             FetchResult.Success(qandas)
         }
