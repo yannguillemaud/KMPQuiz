@@ -21,7 +21,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Refresh
@@ -42,14 +41,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import ygmd.kmpquiz.viewModel.quiz.QuizUiState
+import ygmd.kmpquiz.viewModel.quiz.session.QuizSessionUiState
 
 @Composable
 fun QuizCompletedSection(
-    state: QuizUiState.Completed,
+    state: QuizSessionUiState.Completed,
     onNavigateBack: () -> Unit
 ) {
     val percentage = (state.results.score * 100f / state.results.questions).toInt()

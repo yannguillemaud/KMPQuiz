@@ -1,34 +1,29 @@
 [versions]
-assertjCore = "3.25.3"
-kotlin = "2.1.21"
+kcronCommon = "0.27.4"
+kotlin = "2.2.10"
 kotlin-coroutines = "1.10.2"
-kotlin-serialization-json = "1.8.1"  # Version correcte pour kotlinx-serialization-json
+kotlin-serialization-json = "1.9.0"
 
-agp = "8.10.1"
-arrowCore = "1.2.0"
-exposedCoreVersion = "0.45.0"
-exposedDaoVersion = "0.45.0"
-hikaricpVersion = "5.1.0"
-compose = "1.8.0"
+agp = "8.12.1"
+compose = "1.9.0"
+composeMultiplateform = "1.8.2"
+androidx-lifecycle = "2.9.2"
+composeHotReload = "1.0.0-beta05"
 
-androidx-lifecycle = "2.9.0"
+koin = "4.1.0"
+kermit = "2.0.8"
 
-koin = "4.0.4"
-kermit = "2.0.5"
-
-ktor = "3.1.2"
+ktor = "3.2.3"
 material3Android = "1.3.2"
-mockk = "1.14.2"
-postgresqlVersion = "42.7.3"
-room = "2.7.1"
+mockk = "1.14.5"
 ksp = "2.1.21-2.0.2"
 
 # DATABASE
-exposedCore = "0.47.1"
-exposedDao = "0.47.1"
-hikaricp = "5.1.0"
+postgresqlVersion = "42.7.7"
+exposedVersion = "0.61.0"
+hikaricpVersion = "7.0.2"
+workRuntimeKtx = "2.10.3"
 
-composeHotReload = "1.0.0-alpha10"
 
 [libraries]
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version = "1.10.1" }
@@ -37,16 +32,15 @@ androidx-lifecycle-runtime-compose = { group = "org.jetbrains.androidx.lifecycle
 
 androidx-material3-android = { group = "androidx.compose.material3", name = "material3-android", version.ref = "material3Android" }
 
-arrow-core = { module = "io.arrow-kt:arrow-core", version.ref = "arrowCore" }
-assertj-core = { module = "org.assertj:assertj-core", version.ref = "assertjCore" }
+androidx-work-runtime-ktx = { module = "androidx.work:work-runtime-ktx", version.ref = "workRuntimeKtx" }
 compose-ui = { module = "androidx.compose.ui:ui", version.ref = "compose" }
 compose-ui-tooling = { module = "androidx.compose.ui:ui-tooling", version.ref = "compose" }
 compose-ui-tooling-preview = { module = "androidx.compose.ui:ui-tooling-preview", version.ref = "compose" }
 
 # DATABASE
-exposed-dao = { module = "org.jetbrains.exposed:exposed-dao", version.ref = "exposedDaoVersion" }
-exposed-core = { module = "org.jetbrains.exposed:exposed-core", version.ref = "exposedCoreVersion" }
-exposed-jdbc = { module = "org.jetbrains.exposed:exposed-jdbc", version.ref = "exposedCoreVersion" }
+exposed-dao = { module = "org.jetbrains.exposed:exposed-dao", version.ref = "exposedVersion" }
+exposed-core = { module = "org.jetbrains.exposed:exposed-core", version.ref = "exposedVersion" }
+exposed-jdbc = { module = "org.jetbrains.exposed:exposed-jdbc", version.ref = "exposedVersion" }
 hikaricp = { module = "com.zaxxer:HikariCP", version.ref = "hikaricpVersion" }
 
 # KOIN
@@ -55,15 +49,17 @@ koin-ktor = {module = "io.insert-koin:koin-ktor", version.ref = "koin"}
 koin-android = {module = "io.insert-koin:koin-android", version.ref = "koin" }
 koin-compose-viewmodel = {module = "io.insert-koin:koin-compose-viewmodel", version.ref = "koin" }
 koin-compose-viewmodel-nav = {module = "io.insert-koin:koin-compose-viewmodel-navigation", version.ref = "koin" }
+koin-androidx-workmanager = { module = "io.insert-koin:koin-androidx-workmanager", version.ref = "koin" }
 
 kermit = { module = "co.touchlab:kermit", version.ref = "kermit" }
 
+kcron-common = { module = "com.ucasoft.kcron:kcron-common", version.ref = "kcronCommon" }
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
 
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlin-coroutines" }
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlin-coroutines" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlin-serialization-json" }  # Référence corrigée
-kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version = "0.6.2" }
+kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version = "0.7.1" }
 
 ktor-client-content-negotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor" }
 ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
@@ -76,14 +72,9 @@ ktor-server-content-negotiation = { module = "io.ktor:ktor-server-content-negoti
 ktor-server-core = { module = "io.ktor:ktor-server-core", version.ref = "ktor" }
 ktor-server-netty = { module = "io.ktor:ktor-server-netty", version.ref = "ktor" }
 koin-logger-slf4j = { module = "io.insert-koin:koin-logger-slf4j", version.ref = "koin" }
-logback = { module = "ch.qos.logback:logback-classic", version = "1.4.11" }
 
 mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
 postgresql = { module = "org.postgresql:postgresql", version.ref = "postgresqlVersion" }
-room-runtime = { group = "androidx.room", name = "room-runtime", version.ref = "room" }
-room-runtime-android = { group = "androidx.room", name = "room-runtime-android", version.ref = "room" }
-room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "room" }
-sqlite = { group = "androix.sqlite", name = "sqlite-bundled", version.ref = "room" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }
@@ -93,7 +84,6 @@ kotlinMultiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref =
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 composeHotReload = { id = "org.jetbrains.compose.hot-reload", version.ref = "composeHotReload"}
-compose-multiplatform = { id = "org.jetbrains.compose", version.ref = "compose" }
+compose-multiplatform = { id = "org.jetbrains.compose", version.ref = "composeMultiplateform" }
 
-room = { id = "androix.room", version.ref = "room" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }

@@ -12,11 +12,11 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import ygmd.kmpquiz.createQanda
 import ygmd.kmpquiz.createQuizSession
-import ygmd.kmpquiz.application.usecase.quiz.QuizUseCase
-import ygmd.kmpquiz.viewModel.quiz.QuizUiState
-import ygmd.kmpquiz.viewModel.quiz.QuizUiState.Completed
-import ygmd.kmpquiz.viewModel.quiz.QuizUiState.InProgress
-import ygmd.kmpquiz.viewModel.quiz.QuizViewModel
+import ygmd.kmpquiz.application.usecase.quiz.StartQuizSessionUseCase
+import ygmd.kmpquiz.viewModel.quiz.session.QuizSessionUiState
+import ygmd.kmpquiz.viewModel.quiz.session.QuizSessionUiState.Completed
+import ygmd.kmpquiz.viewModel.quiz.session.QuizSessionUiState.InProgress
+import ygmd.kmpquiz.viewModel.quiz.session.QuizSessionViewModel
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -29,10 +29,10 @@ import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class QuizViewModelTest {
-    private val quizUseCase: QuizUseCase = mockk()
+    private val startQuizSessionUseCase: StartQuizSessionUseCase = mockk()
     private val logger: Logger = mockk(relaxed = true)
 
-    private lateinit var viewModel: QuizViewModel
+    private lateinit var viewModel: QuizSessionViewModel
 
     @OptIn(ExperimentalCoroutinesApi::class)
     private val testDispatcher = UnconfinedTestDispatcher()
@@ -41,7 +41,7 @@ class QuizViewModelTest {
     @BeforeTest
     fun setup() {
         Dispatchers.setMain(testDispatcher)
-        viewModel = QuizViewModel(quizUseCase, logger)
+        viewModel = QuizSessionViewModel(startQuizSessionUseCase, logger)
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -54,7 +54,7 @@ class QuizViewModelTest {
     fun `should have Idle state initially`() {
         // Given - setUp
         // Then
-        assertIs<QuizUiState.Idle>(viewModel.quizUiState.value)
+        assertIs<QuizSessionUiState.Idle>(viewModel.quizUiState.value)
     }
 
     @Test
@@ -68,7 +68,7 @@ class QuizViewModelTest {
             )
         )
 
-        coEvery { quizUseCase.start(any()) } returns Result.success(mockSession)
+        coEvery { startQuizSessionUseCase.start(any()) } returns Result.success(mockSession)
 
         // When
         viewModel.startQuiz(qandaIds)
@@ -80,7 +80,7 @@ class QuizViewModelTest {
         assertFalse { currentState.hasAnswered }
         assertNull(currentState.selectedAnswer)
 
-        coVerify { quizUseCase.start(qandaIds) }
+        coVerify { startQuizSessionUseCase.start(qandaIds) }
     }
 
     @Test
@@ -90,14 +90,14 @@ class QuizViewModelTest {
         val errorMessage = "Network error"
         val exception = RuntimeException(errorMessage)
 
-        coEvery { quizUseCase.start(qandaIds) } returns Result.failure(exception)
+        coEvery { startQuizSessionUseCase.start(qandaIds) } returns Result.failure(exception)
 
         // When
         viewModel.startQuiz(qandaIds)
 
         // Then
         val currentState = viewModel.quizUiState.value
-        assertIs<QuizUiState.Error>(currentState)
+        assertIs<QuizSessionUiState.Error>(currentState)
         assertEquals(errorMessage, currentState.message)
     }
 
@@ -111,7 +111,7 @@ class QuizViewModelTest {
                 createQanda(category = "History", difficulty = "Easy")
             )
         )
-        coEvery { quizUseCase.start(qandaIds) } returns Result.success(session)
+        coEvery { startQuizSessionUseCase.start(qandaIds) } returns Result.success(session)
 
         // When
         viewModel.startQuiz(qandaIds)
@@ -145,7 +145,7 @@ class QuizViewModelTest {
                 )
             )
         )
-        coEvery { quizUseCase.start(qandaIds) } returns Result.success(session)
+        coEvery { startQuizSessionUseCase.start(qandaIds) } returns Result.success(session)
 
         // When - 2 bonnes réponses, 1 fausse
         viewModel.startQuiz(qandaIds)
@@ -182,7 +182,7 @@ class QuizViewModelTest {
         val qandaWithNullId = createQanda(id = null)
         val session = createQuizSession(qandas = listOf(qandaWithNullId))
 
-        coEvery { quizUseCase.start(qandaIds) } returns Result.success(session)
+        coEvery { startQuizSessionUseCase.start(qandaIds) } returns Result.success(session)
 
         // When
         viewModel.startQuiz(qandaIds)
@@ -206,7 +206,7 @@ class QuizViewModelTest {
         val qandaIds = listOf(42L)
         val session = createQuizSession(qandas = listOf(originalQanda))
 
-        coEvery { quizUseCase.start(qandaIds) } returns Result.success(session)
+        coEvery { startQuizSessionUseCase.start(qandaIds) } returns Result.success(session)
 
         // When
         viewModel.startQuiz(qandaIds)
@@ -239,7 +239,7 @@ class QuizViewModelTest {
             ),
             currentIndex = 0
         )
-        coEvery { quizUseCase.start(qandaIds) } returns Result.success(session)
+        coEvery { startQuizSessionUseCase.start(qandaIds) } returns Result.success(session)
 
         viewModel.startQuiz(qandaIds)
 
@@ -300,7 +300,7 @@ class QuizViewModelTest {
                 createQanda(id = 2L)
             )
         )
-        coEvery { quizUseCase.start(qandaIds) } returns Result.success(session)
+        coEvery { startQuizSessionUseCase.start(qandaIds) } returns Result.success(session)
 
         viewModel.startQuiz(qandaIds)
 
@@ -333,9 +333,9 @@ class QuizViewModelTest {
                 createQanda(id = 1L, question = "Single question?")
             )
         )
-        coEvery { quizUseCase.start(qandaIds) } returns Result.success(session)
+        coEvery { startQuizSessionUseCase.start(qandaIds) } returns Result.success(session)
         val state = viewModel.quizUiState.value
-        assertIs<QuizUiState.Idle>(state)
+        assertIs<QuizSessionUiState.Idle>(state)
 
         viewModel.startQuiz(qandaIds)
 

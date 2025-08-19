@@ -27,9 +27,8 @@ kotlin {
             implementation(libs.ktor.client.content.negotiation)
             implementation(libs.ktor.serialization.kotlinx.json)
 
-            implementation(libs.arrow.core)
-
             implementation(libs.kermit)
+            implementation(libs.kcron.common)
         }
 
         commonTest.dependencies {
@@ -37,26 +36,42 @@ kotlin {
             implementation(libs.kotlinx.coroutines.test)
             implementation(libs.mockk)
             implementation(libs.ktor.client.mock)
+            implementation(libs.kotlinx.datetime)
         }
 
         androidMain.dependencies {
             implementation(libs.ktor.client.okhttp)
+            // Koin pour Android
+            implementation(libs.koin.android)
+            // WorkManager
+            implementation(libs.androidx.work.runtime.ktx)
+            implementation(libs.koin.androidx.workmanager)
         }
 
         jvmMain {
             dependencies {
                 implementation(libs.ktor.client.cio)
+                implementation(libs.kcron.common)
             }
+        }
+
+        compilerOptions {
+            optIn.add("kotlin.time.ExperimentalTime")
         }
     }
 }
 
 android {
     namespace = "ygmd.kmpquiz.shared"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
-        minSdk = 24
+        minSdk = 26 
+    }
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_1_8
+        targetCompatibility = JavaVersion.VERSION_1_8
     }
 }
 

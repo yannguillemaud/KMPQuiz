@@ -21,9 +21,6 @@ dependencies {
     implementation(libs.ktor.server.content.negotiation)
     implementation(libs.ktor.serialization.kotlinx.json)
     implementation(libs.ktor.server.status.page)
-    implementation(libs.logback)
-
-//    implementation(libs.postgresql)
 
     // Exposed
     implementation(libs.exposed.core)
@@ -36,6 +33,8 @@ dependencies {
     implementation(libs.koin.core)
     implementation(libs.koin.ktor)
     implementation(libs.koin.logger.slf4j)
+
+    testImplementation(kotlin("test"))
 }
 
 kotlin {

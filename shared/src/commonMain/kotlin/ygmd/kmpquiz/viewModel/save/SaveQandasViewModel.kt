@@ -7,68 +7,54 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import ygmd.kmpquiz.domain.entities.qanda.Qanda
 import ygmd.kmpquiz.application.usecase.qanda.DeleteQandasUseCase
-import ygmd.kmpquiz.application.usecase.qanda.GetQandasUseCase
-import ygmd.kmpquiz.application.usecase.qanda.SaveQandasUseCase
+import ygmd.kmpquiz.application.usecase.qanda.GetQandaUseCase
+import ygmd.kmpquiz.domain.entities.qanda.Qanda
+
+sealed interface PersistanceIntent {
+    data class DeleteByIdentifier(val category: String) : PersistanceIntent
+    data class DeleteQanda(val qandaId: String) : PersistanceIntent
+}
+
+data class SavedQandasUiState(
+    val identifiedQandas: List<CategoryQandas> = emptyList()
+)
+
+data class CategoryQandas(
+    val identifier: String,
+    val qandas: List<Qanda>
+)
 
 class SavedQandasViewModel(
-    getQandasUseCase: GetQandasUseCase,
-    private val saveQandaUseCase: SaveQandasUseCase,
+    getQandaUseCase: GetQandaUseCase,
     private val deleteQandasUseCase: DeleteQandasUseCase
 ) : ViewModel() {
 
-    val savedState: StateFlow<SavedQandasUiState> = getQandasUseCase.observeAll()
+    val savedState: StateFlow<SavedQandasUiState> = getQandaUseCase.observeAll()
         .map { qandas ->
-            SavedQandasUiState.Success(
-                qandas = qandas,
-                categories = qandas
-                    .map { it.metadata }
-                    .mapNotNull { it.category }
-                    .distinct()
+            println(qandas)
+            SavedQandasUiState(
+                qandas.mapNotNull { qanda -> qanda.metadata.category?.let { it to qanda } }
+                    .groupBy({ it.first }, { it.second })
+                    .map { CategoryQandas(it.key, it.value) }
             )
         }
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
-            initialValue = SavedQandasUiState.Loading
+            initialValue = SavedQandasUiState()
         )
 
-    fun saveQanda(qanda: Qanda) {
-        viewModelScope.launch {
-            saveQandaUseCase.save(qanda)
-            // Pas besoin de mettre à jour manuellement !
-            // Le Flow se met à jour automatiquement 🎉
+    fun processIntent(persistanceIntent: PersistanceIntent) {
+        when (persistanceIntent) {
+            is PersistanceIntent.DeleteByIdentifier ->
+                viewModelScope.launch {
+                    deleteQandasUseCase.deleteAllByCategory(persistanceIntent.category)
+                }
+            is PersistanceIntent.DeleteQanda ->
+                viewModelScope.launch {
+                    deleteQandasUseCase.deleteById(persistanceIntent.qandaId)
+                }
         }
     }
-
-    fun saveAll(qandas: List<Qanda>) {
-        viewModelScope.launch {
-            saveQandaUseCase.saveAll(qandas)
-            // Idem, mise à jour automatique ! 🎉
-        }
-    }
-
-    fun deleteQanda(qanda: Qanda) {
-        viewModelScope.launch {
-            deleteQandasUseCase.delete(qanda)
-            // Idem, mise à jour automatique ! 🎉
-        }
-    }
-
-    fun toggleFavorite(qanda: Qanda) {
-        viewModelScope.launch {
-            // TODO: Implémenter quand on aura les favoris
-        }
-    }
-}
-
-// États UI simplifiés
-sealed interface SavedQandasUiState {
-    data object Loading : SavedQandasUiState
-
-    data class Success(
-        val qandas: List<Qanda>,
-        val categories: List<String>
-    ) : SavedQandasUiState
 }

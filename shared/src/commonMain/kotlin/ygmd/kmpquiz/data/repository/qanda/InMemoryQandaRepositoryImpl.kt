@@ -4,9 +4,10 @@ import co.touchlab.kermit.Logger
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.update
 import ygmd.kmpquiz.domain.entities.qanda.Qanda
-import ygmd.kmpquiz.domain.error.DomainError.PersistenceError.DatabaseError
 import ygmd.kmpquiz.domain.error.DomainError.QandaError.NotFound
+import ygmd.kmpquiz.domain.repository.DraftQanda
 import ygmd.kmpquiz.domain.repository.QandaRepository
 
 private val logger = Logger.withTag(InMemoryQandaRepository::class.simpleName.toString())
@@ -16,42 +17,32 @@ class InMemoryQandaRepository : QandaRepository {
     private val qandasMap: Map<Long, Qanda>
         get() = _qandasMap.value
 
-    override fun observeAll(): Flow<List<Qanda>> =
-        _qandasMap.map { it.values.toList() }
+    override fun observeAll(): Flow<List<Qanda>> = _qandasMap.map { it.values.toList() }
 
     override suspend fun getAll(): List<Qanda> = _qandasMap.value.values.toList()
 
-    override suspend fun save(qanda: Qanda): Result<Long> {
-        if (qanda.id != null) {
-            logger.w { "Qanda already has id: ${qanda.id}" }
-        }
+    override suspend fun getByCategory(category: String): List<Qanda> =
+        _qandasMap.value.values
+            .filter { it.metadata.category == category }
 
+    override suspend fun save(qanda: DraftQanda): Result<Long> {
         val newId = IDGenerator.nextId
-        val savedQanda = qanda.copy(id = newId)
-        _qandasMap.value += (newId to savedQanda)
+        val saved = qanda.toQanda(newId)
+        _qandasMap.update { it + (newId to saved) }
         return Result.success(newId)
     }
 
-    override suspend fun saveAll(qandas: List<Qanda>): Result<Unit> {
-        val conflicts = qandas.mapNotNull { it.id }
-        if (conflicts.isNotEmpty()) {
-            logger.w { "Following qandas already have ids: $conflicts" }
-        }
+    override suspend fun saveAll(qandas: List<DraftQanda>): Result<Unit> {
+        val toAdd: Map<Long, Qanda> = qandas
+                .map { draft -> draft.toQanda(IDGenerator.nextId) }
+                .associateBy { it.id }
 
-        val newEntries = qandas.associate { qanda ->
-            val newId = IDGenerator.nextId
-            newId to qanda.copy(id = newId)
-        }
-        _qandasMap.value += newEntries
+        _qandasMap.update { it + toAdd }
         return Result.success(Unit)
     }
 
     override suspend fun update(qanda: Qanda): Result<Unit> {
-        val id = qanda.id ?: return Result.failure(
-            DatabaseError("Cannot update Qanda with null ID")
-        )
-
-        _qandasMap.value += (id to qanda)
+        _qandasMap.value += (qanda.id to qanda)
         return Result.success(Unit)
     }
 
@@ -72,8 +63,7 @@ class InMemoryQandaRepository : QandaRepository {
         qandasMap[id]?.let { Result.success(it) } ?: Result.failure(NotFound)
 
     override suspend fun findByContentKey(qanda: Qanda): Result<Qanda> {
-        return qandasMap.values
-            .firstOrNull { it.contextKey == qanda.contextKey }
+        return qandasMap.values.firstOrNull { it.contextKey == qanda.contextKey }
             ?.let { Result.success(it) } ?: Result.failure(NotFound)
     }
 }

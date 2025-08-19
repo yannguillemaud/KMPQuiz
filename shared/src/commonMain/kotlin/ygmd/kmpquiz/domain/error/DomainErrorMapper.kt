@@ -1,11 +1,12 @@
 package ygmd.kmpquiz.domain.error
 
-import ygmd.kmpquiz.data.repository.service.FailureType.API_ERROR
-import ygmd.kmpquiz.data.repository.service.FailureType.ERROR
-import ygmd.kmpquiz.data.repository.service.FailureType.NETWORK_ERROR
-import ygmd.kmpquiz.data.repository.service.FailureType.RATE_LIMIT
-import ygmd.kmpquiz.data.repository.service.FetchResult
+import ygmd.kmpquiz.data.service.FailureType.API_ERROR
+import ygmd.kmpquiz.data.service.FailureType.ERROR
+import ygmd.kmpquiz.data.service.FailureType.NETWORK_ERROR
+import ygmd.kmpquiz.data.service.FailureType.RATE_LIMIT
+import ygmd.kmpquiz.data.service.FetchResult
 import ygmd.kmpquiz.viewModel.error.ViewModelError
+import ygmd.kmpquiz.viewModel.error.ViewModelError.SaveError
 
 fun DomainError.toViewModelError(): ViewModelError = when (this) {
     is DomainError.NetworkError.HttpError -> ViewModelError.NetworkError("HTTP $code: $errorMessage")
@@ -13,16 +14,18 @@ fun DomainError.toViewModelError(): ViewModelError = when (this) {
     is DomainError.NetworkError.RateLimited -> ViewModelError.NetworkError("Rate limit exceeded")
     is DomainError.NetworkError.ParseError -> ViewModelError.NetworkError("Parse error: $errorMessage")
 
-    is DomainError.QandaError.NotFound -> ViewModelError.SaveError("Qanda not found")
-    is DomainError.QandaError.AlreadyExists -> ViewModelError.SaveError("Qanda already exists")
-    is DomainError.QandaError.ValidationError -> ViewModelError.SaveError("Validation error: $reason")
+    is DomainError.QandaError.NotFound -> SaveError("Qanda not found")
+    is DomainError.QandaError.AlreadyExists -> SaveError("Qanda already exists")
+    is DomainError.QandaError.ValidationError -> SaveError("Validation error: $reason")
 
-    is DomainError.PersistenceError.DatabaseError -> ViewModelError.SaveError("Database error: $errorMessage")
-    is DomainError.PersistenceError.ConnectionFailed -> ViewModelError.SaveError("Database connection failed")
+    is DomainError.PersistenceError.DatabaseError -> SaveError("Database error: $errorMessage")
+    is DomainError.PersistenceError.ConnectionFailed -> SaveError("Database connection failed")
 
-    is DomainError.CronError.CronNotExists -> ViewModelError.SaveError("Cron does not not exists")
+    is DomainError.CronError.CronNotExists -> SaveError("Cron does not not exists")
 
     is DomainError.UnknownError -> ViewModelError.UnknownError(message, cause)
+    is DomainError.QuizSessionError.EmptyQuizSession -> TODO()
+    is DomainError.QuizSessionError.QandasNotFoundForSession -> TODO()
 }
 
 fun <T> FetchResult<T>.toViewModelError(): ViewModelError = when (this) {

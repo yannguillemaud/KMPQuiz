@@ -9,7 +9,7 @@ import kotlinx.coroutines.test.runTest
 import ygmd.kmpquiz.createQanda
 import ygmd.kmpquiz.domain.repository.QandaRepository
 import ygmd.kmpquiz.application.usecase.qanda.GetQandasUseCase
-import ygmd.kmpquiz.application.usecase.qanda.GetQandasUseCaseImpl
+import ygmd.kmpquiz.application.usecase.qanda.GetQandaUseCase
 import kotlin.Result.Companion.success
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -17,7 +17,7 @@ import kotlin.test.assertTrue
 
 class GetQandasUseCaseTest {
     private val repository = mockk<QandaRepository>()
-    private val getQandasUseCase: GetQandasUseCase = GetQandasUseCaseImpl(repository)
+    private val getQandasUseCase: GetQandasUseCase = GetQandaUseCase(repository)
 
     @Test
     fun `should get qanda`() = runTest {

@@ -1,10 +1,17 @@
 package ygmd.kmpquiz.application.usecase.notification
 
-class GetNotificationUseCase(
-//    private val notificationRepository: NotificationRepository,
+import co.touchlab.kermit.Logger
+import ygmd.kmpquiz.application.scheduler.TaskScheduler
+import ygmd.kmpquiz.domain.repository.QuizRepository
+
+private val logger = Logger.withTag("RescheduleTasksUseCase")
+
+class RescheduleTasksUseCase(
+    private val taskScheduler: TaskScheduler,
+    private val quizRepository: QuizRepository,
 ) {
-//    fun observeAll(): Flow<List<Notification>> =
-//        notificationRepository.observeAllNotifications()
-//
-//    suspend fun getAll(): List<Notification> = notificationRepository.getAllNotifications()
+    suspend fun execute(){
+        logger.i { "Executing rescheduler" }
+        taskScheduler.rescheduleQuizReminders(quizRepository.getAllQuizzes())
+    }
 }

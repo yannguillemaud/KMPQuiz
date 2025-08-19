@@ -1,10 +1,14 @@
 package koin
 
 import org.koin.dsl.module
-import ygmd.kmpquiz.data.repository.cron.CronRepositoryImpl
+import ygmd.kmpquiz.data.repository.QuizRepository.QuizRepositoryImpl
+import ygmd.kmpquiz.data.repository.fetch.FetchRepositoryImpl
 import ygmd.kmpquiz.data.repository.qanda.InMemoryQandaRepository
-import ygmd.kmpquiz.domain.repository.CronRepository
+import ygmd.kmpquiz.data.service.SimpleCronCalculator
+import ygmd.kmpquiz.domain.repository.FetchRepository
 import ygmd.kmpquiz.domain.repository.QandaRepository
+import ygmd.kmpquiz.domain.repository.QuizRepository
+import ygmd.kmpquiz.domain.service.CronExecutionCalculator
 
 // Data Layer - Repositories & DataSources
 val dataModule = module {
@@ -13,11 +17,15 @@ val dataModule = module {
         InMemoryQandaRepository()
     }
 
-    single<CronRepository> {
-        CronRepositoryImpl(storage = get())
+    single<QuizRepository> {
+        QuizRepositoryImpl()
     }
 
-//    single<NotificationRepository> {
-//        NotificationRepository
-//    }
+    single<FetchRepository> {
+        FetchRepositoryImpl()
+    }
+
+    single<CronExecutionCalculator>{
+        SimpleCronCalculator()
+    }
 }
