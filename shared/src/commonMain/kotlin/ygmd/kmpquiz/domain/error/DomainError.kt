@@ -7,14 +7,8 @@ sealed class DomainError(
     // Erreurs du domaine Qanda
     sealed class QandaError(message: String, cause: Throwable? = null) :
         DomainError(message, cause) {
-        data object NotFound : QandaError("Qanda not found") {
-            private fun readResolve(): Any = NotFound
-        }
-
-        data object AlreadyExists : QandaError("Qanda already exists") {
-            private fun readResolve(): Any = AlreadyExists
-        }
-
+        data object NotFound : QandaError("Qanda not found")
+        data object AlreadyExists : QandaError("Qanda already exists")
         data class ValidationError(val field: String, val reason: String) :
             QandaError("Validation failed for field '$field': $reason")
     }
@@ -54,5 +48,12 @@ sealed class DomainError(
     sealed class CronError(override val message: String, cause: Throwable? = null) :
         DomainError(message, cause) {
         data class CronNotExists(val errorMessage: String) : CronError(errorMessage)
+    }
+
+    sealed class QuizSessionError(message: String, cause: Throwable? = null) :
+        DomainError(message, cause) {
+        data class EmptyQuizSession(override val message: String) : QuizSessionError(message)
+        data class QandasNotFoundForSession(override val message: String) :
+            QuizSessionError(message)
     }
 }

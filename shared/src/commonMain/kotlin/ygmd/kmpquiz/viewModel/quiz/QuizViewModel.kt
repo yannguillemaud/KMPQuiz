@@ -3,99 +3,162 @@ package ygmd.kmpquiz.viewModel.quiz
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import co.touchlab.kermit.Logger
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import ygmd.kmpquiz.application.usecase.quiz.QuizUseCase
-import ygmd.kmpquiz.domain.entities.qanda.AnswerSet.AnswerContent
-import ygmd.kmpquiz.domain.entities.quiz.QuizSession
-import ygmd.kmpquiz.viewModel.quiz.QuizUiState.Idle
-import ygmd.kmpquiz.viewModel.quiz.QuizUiState.InProgress
+import ygmd.kmpquiz.application.usecase.qanda.GetQandaUseCase
+import ygmd.kmpquiz.application.usecase.quiz.CreateQuizUseCase
+import ygmd.kmpquiz.domain.entities.qanda.Qanda
+import ygmd.kmpquiz.domain.entities.quiz.Quiz
+import ygmd.kmpquiz.domain.repository.QuizRepository
+import ygmd.kmpquiz.viewModel.error.UiEvent
+import ygmd.kmpquiz.viewModel.settings.UiCronSetting
+
+private val logger = Logger.withTag("QuizViewModel")
+
+data class QuizzesUiState(
+    val quizzes: Map<String, QuizState> = emptyMap(),
+    val isLoading: Boolean = false,
+    val isCreating: Boolean = false,
+    val error: String? = null,
+)
+
+data class QuizState(
+    val id: String,
+    val title: String,
+    val qandas: List<Qanda> = emptyList(),
+    val createdAt: kotlin.time.Instant
+)
+
+sealed interface QuizIntent {
+    data class CreateQuiz(
+        val title: String,
+        val qandas: List<Qanda>,
+        val cronSetting: UiCronSetting?,
+    ) : QuizIntent
+
+    data class DeleteQuiz(val quizId: String) : QuizIntent
+}
+
+/**
+ * TODO
+ * - show snackbar at creation/error/deletion
+ * - update back nav -> popstackback
+ */
 
 class QuizViewModel(
-    private val quizUseCase: QuizUseCase,
-    private val logger: Logger,
+    private val quizRepository: QuizRepository,
+    getQandaUseCase: GetQandaUseCase,
+    private val createQuizUseCase: CreateQuizUseCase,
 ) : ViewModel() {
-    private val _uiState = MutableStateFlow<QuizUiState>(Idle)
-    val quizUiState = _uiState.asStateFlow()
+    private var _quizzesState = MutableStateFlow(QuizzesUiState())
+    val quizzesState = _quizzesState.asStateFlow()
+    val qandas = getQandaUseCase.observeSaved()
+
+    private val _quizEvents = MutableSharedFlow<UiEvent>(replay = 1)
+    val quizEvents = _quizEvents.asSharedFlow()
 
     init {
-        _uiState.value = Idle
+        loadQuizzes()
     }
 
-    fun startQuiz(qandaIds: List<Long>) {
+    private fun loadQuizzes() {
         viewModelScope.launch {
-            quizUseCase.start(qandaIds).fold(
-                onSuccess = { session ->
-                    logger.i { "Quiz started with ${session.qandas.size} questions" }
-                    _uiState.value = InProgress(
-                        session = session,
-                        shuffledAnswers = session.currentQanda?.answers?.shuffled()
+            quizRepository.observeAll()
+                .distinctUntilChanged()
+                .collect { quizzes ->
+                    val quizzesById = quizzes
+                        .map { it.toQuizUiState() }
+                        .associateBy { it.id }
+
+                    _quizzesState.value = QuizzesUiState(quizzesById)
+                }
+        }
+    }
+
+    fun processIntent(quizIntent: QuizIntent) {
+        when (quizIntent) {
+            is QuizIntent.CreateQuiz -> {
+                return createQuiz(
+                    title = quizIntent.title,
+                    qandas = quizIntent.qandas,
+                    cronSetting = quizIntent.cronSetting,
+                )
+            }
+
+            is QuizIntent.DeleteQuiz -> deleteQuiz(quizIntent.quizId)
+        }
+    }
+
+    private fun createQuiz(
+        title: String,
+        qandas: List<Qanda>,
+        cronSetting: UiCronSetting?,
+    ) {
+        viewModelScope.launch {
+            _quizzesState.value = _quizzesState.value.copy(isCreating = true, error = null)
+            createQuizUseCase.createQuiz(
+                title = title,
+                qandas = qandas,
+                cron = cronSetting?.toCron()
+            ).fold(
+                onSuccess = {
+                    val quizState = QuizState(
+                        id = it.id,
+                        title = it.title,
+                        qandas = it.qandas,
+                        createdAt = it.createdAt
+                    )
+
+                    _quizzesState.update { currentState ->
+                        val newMap = currentState.quizzes + (it.id to quizState)
+                        currentState.copy(quizzes = newMap)
+                    }
+
+                    logger.i { "Created quiz: $title with id: ${it.id} and cron: ${cronSetting?.cronExpression}" }
+                    _quizEvents.tryEmit(
+                        UiEvent.Success(
+                            message = "Quiz created successfully",
+                        )
                     )
                 },
-                onFailure = { error ->
-                    val errorMessage = "Failed to start quiz: ${error.message}"
-                    logger.e { errorMessage }
-                    _uiState.value = QuizUiState.Error(error.message ?: errorMessage)
+                onFailure = {
+                    logger.e(it) { "Error creating quiz: $title" }
+                    _quizEvents.tryEmit(
+                        UiEvent.Success(
+                            message = "Error creating quiz: ${it.message}",
+                        )
+                    )
                 }
             )
         }
     }
 
-    fun selectAnswer(answer: AnswerContent) {
-        val currentState = _uiState.value
-        if (currentState is InProgress && !currentState.hasAnswered) {
-            _uiState.value = currentState.copy(
-                hasAnswered = true,
-                selectedAnswer = answer
-            )
-            logger.d { "Answer selected: $answer" }
+    private fun deleteQuiz(quizId: String) {
+        viewModelScope.launch {
+            quizRepository.deleteQuizById(quizId)
+                .fold(
+                    onSuccess = {
+                        _quizzesState.update { currentState ->
+                            currentState.copy(quizzes = currentState.quizzes - quizId)
+                        }
+                        logger.i { "Deleted quiz: $quizId" }
+                    },
+                    onFailure = {
+                        logger.e(it) { "Error deleting quiz: $quizId" }
+                    }
+                )
         }
-    }
-
-    fun goToNextQuestion() {
-        val currentState = _uiState.value
-        if (currentState !is InProgress) {
-            logger.w { "Cannot go to next question in current state" }
-            return
-        }
-
-        val session = currentState.session
-        val selectedAnswer = currentState.selectedAnswer ?: return
-
-        val updatedSession = session.copy(
-            userAnswers = session.userAnswers + (session.currentIndex to selectedAnswer),
-            currentIndex = session.currentIndex + 1,
-        )
-
-        if (updatedSession.isComplete) {
-            // Quiz terminé
-            val results = calculateResults(updatedSession)
-            _uiState.value = QuizUiState.Completed(
-                session = updatedSession,
-                results = results
-            )
-            logger.i { "Quiz completed with score: ${results.score}/${results.questions}" }
-        } else {
-            // Question suivante
-            _uiState.value = InProgress(
-                session = updatedSession,
-                shuffledAnswers = updatedSession.currentQanda?.answers?.shuffled(),
-                hasAnswered = false,
-                selectedAnswer = null
-            )
-            logger.d { "Moved to question ${updatedSession.currentIndex}/${updatedSession.qandas.size}" }
-        }
-    }
-
-    private fun calculateResults(session: QuizSession): QuizResult {
-        val correctAnswers = session.userAnswers.count { (index, userAnswer) ->
-            session.qandas.getOrNull(index)?.correctAnswer == userAnswer
-        }
-
-        return QuizResult(
-            questions = session.qandas.size,
-            score = correctAnswers
-        )
     }
 }
+
+private fun Quiz.toQuizUiState() = QuizState(
+    id = id,
+    title = title,
+    qandas = qandas,
+    createdAt = createdAt
+)

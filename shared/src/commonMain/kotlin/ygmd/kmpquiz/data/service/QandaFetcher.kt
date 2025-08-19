@@ -1,11 +1,10 @@
 package ygmd.kmpquiz.data.service
 
-import ygmd.kmpquiz.data.repository.service.FetchResult
-import ygmd.kmpquiz.domain.entities.qanda.Qanda
+import ygmd.kmpquiz.domain.repository.DraftQanda
 
 interface QandaFetcher {
     val isEnabled: Boolean
-    suspend fun fetch(fetchConfig: FetchConfig): FetchResult<List<Qanda>>
+    suspend fun fetch(fetchConfig: FetchConfig): FetchResult<List<DraftQanda>>
 }
 
 data class FetchConfig(

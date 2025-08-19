@@ -92,8 +92,8 @@ fun AnswerCard(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            if (answer is AnswerContent.TextContent)
-                Text(
+            when (answer) {
+                is AnswerContent.TextContent -> Text(
                     text = answer.text,
                     style = TextStyle(
                         fontSize = 16.sp,
@@ -104,36 +104,40 @@ fun AnswerCard(
                     modifier = Modifier.weight(1f)
                 )
 
-            // Icône d'état
-            when {
-                isAnswered && isCorrect == true -> Icon(
-                    imageVector = Icons.Filled.CheckCircle,
-                    contentDescription = "Correct",
-                    tint = Color(0xFF10B981),
-                    modifier = Modifier.size(24.dp)
-                )
-
-                isAnswered && isCorrect == false && isSelected -> Icon(
-                    imageVector = Icons.Filled.Cancel,
-                    contentDescription = "Incorrect",
-                    tint = Color(0xFFEF4444),
-                    modifier = Modifier.size(24.dp)
-                )
-
-                isSelected && !isAnswered -> Icon(
-                    imageVector = Icons.Filled.RadioButtonChecked,
-                    contentDescription = "Sélectionné",
-                    tint = Color(0xFF4F46E5),
-                    modifier = Modifier.size(20.dp)
-                )
-
-                else -> Icon(
-                    imageVector = Icons.Filled.RadioButtonUnchecked,
-                    contentDescription = "Non sélectionné",
-                    tint = Color(0xFF9CA3AF),
-                    modifier = Modifier.size(20.dp)
-                )
+                is AnswerContent.ImageContent -> {
+                    /* TODO */
+                }
             }
+        }
+
+        when {
+            isAnswered && isCorrect == true -> Icon(
+                imageVector = Icons.Filled.CheckCircle,
+                contentDescription = "Correct",
+                tint = Color(0xFF10B981),
+                modifier = Modifier.size(24.dp)
+            )
+
+            isAnswered && isCorrect == false && isSelected -> Icon(
+                imageVector = Icons.Filled.Cancel,
+                contentDescription = "Incorrect",
+                tint = Color(0xFFEF4444),
+                modifier = Modifier.size(24.dp)
+            )
+
+            isSelected && !isAnswered -> Icon(
+                imageVector = Icons.Filled.RadioButtonChecked,
+                contentDescription = "Sélectionné",
+                tint = Color(0xFF4F46E5),
+                modifier = Modifier.size(20.dp)
+            )
+
+            else -> Icon(
+                imageVector = Icons.Filled.RadioButtonUnchecked,
+                contentDescription = "Non sélectionné",
+                tint = Color(0xFF9CA3AF),
+                modifier = Modifier.size(20.dp)
+            )
         }
     }
 }

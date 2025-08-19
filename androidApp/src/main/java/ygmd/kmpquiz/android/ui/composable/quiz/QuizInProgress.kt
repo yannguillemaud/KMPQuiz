@@ -6,24 +6,24 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import ygmd.kmpquiz.domain.entities.qanda.AnswerSet.AnswerContent
-import ygmd.kmpquiz.viewModel.quiz.QuizUiState
+import ygmd.kmpquiz.viewModel.quiz.session.QuizSessionUiState
 
 @Composable
 fun QuizInProgressSection(
-    state: QuizUiState.InProgress,
+    quiz: QuizSessionUiState.InProgress,
     onAnswerSelected: (AnswerContent) -> Unit,
     onNextQuestion: () -> Unit,
     onNavigateBack: () -> Unit,
 ){
-    val session = state.session
+    val session = quiz.session
     val currentQanda = session.currentQanda!!
 
     Column(modifier = Modifier.fillMaxSize()) {
-        // Header avec progression
         QuizHeader(
             currentQuestion = session.currentIndex + 1,
             totalQuestions = session.qandas.size,
@@ -32,7 +32,6 @@ fun QuizInProgressSection(
             onNavigateBack = onNavigateBack
         )
 
-        // Corps principal scrollable
         LazyColumn(
             modifier = Modifier
                 .weight(1f)
@@ -44,22 +43,19 @@ fun QuizInProgressSection(
                 QuestionCard(question = currentQanda.question.text)
             }
 
-// TODO
-/*
-            items(state.shuffledAnswers) { answer ->
+            items(requireNotNull(quiz.shuffledAnswers).answers) { answer ->
                 AnswerCard(
                     answer = answer,
-                    isSelected = answer == state.selectedAnswer,
-                    isAnswered = state.hasAnswered,
-                    isCorrect = if (state.hasAnswered) answer == currentQanda.correctAnswer else null,
+                    isSelected = answer == quiz.selectedAnswer,
+                    isAnswered = quiz.hasAnswered,
+                    isCorrect = if (quiz.hasAnswered) answer == currentQanda.correctAnswer else null,
                     onClick = { onAnswerSelected(answer) }
                 )
             }
-*/
         }
 
         // Footer avec bouton suivant
-        if (state.hasAnswered) {
+        if (quiz.hasAnswered) {
             NextQuestionButton(
                 isComplete = session.isComplete,
                 onClick = onNextQuestion

@@ -1,23 +1,52 @@
 package ygmd.kmpquiz.domain.entities.cron
 
+import com.ucasoft.kcron.Cron.builder
+import com.ucasoft.kcron.core.extensions.anyDays
+import com.ucasoft.kcron.core.extensions.anyHours
+import com.ucasoft.kcron.core.extensions.at
+import com.ucasoft.kcron.core.extensions.daysOfWeek
+import com.ucasoft.kcron.core.extensions.hours
+import com.ucasoft.kcron.core.extensions.minutes
+import com.ucasoft.kcron.core.extensions.on
+import com.ucasoft.kcron.core.extensions.seconds
+import com.ucasoft.kcron.core.extensions.years
+
 enum class CronPreset(private val expression: String, val displayName: String) {
     // Fréquences communes
-    DAILY("0 9 * * *", "Tous les jours à 9h"),
-    WEEKLY("0 9 * * 1", "Tous les lundis à 9h"),
-    MONTHLY("0 9 1 * *", "Le 1er de chaque mois à 9h"),
-
-    // Fréquences d'étude
-    TWICE_DAILY("0 9,18 * * *", "Matin (9h) et soir (18h)"),
-    WEEKDAYS("0 9 * * 1-5", "En semaine à 9h"),
-    WEEKENDS("0 10 * * 0,6", "Week-ends à 10h"),
-
-    // Révisions espacées (Spaced Repetition)
-    EVERY_3_DAYS("0 9 */3 * *", "Tous les 3 jours à 9h"),
-    WEEKLY_REVIEW("0 19 * * 5", "Révision hebdo (vendredi 19h)"),
+    DAILY(
+        expression = builder().apply {
+            anyDays()
+            hours(9)
+        }.expression,
+        displayName = "Tous les jours à 9h"
+    ),
+    HOURLY(
+        expression = builder().apply {
+            anyHours()
+        }.expression,
+        displayName = "Toutes les heures"
+    ),
+    WEEKLY(
+        expression = builder().apply {
+            daysOfWeek(1)
+        }.expression,
+        displayName = "Toutes les semaines"
+    ),
 
     // tests/debug
     EVERY_MINUTE("* * * * *", "Toutes les minutes (test)"),
-    HOURLY("0 * * * *", "Toutes les heures");
 
-    fun toCronExpression(): CronExpression = CronExpression.parse(expression)
+    TEST_CRON_LIB(
+        expression = builder().apply {
+            seconds(10 at 0)
+            minutes(5..25)
+            hours(5, 12)
+            daysOfWeek(7 on 5)
+            years(2050)
+
+        }.expression,
+        displayName = "Cron Personnalisé par lib"
+    );
+
+    fun toCronExpression(): CronExpression = CronExpression(expression, displayName)
 }

@@ -9,11 +9,12 @@ import io.ktor.http.HttpStatusCode.Companion.TooManyRequests
 import io.ktor.http.isSuccess
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
-import ygmd.kmpquiz.data.repository.service.FailureType
-import ygmd.kmpquiz.data.repository.service.FetchResult
+import ygmd.kmpquiz.data.service.FailureType
 import ygmd.kmpquiz.data.service.FetchConfig
+import ygmd.kmpquiz.data.service.FetchResult
 import ygmd.kmpquiz.data.service.QandaFetcher
-import ygmd.kmpquiz.domain.entities.qanda.Qanda
+import ygmd.kmpquiz.domain.repository.DraftQanda
+import ygmd.kmpquiz.unescaped
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
@@ -28,7 +29,7 @@ class OpenTriviaFetcher(
 
     override suspend fun fetch(
         fetchConfig: FetchConfig
-    ): FetchResult<List<Qanda>> =
+    ): FetchResult<List<DraftQanda>> =
         try {
             val response = client.get(url.build())
             handleHttpResponse(response)
@@ -42,7 +43,7 @@ class OpenTriviaFetcher(
         }
 }
 
-private suspend fun handleHttpResponse(response: HttpResponse): FetchResult<List<Qanda>> {
+private suspend fun handleHttpResponse(response: HttpResponse): FetchResult<List<DraftQanda>> {
     return when {
         response.status.isSuccess() -> {
             processSuccessResponse(response)
@@ -69,7 +70,7 @@ private suspend fun handleHttpResponse(response: HttpResponse): FetchResult<List
     }
 }
 
-private suspend fun processSuccessResponse(response: HttpResponse): FetchResult<List<Qanda>> {
+private suspend fun processSuccessResponse(response: HttpResponse): FetchResult<List<DraftQanda>> {
     return try {
         val body = response.bodyAsText()
         if (body.isBlank()) {
@@ -92,10 +93,10 @@ private suspend fun processSuccessResponse(response: HttpResponse): FetchResult<
     }
 }
 
-private fun handleApiResponse(apiResponse: OpenTriviaApiResponse): FetchResult<List<Qanda>> {
+private fun handleApiResponse(apiResponse: OpenTriviaApiResponse): FetchResult<List<DraftQanda>> {
     return when (apiResponse.response_code) {
         0 -> {
-            val qandas = apiResponse.results.map { it.toQanda() }
+            val qandas = apiResponse.results.map { it.toFetchedQanda() }
             logger.i { "${qandas.size} qandas fetched successfully" }
             FetchResult.Success(qandas)
         }
@@ -133,3 +134,19 @@ private fun parseRetryAfter(response: HttpResponse): Duration? {
         ?.takeIf { it > 0 }
         ?.seconds
 }
+
+fun OpenTriviaQandaDto.toFetchedQanda(): DraftQanda {
+    val unescapedQuestion = question.unescaped()
+    val unescapedCorrectAnswer = correct_answer
+    val unescapedIncorrectAnswers = incorrect_answers
+    val unescapedCategory = category.sanitized()
+
+    return DraftQanda(
+        question = unescapedQuestion,
+        answers = (unescapedIncorrectAnswers + unescapedCorrectAnswer),
+        correctAnswer = unescapedCorrectAnswer,
+        category = unescapedCategory
+    )
+}
+
+private fun String.sanitized(): String = this.replace("Entertainment: ", "")

@@ -1,62 +1,103 @@
 package koin
 
 import org.koin.dsl.module
-import ygmd.kmpquiz.application.usecase.cron.GetCronUseCase
-import ygmd.kmpquiz.application.usecase.notification.GetNotificationUseCase
+import ygmd.kmpquiz.application.usecase.fetch.DeleteFetchQandasUseCase
+import ygmd.kmpquiz.application.usecase.fetch.FetchQandasUseCase
+import ygmd.kmpquiz.application.usecase.fetch.GetFetchQandasUseCase
+import ygmd.kmpquiz.application.usecase.fetch.SaveFetchQandasUseCase
+import ygmd.kmpquiz.application.usecase.notification.RescheduleTasksUseCase
 import ygmd.kmpquiz.application.usecase.qanda.DeleteQandasUseCase
-import ygmd.kmpquiz.application.usecase.qanda.DeleteQandasUseCaseImpl
-import ygmd.kmpquiz.application.usecase.qanda.FetchQandasUseCase
-import ygmd.kmpquiz.application.usecase.qanda.GetQandasUseCase
-import ygmd.kmpquiz.application.usecase.qanda.GetQandasUseCaseImpl
+import ygmd.kmpquiz.application.usecase.qanda.GetQandaUseCase
 import ygmd.kmpquiz.application.usecase.qanda.SaveQandasUseCase
-import ygmd.kmpquiz.application.usecase.qanda.SaveQandasUseCaseImpl
-import ygmd.kmpquiz.application.usecase.quiz.QuizUseCase
-import ygmd.kmpquiz.application.usecase.quiz.QuizUseCaseImpl
+import ygmd.kmpquiz.application.usecase.quiz.CreateQuizUseCase
+import ygmd.kmpquiz.application.usecase.quiz.GetQuizUseCase
+import ygmd.kmpquiz.application.usecase.quiz.StartQuizSessionUseCase
+import ygmd.kmpquiz.application.usecase.quiz.UpdateQuizUseCase
+import ygmd.kmpquiz.viewModel.coordinator.FetchScreenCoordinator
 
 // Domain Layer - Use Cases
 val domainModule = module {
     // Qanda Use Cases
-    factory<GetQandasUseCase> {
-        GetQandasUseCaseImpl(
+    factory {
+        GetQandaUseCase(
             repository = get()
         )
     }
 
-    factory<SaveQandasUseCase> {
-        SaveQandasUseCaseImpl(
+    factory {
+        SaveQandasUseCase (
             repository = get(),
         )
     }
 
-    factory<DeleteQandasUseCase> {
-        DeleteQandasUseCaseImpl(
+    factory {
+        DeleteQandasUseCase(
             repository = get(),
         )
     }
 
     // Quiz Use Cases
-    factory<QuizUseCase> {
-        QuizUseCaseImpl(
+    factory {
+        GetQuizUseCase(quizRepository = get())
+    }
+
+    factory {
+        StartQuizSessionUseCase(
             repository = get(),
+        )
+    }
+
+    factory {
+        CreateQuizUseCase(
+            quizRepository = get(),
+            getQandaUseCase = get(),
+            getQuizUseCase = get(),
         )
     }
 
     // Fetch Use Cases
     factory {
+        GetFetchQandasUseCase(
+            repository = get()
+        )
+    }
+
+    factory {
+        SaveFetchQandasUseCase(
+            fetchRepository = get()
+        )
+    }
+
+    factory {
         FetchQandasUseCase(
-            fetcher = get()
+            fetcher = get(),
+            fetchRepository = get()
         )
     }
 
     factory {
-        GetCronUseCase(
-            cronRepository = get()
+        DeleteFetchQandasUseCase(
+            fetchRepository = get()
         )
     }
 
     factory {
-        GetNotificationUseCase(
-//            notificationRepository = get()
+        UpdateQuizUseCase(
+            quizRepository = get()
+        )
+    }
+
+    factory {
+        RescheduleTasksUseCase(
+            taskScheduler = get(),
+            quizRepository = get(),
+        )
+    }
+
+    factory {
+        FetchScreenCoordinator(
+            fetchQandasViewModel = get(),
+            savedQandasViewModel = get()
         )
     }
 }

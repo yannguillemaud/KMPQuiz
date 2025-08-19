@@ -2,73 +2,122 @@ package ygmd.kmpquiz.viewModel.save
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import ygmd.kmpquiz.domain.entities.qanda.Qanda
+import ygmd.kmpquiz.application.usecase.fetch.DeleteFetchQandasUseCase
 import ygmd.kmpquiz.application.usecase.qanda.DeleteQandasUseCase
-import ygmd.kmpquiz.application.usecase.qanda.GetQandasUseCase
+import ygmd.kmpquiz.application.usecase.qanda.GetQandaUseCase
 import ygmd.kmpquiz.application.usecase.qanda.SaveQandasUseCase
+import ygmd.kmpquiz.domain.entities.qanda.Qanda
+import ygmd.kmpquiz.domain.repository.DraftQanda
+import ygmd.kmpquiz.viewModel.error.UiError
+import ygmd.kmpquiz.viewModel.error.UiEvent
 
-class SavedQandasViewModel(
-    getQandasUseCase: GetQandasUseCase,
-    private val saveQandaUseCase: SaveQandasUseCase,
-    private val deleteQandasUseCase: DeleteQandasUseCase
-) : ViewModel() {
-
-    val savedState: StateFlow<SavedQandasUiState> = getQandasUseCase.observeAll()
-        .map { qandas ->
-            SavedQandasUiState.Success(
-                qandas = qandas,
-                categories = qandas
-                    .map { it.metadata }
-                    .mapNotNull { it.category }
-                    .distinct()
-            )
-        }
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = SavedQandasUiState.Loading
-        )
-
-    fun saveQanda(qanda: Qanda) {
-        viewModelScope.launch {
-            saveQandaUseCase.save(qanda)
-            // Pas besoin de mettre à jour manuellement !
-            // Le Flow se met à jour automatiquement 🎉
-        }
-    }
-
-    fun saveAll(qandas: List<Qanda>) {
-        viewModelScope.launch {
-            saveQandaUseCase.saveAll(qandas)
-            // Idem, mise à jour automatique ! 🎉
-        }
-    }
-
-    fun deleteQanda(qanda: Qanda) {
-        viewModelScope.launch {
-            deleteQandasUseCase.delete(qanda)
-            // Idem, mise à jour automatique ! 🎉
-        }
-    }
-
-    fun toggleFavorite(qanda: Qanda) {
-        viewModelScope.launch {
-            // TODO: Implémenter quand on aura les favoris
-        }
-    }
+sealed interface PersistanceIntent {
+    data class SaveAll(val qandas: List<DraftQanda>) : PersistanceIntent
+    data class DeleteQanda(val qandaId: String) : PersistanceIntent
+    data class DeleteByCategory(val category: String) : PersistanceIntent
+    data object ClearError : PersistanceIntent
 }
 
-// États UI simplifiés
-sealed interface SavedQandasUiState {
-    data object Loading : SavedQandasUiState
+data class SaveUiState(
+    val isLoading: Boolean = false,
+    val error: UiError? = null,
+    val savedQandas: Map<String, List<Qanda>> = emptyMap(),
+)
 
-    data class Success(
-        val qandas: List<Qanda>,
-        val categories: List<String>
-    ) : SavedQandasUiState
+class SavedQandasViewModel(
+    private val saveQandaUseCase: SaveQandasUseCase,
+    private val deleteQandasUseCase: DeleteQandasUseCase,
+    private val deleteFetchQandasUseCase: DeleteFetchQandasUseCase,
+    private val getQandaUseCase: GetQandaUseCase,
+) : ViewModel() {
+
+    private val _saveState = MutableStateFlow(SaveUiState())
+    val saveState: StateFlow<SaveUiState> = _saveState.asStateFlow()
+
+    private val _events = MutableSharedFlow<UiEvent>(extraBufferCapacity = 1)
+    val events = _events.asSharedFlow()
+
+    init {
+        loadSavedQandas()
+    }
+
+    private fun loadSavedQandas() {
+        viewModelScope.launch {
+            _saveState.update { it.copy(isLoading = true, error = null) }
+            getQandaUseCase.observeSaved().collect { qandas ->
+                _saveState.update {
+                    it.copy(
+                        isLoading = false,
+                        savedQandas = qandas.groupBy { it.metadata.category }
+                    )
+                }
+            }
+        }
+    }
+
+    fun processIntent(persistanceIntent: PersistanceIntent) {
+        return when (persistanceIntent) {
+            is PersistanceIntent.DeleteByCategory -> {
+                deleteByCategory(persistanceIntent.category)
+            }
+
+            is PersistanceIntent.DeleteQanda -> {
+                deleteQanda(persistanceIntent.qandaId)
+            }
+
+            is PersistanceIntent.SaveAll -> {
+                saveAll(persistanceIntent.qandas)
+            }
+
+            PersistanceIntent.ClearError -> {
+                clearError()
+            }
+        }
+    }
+
+    private fun clearError() {
+        _saveState.update { it.copy(error = null) }
+    }
+
+    private fun saveAll(qandas: List<DraftQanda>) {
+        viewModelScope.launch {
+            _saveState.update { it.copy(isLoading = true, error = null) }
+            saveQandaUseCase.saveAll(qandas)
+                .fold(
+                    onFailure = { error ->
+                        _saveState.update {
+                            it.copy(isLoading = false, error = UiError.SaveFailed)
+                        }
+                    },
+                    onSuccess = {
+                        handleSuccessfullSave(qandas)
+                    }
+                )
+        }
+    }
+
+    private fun deleteQanda(qandaId: String) {
+        viewModelScope.launch {
+            deleteQandasUseCase.deleteById(qandaId)
+        }
+    }
+
+    private fun deleteByCategory(category: String) {
+        viewModelScope.launch {
+            deleteQandasUseCase.deleteAllByCategory(category)
+            _events.tryEmit(UiEvent.Success("Deleted all qandas from $category"))
+        }
+    }
+
+    private suspend fun handleSuccessfullSave(qandas: List<DraftQanda>) {
+        deleteFetchQandasUseCase.delete(qandas)
+        _events.tryEmit(UiEvent.Success("Saved ${qandas.size} qandas"))
+    }
 }

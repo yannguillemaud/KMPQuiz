@@ -2,11 +2,6 @@ package ygmd.kmpquiz.infra.openTrivia
 
 const val URL = "https://opentdb.com/api.php"
 
-object OpenTriviaDefaults {
-    fun defaultBuilder(): OpenTriviaUrlBuilder = OpenTriviaUrlBuilder()
-    fun bulkBuilder(amount: Int = 50): OpenTriviaUrlBuilder = OpenTriviaUrlBuilder().withAmount(amount)
-}
-
 class OpenTriviaUrlBuilder {
     private var amount: Int = 1
         set(value) {

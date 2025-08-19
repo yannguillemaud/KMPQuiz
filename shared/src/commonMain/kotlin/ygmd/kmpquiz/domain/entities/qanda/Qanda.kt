@@ -1,10 +1,11 @@
 package ygmd.kmpquiz.domain.entities.qanda
 
+import kotlinx.serialization.Serializable
 import ygmd.kmpquiz.domain.entities.qanda.AnswerSet.AnswerContent
 
-
+@Serializable
 data class Qanda(
-    val id: Long? = null,
+    val id: Long,
     val question: QuestionContent,
     val answers: AnswerSet,
     val metadata: QandaMetadata,
@@ -23,23 +24,25 @@ data class Qanda(
 }
 
 
+@Serializable
 data class QandaMetadata(
-    val category: String?,
+    val category: String,
     val difficulty: String?,
-    val tags: Map<String, Any> = emptyMap()
+    val tags: Map<String, String> = emptyMap()
 )
 
-
+@Serializable
 sealed interface QuestionContent {
     val text: String
     val contextKey: String
 
+    @Serializable
     data class TextContent(override val text: String) : QuestionContent {
         override val contextKey: String
             get() = text.normalize()
     }
 
-
+    @Serializable
     data class ImageContent(
         override val text: String,
         val imageUrl: String,
@@ -51,6 +54,7 @@ sealed interface QuestionContent {
 }
 
 
+@Serializable
 data class AnswerSet(
     val answers: List<AnswerContent>
 ) {
@@ -64,9 +68,6 @@ data class AnswerSet(
 
     val incorrectAnswers: List<AnswerContent>
         get() = answers.filterNot { it.isCorrect }
-
-    val allAnswersText: List<String>
-        get() = answers.map { it.contextKey }
 
     fun hasExactlyOneCorrectAnswer(): Boolean = answers.count { it.isCorrect } == 1
     fun shuffled(): AnswerSet = copy(answers = answers.shuffled())
@@ -97,12 +98,12 @@ data class AnswerSet(
         }
     }
 
-
+    @Serializable
     sealed interface AnswerContent {
         val isCorrect: Boolean
         val contextKey: String
 
-
+        @Serializable
         data class TextContent(
             val text: String,
             override val isCorrect: Boolean,
@@ -115,7 +116,7 @@ data class AnswerSet(
                 get() = text.normalize()
         }
 
-
+        @Serializable
         data class ImageContent(
             val imageUrl: String,
             val altText: String? = null,

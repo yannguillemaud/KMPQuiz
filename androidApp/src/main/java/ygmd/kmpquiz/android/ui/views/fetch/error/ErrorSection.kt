@@ -29,11 +29,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import ygmd.kmpquiz.viewModel.error.ViewModelError
+import ygmd.kmpquiz.viewModel.error.UiError
 
+// todo
 @Composable
 fun FetchErrorSection(
-    error: ViewModelError,
+    error: UiError,
     onRetry: () -> Unit
 ) {
     Box(
@@ -74,7 +75,7 @@ fun FetchErrorSection(
             )
 
             Text(
-                text = error.errorMessage,
+                text = error.message,
                 style = TextStyle(
                     fontSize = 16.sp,
                     color = Color(0xFF6B7280)

@@ -1,26 +1,22 @@
 package ygmd.kmpquiz.data.service
 
-import kotlinx.datetime.DateTimeUnit
-import kotlinx.datetime.Instant
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.plus
+import com.ucasoft.kcron.Cron
+import com.ucasoft.kcron.core.builders.DelicateIterableApi
+import kotlinx.datetime.toJavaLocalDateTime
 import ygmd.kmpquiz.domain.entities.cron.CronExpression
 import ygmd.kmpquiz.domain.service.CronExecutionCalculator
+import kotlin.time.Duration
+import kotlin.time.toKotlinDuration
 
-class SimpleCronCalculator: CronExecutionCalculator {
-    override fun getNextExecution(
-        cronExpression: CronExpression,
-        from: Instant
-    ): Instant? = when(this.toString()){
-        "* * * * *" -> from.plus(1, DateTimeUnit.Companion.DAY, TimeZone.Companion.currentSystemDefault())
-        else -> null // TODO
-    }
-
-    override fun getNextExecutions(
-        cronExpression: CronExpression,
-        count: Int,
-        from: Instant
-    ): List<Instant> {
-        TODO("Not yet implemented")
+class SimpleCronCalculator : CronExecutionCalculator {
+    @OptIn(DelicateIterableApi::class)
+    override fun getInterval(cronExpression: CronExpression): Duration {
+        val instants = Cron.parseAndBuild(cronExpression.expression)
+            .asIterable()
+            .take(2)
+            .map { it.toJavaLocalDateTime() }
+        return java.time.Duration
+            .between(instants.first(), instants.last())
+            .toKotlinDuration()
     }
 }

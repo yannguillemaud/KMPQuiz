@@ -11,11 +11,10 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
-import ygmd.kmpquiz.data.repository.service.FailureType
-import ygmd.kmpquiz.data.repository.service.FetchResult
+import ygmd.kmpquiz.data.service.FailureType
+import ygmd.kmpquiz.data.service.FetchResult
 import ygmd.kmpquiz.domain.entities.qanda.AnswerContent
 import ygmd.kmpquiz.domain.entities.qanda.Qanda
-import ygmd.kmpquiz.domain.entities.qanda.contains
 import ygmd.kmpquiz.infra.openTrivia.OpenTriviaFetcher
 import kotlin.test.Test
 import kotlin.test.assertEquals
