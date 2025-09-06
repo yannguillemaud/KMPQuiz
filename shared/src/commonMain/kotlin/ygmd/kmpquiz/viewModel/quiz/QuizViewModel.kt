@@ -31,7 +31,6 @@ data class QuizState(
     val id: String,
     val title: String,
     val qandas: List<Qanda> = emptyList(),
-    val createdAt: kotlin.time.Instant
 )
 
 sealed interface QuizIntent {
@@ -111,7 +110,6 @@ class QuizViewModel(
                         id = it.id,
                         title = it.title,
                         qandas = it.qandas,
-                        createdAt = it.createdAt
                     )
 
                     _quizzesState.update { currentState ->
@@ -160,5 +158,4 @@ private fun Quiz.toQuizUiState() = QuizState(
     id = id,
     title = title,
     qandas = qandas,
-    createdAt = createdAt
 )

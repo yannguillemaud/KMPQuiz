@@ -9,5 +9,5 @@ class GetQuizUseCase(
 ) {
     fun observeAll(): Flow<List<Quiz>> = quizRepository.observeAll()
     suspend fun getAllQuizz(): List<Quiz> = quizRepository.getAllQuizzes()
-    suspend fun getQuizById(id: String): Quiz? = quizRepository.getQuizById(id)
+    suspend fun getQuizById(id: String): Result<Quiz> = quizRepository.getQuizById(id)
 }

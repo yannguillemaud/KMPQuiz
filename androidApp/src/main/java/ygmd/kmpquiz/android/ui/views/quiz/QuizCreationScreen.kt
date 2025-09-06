@@ -68,6 +68,7 @@ fun QuizCreationScreen(
                 cronSetting = selectedCron
             )
         )
+        onSavedQuiz()
     }
 
     LaunchedEffect(Unit) {

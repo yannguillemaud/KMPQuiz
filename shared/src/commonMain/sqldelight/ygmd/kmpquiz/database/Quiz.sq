@@ -1,0 +1,26 @@
+CREATE TABLE quiz (
+    id TEXT PRIMARY KEY,
+    title TEXT NOT NULL,
+    cron_expression TEXT,
+    cron_display_name TEXT
+);
+
+selectAllQuizzes:
+SELECT * FROM quiz;
+
+getQuizById:
+SELECT * FROM quiz q
+WHERE q.id = ?;
+
+insertQuiz:
+INSERT INTO quiz(id, title, cron_expression, cron_display_name)
+VALUES (?, ?, ?, ?);
+
+deleteById:
+DELETE FROM quiz
+WHERE id = ?;
+
+updateQuiz:
+UPDATE quiz
+SET title = ?, cron_expression = ?, cron_display_name = ?
+WHERE id = ?;

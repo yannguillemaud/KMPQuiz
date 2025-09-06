@@ -43,6 +43,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import org.koin.compose.viewmodel.koinViewModel
+import ygmd.kmpquiz.domain.entities.qanda.Choice
 import ygmd.kmpquiz.domain.entities.qanda.Qanda
 import ygmd.kmpquiz.viewModel.save.PersistanceIntent
 import ygmd.kmpquiz.viewModel.save.SaveUiState
@@ -286,7 +287,7 @@ private fun QandaDetailSheet(
             modifier = Modifier.padding(bottom = 8.dp)
         )
 
-        qanda.answers.answers.forEach { answer ->
+        qanda.answers.choices.forEach { choice ->
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -295,17 +296,17 @@ private fun QandaDetailSheet(
             ) {
                 // Indicateur correct/incorrect
                 Text(
-                    text = if (answer.isCorrect) "✅" else "❌",
+                    text = if (choice == qanda.correctAnswer) "✅" else "❌",
                     modifier = Modifier.padding(end = 8.dp)
                 )
 
                 // Texte de la réponse
                 Text(
-                    text = when (answer) {
-                        is ygmd.kmpquiz.domain.entities.qanda.AnswerSet.AnswerContent.TextContent -> answer.text
-                        is ygmd.kmpquiz.domain.entities.qanda.AnswerSet.AnswerContent.ImageContent -> "Image: ${answer.altText ?: "Sans description"}"
+                    text = when (choice) {
+                        is Choice.TextChoice -> choice.text
+                        is Choice.ImageChoice -> "Image: ${choice.altText ?: "Sans description"}"
                     },
-                    style = if (answer.isCorrect) {
+                    style = if (choice == qanda.correctAnswer) {
                         typography.bodyMedium.copy(
                             fontWeight = FontWeight.Bold,
                             color = colorScheme.primary

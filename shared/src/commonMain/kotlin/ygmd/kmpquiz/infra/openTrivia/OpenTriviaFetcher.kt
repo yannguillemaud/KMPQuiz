@@ -13,6 +13,8 @@ import ygmd.kmpquiz.data.service.FailureType
 import ygmd.kmpquiz.data.service.FetchConfig
 import ygmd.kmpquiz.data.service.FetchResult
 import ygmd.kmpquiz.data.service.QandaFetcher
+import ygmd.kmpquiz.domain.entities.qanda.AnswersFactory
+import ygmd.kmpquiz.domain.entities.qanda.Question
 import ygmd.kmpquiz.domain.repository.DraftQanda
 import ygmd.kmpquiz.unescaped
 import kotlin.time.Duration
@@ -140,11 +142,15 @@ fun OpenTriviaQandaDto.toFetchedQanda(): DraftQanda {
     val unescapedCorrectAnswer = correct_answer
     val unescapedIncorrectAnswers = incorrect_answers
     val unescapedCategory = category.sanitized()
+    val isBooleanType = incorrect_answers.size == 2
 
     return DraftQanda(
-        question = unescapedQuestion,
-        answers = (unescapedIncorrectAnswers + unescapedCorrectAnswer),
-        correctAnswer = unescapedCorrectAnswer,
+        question = Question.TextQuestion(unescapedQuestion),
+        answers = if (isBooleanType) AnswersFactory.createTrueFalse(correct_answer.toBooleanStrict())
+        else AnswersFactory.createMultipleTextChoices(
+            unescapedCorrectAnswer,
+            unescapedIncorrectAnswers
+        ),
         category = unescapedCategory
     )
 }

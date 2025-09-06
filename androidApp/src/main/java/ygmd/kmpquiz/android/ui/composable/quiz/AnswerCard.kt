@@ -28,11 +28,11 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import ygmd.kmpquiz.domain.entities.qanda.AnswerSet.AnswerContent
+import ygmd.kmpquiz.domain.entities.qanda.Choice
 
 @Composable
 fun AnswerCard(
-    answer: AnswerContent,
+    answer: Choice,
     isSelected: Boolean,
     isAnswered: Boolean,
     isCorrect: Boolean?,
@@ -93,7 +93,7 @@ fun AnswerCard(
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             when (answer) {
-                is AnswerContent.TextContent -> Text(
+                is Choice.TextChoice -> Text(
                     text = answer.text,
                     style = TextStyle(
                         fontSize = 16.sp,
@@ -104,7 +104,7 @@ fun AnswerCard(
                     modifier = Modifier.weight(1f)
                 )
 
-                is AnswerContent.ImageContent -> {
+                is Choice.ImageChoice -> {
                     /* TODO */
                 }
             }

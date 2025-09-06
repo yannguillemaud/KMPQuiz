@@ -29,7 +29,6 @@ data class UiCronSetting(
     val cronExpression: CronExpression,
 ){
     fun toCron(): QuizCron = QuizCron(
-        title = title,
         cron = cronExpression,
         isEnabled = isEnabled
     )
@@ -127,7 +126,6 @@ class NotificationSettingsViewModel(
                 updateQuizUseCase.updateQuiz(quiz) {
                     copy(
                         quizCron = cron.copy(
-                            title = cronSetting.title,
                             cron = cronSetting.cronExpression
                         )
                     )

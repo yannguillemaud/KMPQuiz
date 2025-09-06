@@ -1,35 +1,29 @@
 package ygmd.kmpquiz.domain.repository
 
 import kotlinx.coroutines.flow.Flow
-import ygmd.kmpquiz.domain.entities.qanda.AnswerSet.Companion.createMultipleTextChoice
-import ygmd.kmpquiz.domain.entities.qanda.AnswerSet.Companion.createTrueFalse
+import ygmd.kmpquiz.domain.entities.qanda.Answers
+import ygmd.kmpquiz.domain.entities.qanda.Metadata
 import ygmd.kmpquiz.domain.entities.qanda.Qanda
-import ygmd.kmpquiz.domain.entities.qanda.QandaMetadata
-import ygmd.kmpquiz.domain.entities.qanda.QuestionContent
+import ygmd.kmpquiz.domain.entities.qanda.Question
+import java.util.UUID
 
 data class DraftQanda(
-    val question: String,
-    val answers: List<String>,
-    val correctAnswer: String,
+    val question: Question,
+    val answers: Answers,
     val category: String,
     val isSaved: Boolean = false,
 ){
-    val contextKey: String = "$question|$correctAnswer"
+    val contextKey: String = "${question.contextKey}|${answers.contextKey}"
 
-    fun toQanda(id: Long): Qanda {
-        val isBooleanQuestion = answers.size == 2
-
-        return Qanda(
-            id = id,
-            question = QuestionContent.TextContent(question),
-            answers = if (isBooleanQuestion) createTrueFalse(correctAnswer.toBoolean())
-                else createMultipleTextChoice(correctAnswer, answers),
-            metadata = QandaMetadata(
-                category = category,
-                difficulty = null,
-            )
+    fun toQanda(id: String = UUID.randomUUID().toString()): Qanda = Qanda(
+        id = id,
+        question = question,
+        answers = answers,
+        metadata = Metadata(
+            category = category,
+            difficulty = null,
         )
-    }
+    )
 }
 
 interface FetchRepository {

@@ -20,7 +20,7 @@ class FetchRepositoryImpl : FetchRepository {
             }
             Result.success(Unit)
         } catch (e: Throwable) {
-            Result.failure<Unit>(e)
+            Result.failure(e)
         }
 
     override suspend fun removeFetched(qandas: List<DraftQanda>): Result<Unit> =
@@ -36,7 +36,7 @@ class FetchRepositoryImpl : FetchRepository {
             }
             Result.success(Unit)
         } catch (e: Throwable) {
-            Result.failure<Unit>(e)
+            Result.failure(e)
         }
 
     override suspend fun clearAllFetched(): Result<Unit> =
@@ -44,6 +44,6 @@ class FetchRepositoryImpl : FetchRepository {
             _fetched.update { emptyList() }
             Result.success(Unit)
         } catch (e: Throwable) {
-            Result.failure<Unit>(e)
+            Result.failure(e)
         }
 }

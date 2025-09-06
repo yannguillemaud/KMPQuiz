@@ -11,7 +11,6 @@ import ygmd.kmpquiz.application.usecase.qanda.GetQandaUseCase
 import ygmd.kmpquiz.application.usecase.qanda.SaveQandasUseCase
 import ygmd.kmpquiz.application.usecase.quiz.CreateQuizUseCase
 import ygmd.kmpquiz.application.usecase.quiz.GetQuizUseCase
-import ygmd.kmpquiz.application.usecase.quiz.StartQuizSessionUseCase
 import ygmd.kmpquiz.application.usecase.quiz.UpdateQuizUseCase
 import ygmd.kmpquiz.viewModel.coordinator.FetchScreenCoordinator
 
@@ -39,12 +38,6 @@ val domainModule = module {
     // Quiz Use Cases
     factory {
         GetQuizUseCase(quizRepository = get())
-    }
-
-    factory {
-        StartQuizSessionUseCase(
-            repository = get(),
-        )
     }
 
     factory {

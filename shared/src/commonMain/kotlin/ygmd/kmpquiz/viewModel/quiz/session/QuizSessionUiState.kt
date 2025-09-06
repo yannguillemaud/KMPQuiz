@@ -1,7 +1,7 @@
 package ygmd.kmpquiz.viewModel.quiz.session
 
-import ygmd.kmpquiz.domain.entities.qanda.AnswerSet
-import ygmd.kmpquiz.domain.entities.qanda.AnswerSet.AnswerContent
+import ygmd.kmpquiz.domain.entities.qanda.Answers
+import ygmd.kmpquiz.domain.entities.qanda.Choice
 import ygmd.kmpquiz.domain.entities.quiz.QuizSession
 
 sealed class QuizSessionUiState {
@@ -9,9 +9,9 @@ sealed class QuizSessionUiState {
 
     data class InProgress(
         val session: QuizSession,
-        val shuffledAnswers: AnswerSet?,
+        val shuffledAnswers: Answers?,
         val hasAnswered: Boolean = false,
-        val selectedAnswer: AnswerContent? = null,
+        val selectedAnswer: Choice? = null,
     ) : QuizSessionUiState()
 
     data class Completed(

@@ -36,7 +36,7 @@ class DeleteQandasUseCase(
 
     suspend fun deleteById(id: String): Result<Unit> {
         logger.i { "Deleting qanda $id"}
-        return repository.deleteById(id.toLong()).fold(
+        return repository.deleteById(id).fold(
             onSuccess = {
                 logger.i { "Successfully deleted"}
                 success(Unit)

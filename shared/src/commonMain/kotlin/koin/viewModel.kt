@@ -30,7 +30,6 @@ val viewModelModule = module {
 
     factory {
         QuizSessionViewModel(
-            startQuizSessionUseCase = get(),
             getQuizUseCase = get()
         )
     }

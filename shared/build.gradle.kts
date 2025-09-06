@@ -3,6 +3,8 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.ksp)
     alias(libs.plugins.androidLibrary)
+    alias(libs.plugins.sqldelight)
+    id("dev.mokkery") version "2.9.0"
 }
 
 kotlin {
@@ -31,14 +33,21 @@ kotlin {
 
             implementation(libs.kermit)
             implementation(libs.kcron.common)
+
+            implementation(libs.sqldelight.runtime)
+            implementation(libs.sqldelight.coroutines.extensions)
+            implementation(libs.sqldelight.primitive.adapters)
         }
 
         commonTest.dependencies {
             implementation(libs.kotlin.test)
             implementation(libs.kotlinx.coroutines.test)
-            implementation(libs.mockk)
             implementation(libs.ktor.client.mock)
             implementation(libs.kotlinx.datetime)
+            implementation(libs.sqldelight.sqlite.driver)
+            implementation(libs.kotest.framework.engine)
+            implementation(libs.kotest.assertions.core)
+            implementation(libs.turbine)
         }
 
         androidMain.dependencies {
@@ -48,12 +57,22 @@ kotlin {
             // WorkManager
             implementation(libs.androidx.work.runtime.ktx)
             implementation(libs.koin.androidx.workmanager)
+            implementation(libs.sqldelight.android.driver)
         }
 
         jvmMain {
             dependencies {
                 implementation(libs.ktor.client.cio)
                 implementation(libs.kcron.common)
+                implementation(libs.sqldelight.sqlite.driver)
+            }
+        }
+
+        jvmTest {
+            dependencies {
+                implementation(libs.kotlinx.coroutines.test)
+                implementation(libs.sqldelight.sqlite.driver)
+                implementation(libs.kotest.framework.engine)
             }
         }
 
@@ -79,4 +98,12 @@ android {
 
 tasks.withType<Test>().configureEach {
     useJUnitPlatform()
+}
+
+sqldelight {
+    databases {
+        create("KMPQuizDatabase"){
+            packageName.set("ygmd.kmpquiz.database")
+        }
+    }
 }

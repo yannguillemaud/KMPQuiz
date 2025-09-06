@@ -10,13 +10,13 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import ygmd.kmpquiz.domain.entities.qanda.AnswerSet.AnswerContent
+import ygmd.kmpquiz.domain.entities.qanda.Choice
 import ygmd.kmpquiz.viewModel.quiz.session.QuizSessionUiState
 
 @Composable
 fun QuizInProgressSection(
     quiz: QuizSessionUiState.InProgress,
-    onAnswerSelected: (AnswerContent) -> Unit,
+    onAnswerSelected: (Choice) -> Unit,
     onNextQuestion: () -> Unit,
     onNavigateBack: () -> Unit,
 ){
@@ -27,8 +27,7 @@ fun QuizInProgressSection(
         QuizHeader(
             currentQuestion = session.currentIndex + 1,
             totalQuestions = session.qandas.size,
-            // TODO
-            category = currentQanda.metadata.category ?: "NullCategory",
+            category = currentQanda.metadata.category,
             onNavigateBack = onNavigateBack
         )
 
@@ -43,7 +42,7 @@ fun QuizInProgressSection(
                 QuestionCard(question = currentQanda.question.text)
             }
 
-            items(requireNotNull(quiz.shuffledAnswers).answers) { answer ->
+            items(requireNotNull(quiz.shuffledAnswers).choices) { answer ->
                 AnswerCard(
                     answer = answer,
                     isSelected = answer == quiz.selectedAnswer,

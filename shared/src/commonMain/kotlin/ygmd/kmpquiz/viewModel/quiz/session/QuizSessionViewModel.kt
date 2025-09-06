@@ -7,8 +7,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import ygmd.kmpquiz.application.usecase.quiz.GetQuizUseCase
-import ygmd.kmpquiz.application.usecase.quiz.StartQuizSessionUseCase
-import ygmd.kmpquiz.domain.entities.qanda.AnswerSet.AnswerContent
+import ygmd.kmpquiz.domain.entities.qanda.Choice
 import ygmd.kmpquiz.domain.entities.quiz.Quiz
 import ygmd.kmpquiz.domain.entities.quiz.QuizSession
 import ygmd.kmpquiz.viewModel.quiz.session.QuizSessionUiState.Idle
@@ -16,7 +15,7 @@ import ygmd.kmpquiz.viewModel.quiz.session.QuizSessionUiState.InProgress
 
 sealed interface QuizSessionIntent {
     data class StartQuizSession(val quizId: String) : QuizSessionIntent
-    data class SelectAnswer(val answer: AnswerContent) : QuizSessionIntent
+    data class SelectAnswer(val answer: Choice) : QuizSessionIntent
     data object NextQuestion : QuizSessionIntent
 }
 
@@ -24,7 +23,6 @@ private val logger = Logger.withTag("QuizViewModel")
 
 class QuizSessionViewModel(
     private val getQuizUseCase: GetQuizUseCase,
-    private val startQuizSessionUseCase: StartQuizSessionUseCase,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow<QuizSessionUiState>(Idle)
     val quizUiState = _uiState.asStateFlow()
@@ -41,29 +39,20 @@ class QuizSessionViewModel(
 
     private fun startQuiz(quizId: String) {
         viewModelScope.launch {
-            val quiz = getQuizUseCase.getQuizById(quizId) ?: run {
+            val quiz = getQuizUseCase.getQuizById(quizId).getOrNull() ?: run {
                 _uiState.value = QuizSessionUiState.Error("Quiz not found")
                 return@launch
             }
 
             val quizSession = quiz.session()
-            startQuizSessionUseCase.start(quizSession).fold(
-                onSuccess = { session ->
-                    _uiState.value = InProgress(
-                        session = session,
-                        shuffledAnswers = session.currentQanda?.answers?.shuffled()
-                    )
-                },
-                onFailure = { error ->
-                    val message = "Failed to start quiz: ${error.message}"
-                    logger.e(error) { message }
-                    _uiState.value = QuizSessionUiState.Error(error.message ?: message)
-                }
+            _uiState.value = InProgress(
+                session = quizSession,
+                shuffledAnswers = quizSession.currentQanda?.answers?.shuffled()
             )
         }
     }
 
-    private fun selectAnswer(answer: AnswerContent) {
+    private fun selectAnswer(answer: Choice) {
         val currentState = _uiState.value
         if (currentState is InProgress && !currentState.hasAnswered) {
             _uiState.value = currentState.copy(

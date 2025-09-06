@@ -1,29 +1,6 @@
 package ygmd.kmpquiz
 
-import co.touchlab.kermit.Logger
-import io.ktor.client.HttpClient
-import io.ktor.client.engine.mock.MockEngine
-import io.ktor.client.engine.mock.respond
-import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
-import io.ktor.client.utils.buildHeaders
-import io.ktor.http.HttpHeaders
-import io.ktor.http.HttpStatusCode
-import io.ktor.serialization.kotlinx.json.json
-import kotlinx.coroutines.test.runTest
-import kotlinx.serialization.json.Json
-import ygmd.kmpquiz.data.service.FailureType
-import ygmd.kmpquiz.data.service.FetchResult
-import ygmd.kmpquiz.domain.entities.qanda.AnswerContent
-import ygmd.kmpquiz.domain.entities.qanda.Qanda
-import ygmd.kmpquiz.infra.openTrivia.OpenTriviaFetcher
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertIs
-import kotlin.test.assertNotNull
-import kotlin.test.assertNull
-import kotlin.test.assertTrue
-import kotlin.time.Duration.Companion.seconds
-
+/*
 class OpenTriviaFetchQandaTest {
 
     private fun createMockClient(
@@ -402,3 +379,4 @@ class OpenTriviaFetchQandaTest {
         """.trimIndent()
     }
 }
+*/

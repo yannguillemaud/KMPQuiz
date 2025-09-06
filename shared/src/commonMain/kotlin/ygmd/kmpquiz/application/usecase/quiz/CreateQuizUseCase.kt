@@ -5,8 +5,8 @@ import kotlinx.coroutines.flow.first
 import ygmd.kmpquiz.application.usecase.qanda.GetQandaUseCase
 import ygmd.kmpquiz.domain.entities.cron.QuizCron
 import ygmd.kmpquiz.domain.entities.qanda.Qanda
+import ygmd.kmpquiz.domain.entities.quiz.DraftQuiz
 import ygmd.kmpquiz.domain.entities.quiz.Quiz
-import ygmd.kmpquiz.domain.entities.quiz.QuizDraft
 import ygmd.kmpquiz.domain.repository.QuizRepository
 
 private val logger = Logger.withTag("CreateQuizUseCase")
@@ -26,7 +26,11 @@ class CreateQuizUseCase(
             if (title.isBlank()) {
                 return Result.failure(IllegalArgumentException("Quiz title should not be empty"))
             }
-            val quizDraft = QuizDraft(title, qandas, cron)
+            val quizDraft = DraftQuiz(
+                title = title,
+                qandas = qandas,
+                cron = cron
+            )
             val result = quizRepository.insertQuiz(quizDraft)
             if (result.isSuccess) {
                 logger.i { "Created quiz $title with ${qandas.size} qandas" }
@@ -52,7 +56,11 @@ class CreateQuizUseCase(
             if (filteredQandas.isEmpty()) {
                 logger.w { "Filtered qandas is empty for quiz $title" }
             }
-            val quizDraft = QuizDraft(title, filteredQandas, cron)
+            val quizDraft = DraftQuiz(
+                title = title,
+                qandas = filteredQandas,
+                cron = cron
+            )
             val result = quizRepository.insertQuiz(quizDraft)
             if (result.isSuccess) {
                 logger.i { "Created quiz $title with ${filteredQandas.size} qandas" }

@@ -1,7 +1,7 @@
 package ygmd.kmpquiz.domain.entities.quiz
 
 import kotlinx.serialization.Serializable
-import ygmd.kmpquiz.domain.entities.qanda.AnswerSet.AnswerContent
+import ygmd.kmpquiz.domain.entities.qanda.Choice
 import ygmd.kmpquiz.domain.entities.qanda.Qanda
 
 @Serializable
@@ -11,7 +11,7 @@ data class QuizSession(
     val qandas: List<Qanda>,
     val currentIndex: Int = 0,
     // <index, reponse>
-    val userAnswers: Map<Int, AnswerContent> = emptyMap(),
+    val userAnswers: Map<Int, Choice> = emptyMap(),
 ){
     val size: Int
         get() = qandas.size

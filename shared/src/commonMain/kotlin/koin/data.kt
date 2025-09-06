@@ -1,9 +1,13 @@
 package koin
 
 import org.koin.dsl.module
-import ygmd.kmpquiz.data.repository.QuizRepository.QuizRepositoryImpl
 import ygmd.kmpquiz.data.repository.fetch.FetchRepositoryImpl
-import ygmd.kmpquiz.data.repository.qanda.InMemoryQandaRepository
+import ygmd.kmpquiz.data.repository.qanda.PersistenceQandaDao
+import ygmd.kmpquiz.data.repository.qanda.QandaDao
+import ygmd.kmpquiz.data.repository.qanda.QandaRepositoryImpl
+import ygmd.kmpquiz.data.repository.quiz.PersistenceQuizDao
+import ygmd.kmpquiz.data.repository.quiz.PersistenceQuizRepository
+import ygmd.kmpquiz.data.repository.quiz.QuizDao
 import ygmd.kmpquiz.data.service.SimpleCronCalculator
 import ygmd.kmpquiz.domain.repository.FetchRepository
 import ygmd.kmpquiz.domain.repository.QandaRepository
@@ -14,11 +18,11 @@ import ygmd.kmpquiz.domain.service.CronExecutionCalculator
 val dataModule = module {
     // Repositories
     single<QandaRepository> {
-        InMemoryQandaRepository()
+        QandaRepositoryImpl(qandaDao = get())
     }
 
     single<QuizRepository> {
-        QuizRepositoryImpl()
+        PersistenceQuizRepository(get())
     }
 
     single<FetchRepository> {
@@ -27,5 +31,13 @@ val dataModule = module {
 
     single<CronExecutionCalculator>{
         SimpleCronCalculator()
+    }
+
+    single<QandaDao> {
+        PersistenceQandaDao(get())
+    }
+
+    single<QuizDao> {
+        PersistenceQuizDao(get())
     }
 }
