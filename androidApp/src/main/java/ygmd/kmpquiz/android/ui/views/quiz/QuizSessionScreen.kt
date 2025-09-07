@@ -40,6 +40,7 @@ fun QuizSessionScreen(
     ) {
         when (val state = uiState) {
             is QuizSessionUiState.Idle -> QuizLoadingSection()
+
             is QuizSessionUiState.InProgress -> QuizInProgressSection(
                 quiz = state,
                 onAnswerSelected = { viewModel.processIntent(QuizSessionIntent.SelectAnswer(it)) },

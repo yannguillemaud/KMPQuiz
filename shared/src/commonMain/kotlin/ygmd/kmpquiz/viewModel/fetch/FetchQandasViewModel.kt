@@ -4,14 +4,12 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import co.touchlab.kermit.Logger
 import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import ygmd.kmpquiz.application.manager.FetchThrottleManager
 import ygmd.kmpquiz.application.usecase.fetch.FetchQandasUseCase
@@ -22,14 +20,11 @@ import ygmd.kmpquiz.viewModel.error.SnackbarAction
 import ygmd.kmpquiz.viewModel.error.UiError
 import ygmd.kmpquiz.viewModel.error.UiEvent
 import ygmd.kmpquiz.viewModel.state.UiState
-import ygmd.kmpquiz.viewModel.state.getOrDefault
-import ygmd.kmpquiz.viewModel.state.map
 
 private val logger = Logger.withTag(FetchQandasViewModel::class.java.name)
 
 sealed interface FetchIntentAction {
     data object Fetch : FetchIntentAction
-    data class UpdateState(val category: String) : FetchIntentAction
 }
 
 class FetchQandasViewModel(
@@ -43,30 +38,29 @@ class FetchQandasViewModel(
     private val _events = MutableSharedFlow<UiEvent>(extraBufferCapacity = 1)
     val events: SharedFlow<UiEvent> = _events.asSharedFlow()
 
-    private val _fetchState: MutableStateFlow<UiState<Map<String, List<DraftQanda>>>> =
-        MutableStateFlow(UiState.Loading)
-
     init {
         fetchQandas()
     }
 
+    private val _fetchedQandas = getFetchQandasUseCase.observeFetched()
+    private val _savedQandas = getSavedQandasUseCase.observeSaved()
+
     val fetchState: StateFlow<UiState<Map<String, List<DraftQanda>>>> = combine(
-        _fetchState,
-        getFetchQandasUseCase.observeFetched(),
-        getSavedQandasUseCase.observeSaved(),
-    ) { state, fetchedQandas, savedQandas ->
-        val currentFetched = _fetchState.value.getOrDefault(emptyMap())
+        _fetchedQandas,
+        _savedQandas,
+    ) { fetchedQandas, savedQandas ->
+        logger.i { "Updating state" }
         val savedContextKeys = savedQandas.map { it.contextKey }.toSet()
-        val filteredFetchedQandas = fetchedQandas
+        val filteredQandas = fetchedQandas
             .filter { it.contextKey !in savedContextKeys }
             .groupBy { it.category }
-        val newFetch = currentFetched + filteredFetchedQandas
         when {
-            newFetch.isEmpty() -> UiState.Error(
-                currentValue = currentFetched,
-                error = UiError.EmptyFetch
+            filteredQandas.isEmpty() -> UiState.Error(
+                error = UiError.EmptyFetch,
+                currentValue = null
             )
-            else -> UiState.Success(filteredFetchedQandas)
+
+            else -> UiState.Success(filteredQandas)
         }
     }.stateIn(
         viewModelScope,
@@ -76,17 +70,6 @@ class FetchQandasViewModel(
 
     fun onIntentAction(fetchIntentAction: FetchIntentAction) = when (fetchIntentAction) {
         is FetchIntentAction.Fetch -> fetchQandas()
-        is FetchIntentAction.UpdateState -> removeFetchedCategory(fetchIntentAction.category)
-    }
-
-    private fun removeFetchedCategory(category: String) {
-        viewModelScope.launch {
-            _fetchState.update { state ->
-                state.map { current ->
-                    current.filterKeys { it != category }
-                }
-            }
-        }
     }
 
     private fun fetchQandas() {
@@ -105,10 +88,6 @@ class FetchQandasViewModel(
         fetchQandaUseCase.fetch().fold(
             onFailure = { throwable ->
                 logger.e(throwable) { "Failed to fetch qandas" }
-                _fetchState.value = UiState.Error(
-                    currentValue = _fetchState.value,
-                    error = UiError.FetchFailed
-                )
                 _events.tryEmit(
                     UiEvent.Error(
                         message = UiError.FetchFailed.message,
@@ -120,12 +99,6 @@ class FetchQandasViewModel(
                 )
             },
             onSuccess = { fetchedQandas ->
-                logger.i { "Fetched ${fetchedQandas.size} qandas" }
-                _fetchState.update { state ->
-                    state.map { current ->
-                        current + fetchedQandas.groupBy { it.category }
-                    }
-                }
                 _events.tryEmit(
                     UiEvent.Success("Fetched ${fetchedQandas.size} qandas")
                 )

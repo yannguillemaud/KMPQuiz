@@ -2,6 +2,7 @@ package ygmd.kmpquiz.viewModel.quiz.session
 
 import ygmd.kmpquiz.domain.entities.qanda.Answers
 import ygmd.kmpquiz.domain.entities.qanda.Choice
+import ygmd.kmpquiz.domain.entities.qanda.Qanda
 import ygmd.kmpquiz.domain.entities.quiz.QuizSession
 
 sealed class QuizSessionUiState {
@@ -9,10 +10,13 @@ sealed class QuizSessionUiState {
 
     data class InProgress(
         val session: QuizSession,
-        val shuffledAnswers: Answers?,
         val hasAnswered: Boolean = false,
         val selectedAnswer: Choice? = null,
-    ) : QuizSessionUiState()
+        val shuffledAnswers: Answers,
+    ) : QuizSessionUiState() {
+        val currentQanda: Qanda
+            get() = session.currentQanda ?: error("Current Qanda cannot be null")
+    }
 
     data class Completed(
         val session: QuizSession,

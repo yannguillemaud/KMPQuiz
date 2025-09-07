@@ -12,6 +12,7 @@ class QandaRepositoryImpl(
     private val qandaDao: QandaDao
 ) : QandaRepository {
     override fun observeAll(): Flow<List<Qanda>> {
+        logger.i { "Observing qandas" }
         return qandaDao.observeQandas()
     }
 

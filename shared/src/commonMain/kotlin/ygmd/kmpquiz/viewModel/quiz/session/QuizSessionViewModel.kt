@@ -45,9 +45,14 @@ class QuizSessionViewModel(
             }
 
             val quizSession = quiz.session()
+            val shuffledAnswers = quizSession.currentQanda?.answers?.shuffled() ?: run {
+                _uiState.value = QuizSessionUiState.Error("No answers found for quiz")
+                return@launch
+            }
+
             _uiState.value = InProgress(
                 session = quizSession,
-                shuffledAnswers = quizSession.currentQanda?.answers?.shuffled()
+                shuffledAnswers = shuffledAnswers
             )
         }
     }
@@ -79,20 +84,22 @@ class QuizSessionViewModel(
         )
 
         if (updatedSession.isComplete) {
-            // Quiz terminé
-            val results = calculateResults(updatedSession)
             _uiState.value = QuizSessionUiState.Completed(
                 session = updatedSession,
-                results = results
+                results = calculateResults(updatedSession)
             )
-            logger.i { "Quiz completed with score: ${results.score}/${results.questions}" }
+            logger.i { "Quiz completed " }
         } else {
-            // Question suivante
+            val shuffledAnswers = updatedSession.currentQanda?.answers?.shuffled() ?: run {
+                _uiState.value = QuizSessionUiState.Error("No answers found for quiz")
+                return
+            }
+
             _uiState.value = InProgress(
                 session = updatedSession,
-                shuffledAnswers = updatedSession.currentQanda?.answers?.shuffled(),
                 hasAnswered = false,
-                selectedAnswer = null
+                selectedAnswer = null,
+                shuffledAnswers = shuffledAnswers
             )
             logger.d { "Moved to question ${updatedSession.currentIndex}/${updatedSession.qandas.size}" }
         }

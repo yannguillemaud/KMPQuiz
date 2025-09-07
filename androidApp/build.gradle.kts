@@ -57,4 +57,5 @@ dependencies {
     implementation(libs.koin.compose.viewmodel.nav)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.kotlinx.datetime)
+    implementation(libs.coil.compose)
 }

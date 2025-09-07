@@ -22,18 +22,9 @@ import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 
-data class TestDB(val driver: SqlDriver, val db: KMPQuizDatabase)
-
 private val json = Json {
     ignoreUnknownKeys = true
     isLenient = true
-}
-
-private fun inMemoryDb(): TestDB {
-    val driver: SqlDriver = JdbcSqliteDriver(JdbcSqliteDriver.IN_MEMORY)
-    KMPQuizDatabase.Schema.create(driver)
-    val db = KMPQuizDatabase(driver)
-    return TestDB(driver, db)
 }
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -44,11 +35,15 @@ class PersistenceQuizDaoTest {
 
     @BeforeTest
     fun setup() {
-        val testDb = inMemoryDb()
-        driver = testDb.driver
-        db = testDb.db
+        driver = JdbcSqliteDriver(JdbcSqliteDriver.IN_MEMORY).also {
+            KMPQuizDatabase.Schema.create(it)
+        }
+        db = KMPQuizDatabase(driver)
         dao = PersistenceQuizDao(object : DatabaseDriverFactory {
-            override fun createDriver() = driver
+            override fun createDriver(): SqlDriver = driver
+            override fun deleteDatabase() {
+                /* no op */
+            }
         })
     }
 
@@ -108,10 +103,12 @@ class PersistenceQuizDaoTest {
             db.qandaQueries.insertQanda(
                 id = "100",
                 context_key = "Question 1|Answer 1",
+                question_type = "text",
+                question_url = null,
                 question_text = "Question 1",
                 incorrect_answers_text = json.encodeToString(listOf("Answer 2", "Answer 3")),
                 correct_answer_text = "Answer 1",
-                category = "test"
+                category = "test",
             )
 
             // 4. Add relation

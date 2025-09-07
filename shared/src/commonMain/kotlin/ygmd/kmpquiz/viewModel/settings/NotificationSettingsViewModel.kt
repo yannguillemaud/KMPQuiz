@@ -57,16 +57,16 @@ class NotificationSettingsViewModel(
             logger.i { "Actual quizzes: ${quizzes.map { "${it.title}: ${it.quizCron?.isEnabled}" }}" }
             _cronsSettings.value = _cronsSettings.value.copy(
                 isLoading = false,
-                cronsByQuiz = quizzes
-                    .mapNotNull { quiz -> quiz.quizCron?.let { quiz to it } }
-                    .associateBy({ it.first }, { it.second })
-                    .mapValues { (quiz, cron) ->
-                        UiCronSetting(
-                            title = quiz.title,
-                            isEnabled = cron.isEnabled,
-                            cronExpression = cron.cron
-                        )
-                    }
+//                cronsByQuiz = quizzes
+//                    .mapNotNull { quiz -> quiz.quizCron?.let { quiz to it } }
+//                    .associateBy({ it.first }, { it.second })
+//                    .mapValues { (quiz, cron) ->
+//                        UiCronSetting(
+//                            title = quiz.title,
+//                            isEnabled = cron.isEnabled,
+//                            cronExpression = cron.cron
+//                        )
+//                    }
             )
         }
     }

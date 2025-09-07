@@ -1,102 +1,88 @@
 package ygmd.kmpquiz.android.ui.composable.quiz
 
-import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.spring
-import androidx.compose.foundation.background
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
-import androidx.compose.material.icons.filled.Assessment
-import androidx.compose.material3.Button
+import androidx.compose.material.icons.filled.DoneAll
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.Surface
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.scale
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 
 @Composable
 fun NextQuestionButton(
-    isComplete: Boolean,
+    modifier: Modifier = Modifier,
+    isQuizComplete: Boolean,
     onClick: () -> Unit
 ) {
-    val buttonText = if (isComplete) "Voir les résultats" else "Question suivante"
-    val icon = if (isComplete) Icons.Filled.Assessment else Icons.AutoMirrored.Filled.ArrowForward
+    val buttonText = if (isQuizComplete) "Show results" else "Next question"
+    val buttonIcon = if (isQuizComplete) Icons.Filled.DoneAll else Icons.AutoMirrored.Filled.ArrowForward
 
-    var isPressed by remember { mutableStateOf(false) }
-    val scale by animateFloatAsState(
-        targetValue = if (isPressed) 0.98f else 1f,
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessLow
+    FilledTonalButton(
+        onClick = onClick,
+        modifier = modifier,
+        colors = ButtonDefaults.filledTonalButtonColors(
+            containerColor = MaterialTheme.colorScheme.secondaryContainer,
+            contentColor = MaterialTheme.colorScheme.onSecondaryContainer
         ),
-        label = "button_scale"
-    )
-
-    Surface(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(Color.White)
-            .padding(24.dp)
+        shape = RoundedCornerShape(16.dp),
+        contentPadding = PaddingValues(horizontal = 20.dp, vertical = 14.dp)
     ) {
-        Button(
-            onClick = {
-                isPressed = true
-                onClick()
+        AnimatedContent(
+            targetState = Pair(buttonText, buttonIcon),
+            transitionSpec = {
+                (slideInHorizontally(
+                    animationSpec = tween(300),
+                    initialOffsetX = { width -> width / 2 }
+                ) + fadeIn(animationSpec = tween(300)))
+                    .togetherWith(
+                        slideOutHorizontally(
+                            animationSpec = tween(300),
+                            targetOffsetX = { width -> -width / 2 }
+                        ) + fadeOut(animationSpec = tween(300))
+                    )
             },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(56.dp) // Taille tactile optimale
-                .scale(scale),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = Color(0xFF4F46E5)
-            ),
-            shape = RoundedCornerShape(16.dp),
-            elevation = ButtonDefaults.buttonElevation(
-                defaultElevation = 4.dp,
-                pressedElevation = 8.dp
-            )
-        ) {
+            label = "NextButtonAnimation"
+        ) { (text, icon) ->
             Row(
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
             ) {
                 Text(
-                    text = buttonText,
-                    style = TextStyle(
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = Color.White
-                    )
+                    text = text,
+                    style = MaterialTheme.typography.labelLarge
                 )
-                Spacer(modifier = Modifier.width(12.dp))
+                Spacer(modifier = Modifier.width(8.dp))
                 Icon(
                     imageVector = icon,
                     contentDescription = null,
-                    tint = Color.White,
-                    modifier = Modifier.size(20.dp)
+                    modifier = Modifier
                 )
             }
         }
     }
+}
+
+@Preview
+@Composable
+fun NextQuestionButtonPreview() {
+    NextQuestionButton(isQuizComplete = true, onClick = {})
 }

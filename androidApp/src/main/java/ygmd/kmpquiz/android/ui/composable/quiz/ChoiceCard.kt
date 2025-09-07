@@ -31,8 +31,8 @@ import androidx.compose.ui.unit.sp
 import ygmd.kmpquiz.domain.entities.qanda.Choice
 
 @Composable
-fun AnswerCard(
-    answer: Choice,
+fun ChoiceCard(
+    choice: Choice,
     isSelected: Boolean,
     isAnswered: Boolean,
     isCorrect: Boolean?,
@@ -92,9 +92,9 @@ fun AnswerCard(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            when (answer) {
+            when (choice) {
                 is Choice.TextChoice -> Text(
-                    text = answer.text,
+                    text = choice.text,
                     style = TextStyle(
                         fontSize = 16.sp,
                         fontWeight = if (isSelected) FontWeight.Medium else FontWeight.Normal,

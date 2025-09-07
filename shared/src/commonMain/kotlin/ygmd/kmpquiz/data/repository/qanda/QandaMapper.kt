@@ -17,7 +17,10 @@ class QandaMapper {
         val isTrueFalse = incorrectAnswers.size == 1
         return Qanda(
             id = qanda.id,
-            question = Question.TextQuestion(qanda.question_text),
+            question = when(Question.QuestionType.valueOf(qanda.question_type)){
+                Question.QuestionType.TEXT -> Question.TextQuestion(requireNotNull(qanda.question_text))
+                Question.QuestionType.IMAGE -> Question.ImageQuestion(requireNotNull(qanda.question_url), qanda.question_text)
+            },
             answers = if (isTrueFalse) AnswersFactory.createTrueFalse(qanda.correct_answer_text.toBoolean())
             else AnswersFactory.createMultipleTextChoices(
                 qanda.correct_answer_text,

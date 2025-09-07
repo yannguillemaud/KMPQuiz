@@ -115,15 +115,7 @@ fun QuestionDetailCard(
                 }
 
                 // Question
-                Text(
-                    text = qanda.question.text,
-                    style = TextStyle(
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = Color(0xFF1F2937),
-                        lineHeight = 22.sp
-                    )
-                )
+                QuestionCard(qanda.question)
 
                 // Réponse utilisateur
                 if (userAnswer != null) {

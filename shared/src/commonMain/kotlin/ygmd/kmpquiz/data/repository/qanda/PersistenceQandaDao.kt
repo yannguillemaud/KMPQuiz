@@ -6,10 +6,10 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
-import ygmd.kmpquiz.data.database.DatabaseDriverFactory
-import ygmd.kmpquiz.data.database.createDatabase
+import ygmd.kmpquiz.database.KMPQuizDatabase
 import ygmd.kmpquiz.domain.entities.qanda.Choice
 import ygmd.kmpquiz.domain.entities.qanda.Qanda
+import ygmd.kmpquiz.domain.entities.qanda.Question
 import ygmd.kmpquiz.domain.repository.DraftQanda
 import java.util.UUID
 
@@ -17,18 +17,18 @@ private val logger =
     co.touchlab.kermit.Logger.withTag(PersistenceQandaDao::class.simpleName.toString())
 
 class PersistenceQandaDao(
-    private val databaseDriverFactory: DatabaseDriverFactory,
-    private val dispatchers: CoroutineDispatcher = Dispatchers.IO
+    database: KMPQuizDatabase,
+    private val dispatcher: CoroutineDispatcher = Dispatchers.IO
 ) : QandaDao {
-    private val database = createDatabase(databaseDriverFactory)
     private val qandaQueries = database.qandaQueries
     private val relationQueries = database.quizQandasRelationQueries
     private val mapper = QandaMapper()
 
     override fun observeQandas(): Flow<List<Qanda>> {
+        logger.i { "Observing qandas" }
         return qandaQueries.selectAllQandas()
             .asFlow()
-            .mapToList(dispatchers)
+            .mapToList(dispatcher)
             .map { qandas ->
                 qandas.map {
                     mapper.map(it)
@@ -65,13 +65,19 @@ class PersistenceQandaDao(
                     is Choice.TextChoice -> it.text
                 }
             }
+        val questionUrl = if(draftQanda.question is Question.ImageQuestion) draftQanda.question.imageUrl else null
+        val questionText = when(draftQanda.question){
+            is Question.TextQuestion -> draftQanda.question.text
+            is Question.ImageQuestion -> draftQanda.question.text
+        }
 
         try {
             qandaQueries.insertQanda(
                 id = id,
                 context_key = draftQanda.contextKey,
-                // todo
-                question_text = draftQanda.question.contextKey,
+                question_type = draftQanda.question.type,
+                question_text = questionText,
+                question_url = questionUrl,
                 incorrect_answers_text = mapper.json.encodeToString(incorrectAnswersText),
                 correct_answer_text = draftQanda.answers.correctAnswer.contextKey,
                 category = draftQanda.category

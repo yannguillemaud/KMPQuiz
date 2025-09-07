@@ -17,5 +17,7 @@ enum class FailureType {
     RATE_LIMIT,    // Trop de requêtes, retryAfter sera rempli
     API_ERROR,     // Erreur 4xx/5xx ou response_code != 0
     NETWORK_ERROR,  // Problème réseau/parsing,
-    ERROR
+    SERVER_ERROR,
+    UNKNOWN_ERROR,
+    ERROR,
 }

@@ -4,7 +4,6 @@ import org.koin.dsl.module
 import ygmd.kmpquiz.application.usecase.fetch.DeleteFetchQandasUseCase
 import ygmd.kmpquiz.application.usecase.fetch.FetchQandasUseCase
 import ygmd.kmpquiz.application.usecase.fetch.GetFetchQandasUseCase
-import ygmd.kmpquiz.application.usecase.fetch.SaveFetchQandasUseCase
 import ygmd.kmpquiz.application.usecase.notification.RescheduleTasksUseCase
 import ygmd.kmpquiz.application.usecase.qanda.DeleteQandasUseCase
 import ygmd.kmpquiz.application.usecase.qanda.GetQandaUseCase
@@ -52,12 +51,6 @@ val domainModule = module {
     factory {
         GetFetchQandasUseCase(
             repository = get()
-        )
-    }
-
-    factory {
-        SaveFetchQandasUseCase(
-            fetchRepository = get()
         )
     }
 

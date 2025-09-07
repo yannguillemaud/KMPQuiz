@@ -7,16 +7,11 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
-import ygmd.kmpquiz.data.database.DatabaseDriverFactory
-import ygmd.kmpquiz.data.database.createDatabase
 import ygmd.kmpquiz.data.repository.qanda.QandaMapper
 import ygmd.kmpquiz.database.KMPQuizDatabase
 import ygmd.kmpquiz.domain.entities.cron.CronExpression
 import ygmd.kmpquiz.domain.entities.cron.QuizCron
-import ygmd.kmpquiz.domain.entities.qanda.AnswersFactory
-import ygmd.kmpquiz.domain.entities.qanda.Metadata
 import ygmd.kmpquiz.domain.entities.qanda.Qanda
-import ygmd.kmpquiz.domain.entities.qanda.Question
 import ygmd.kmpquiz.domain.entities.quiz.DraftQuiz
 import ygmd.kmpquiz.domain.entities.quiz.Quiz
 import java.util.UUID
@@ -25,10 +20,9 @@ import java.util.UUID
 private val logger = Logger.withTag("PersistenceQuizDao")
 
 class PersistenceQuizDao(
-    databaseDriverFactory: DatabaseDriverFactory,
+    database: KMPQuizDatabase,
     private val dispatchers: CoroutineDispatcher = Dispatchers.IO,
 ) : QuizDao {
-    private val database: KMPQuizDatabase = createDatabase(databaseDriverFactory)
     private val quizQueries = database.quizQueries
     private val qandaQueries = database.qandaQueries
     private val relationQueries = database.quizQandasRelationQueries
@@ -77,24 +71,7 @@ class PersistenceQuizDao(
 
     private fun getQanda(id: String): Qanda? = qandaQueries.getById(id)
         .executeAsOneOrNull()
-        ?.let {
-            val incorrectAnswers =
-                mapper.json.decodeFromString<List<String>>(it.incorrect_answers_text)
-            val correctAnswer =
-                mapper.json.decodeFromString<String>(it.correct_answer_text)
-            val isTrueFalse = incorrectAnswers.size == 1
-            Qanda(
-                id = it.id,
-                question = Question.TextQuestion(it.question_text),
-                answers =
-                    if (isTrueFalse) AnswersFactory.createTrueFalse(correctAnswer.toBoolean())
-                    else AnswersFactory.createMultipleTextChoices(
-                        correctAnswer,
-                        incorrectAnswers
-                    ),
-                metadata = Metadata(category = it.category, difficulty = null)
-            )
-        }
+        ?.let { mapper.map(it) }
 
     override fun getQuizById(id: String): Quiz? {
         return quizQueries.getQuizById(id).executeAsOneOrNull()
@@ -104,18 +81,7 @@ class PersistenceQuizDao(
                     .groupBy({ it.quiz_id }, { it.qanda_id })[id]
                     ?.map { qandaId ->
                         val qandaEntity = qandaQueries.getById(qandaId).executeAsOne()
-                        Qanda(
-                            id = qandaEntity.id,
-                            question = Question.TextQuestion(qandaEntity.question_text),
-                            answers = AnswersFactory.createMultipleTextChoices(
-                                correctAnswer = qandaEntity.correct_answer_text,
-                                incorrectAnswers = mapper.json.decodeFromString(qandaEntity.incorrect_answers_text)
-                            ),
-                            metadata = Metadata(
-                                category = qandaEntity.category,
-                                difficulty = null
-                            )
-                        )
+                        mapper.map(qandaEntity)
                     } ?: emptyList()
 
 

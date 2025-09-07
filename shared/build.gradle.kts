@@ -30,6 +30,7 @@ kotlin {
             implementation(libs.ktor.client.core)
             implementation(libs.ktor.client.content.negotiation)
             implementation(libs.ktor.serialization.kotlinx.json)
+            implementation(libs.ktor.client.cio)
 
             implementation(libs.kermit)
             implementation(libs.kcron.common)
@@ -37,6 +38,8 @@ kotlin {
             implementation(libs.sqldelight.runtime)
             implementation(libs.sqldelight.coroutines.extensions)
             implementation(libs.sqldelight.primitive.adapters)
+
+            implementation("org.jetbrains.compose.components:components-resources:1.10.0-alpha01")
         }
 
         commonTest.dependencies {

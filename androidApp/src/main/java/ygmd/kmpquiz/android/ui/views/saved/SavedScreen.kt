@@ -231,11 +231,11 @@ private fun QandaItem(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(
-                text = qanda.question.text,
-                style = typography.bodyMedium,
-                modifier = Modifier.weight(1f)
-            )
+//            Text(
+//                text = qanda.question.text,
+//                style = typography.bodyMedium,
+//                modifier = Modifier.weight(1f)
+//            )
 
             IconButton(onClick = onDelete) {
                 Icon(
@@ -272,11 +272,11 @@ private fun QandaDetailSheet(
             fontWeight = FontWeight.Bold,
             color = colorScheme.primary
         )
-        Text(
-            text = qanda.question.text,
-            style = typography.bodyLarge,
-            modifier = Modifier.padding(bottom = 16.dp)
-        )
+//        Text(
+//            text = qanda.question.text,
+//            style = typography.bodyLarge,
+//            modifier = Modifier.padding(bottom = 16.dp)
+//        )
 
         // Réponses
         Text(

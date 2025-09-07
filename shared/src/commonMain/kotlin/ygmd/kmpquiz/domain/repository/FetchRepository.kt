@@ -11,7 +11,6 @@ data class DraftQanda(
     val question: Question,
     val answers: Answers,
     val category: String,
-    val isSaved: Boolean = false,
 ){
     val contextKey: String = "${question.contextKey}|${answers.contextKey}"
 
