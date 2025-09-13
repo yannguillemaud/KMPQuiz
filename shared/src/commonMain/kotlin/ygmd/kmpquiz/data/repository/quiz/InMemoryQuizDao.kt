@@ -3,6 +3,7 @@ package ygmd.kmpquiz.data.repository.quiz
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import ygmd.kmpquiz.domain.dao.QuizDao
 import ygmd.kmpquiz.domain.entities.quiz.DraftQuiz
 import ygmd.kmpquiz.domain.entities.quiz.Quiz
 import java.util.UUID

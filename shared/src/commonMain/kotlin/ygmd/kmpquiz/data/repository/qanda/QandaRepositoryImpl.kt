@@ -2,6 +2,7 @@ package ygmd.kmpquiz.data.repository.qanda
 
 import co.touchlab.kermit.Logger
 import kotlinx.coroutines.flow.Flow
+import ygmd.kmpquiz.domain.dao.QandaDao
 import ygmd.kmpquiz.domain.entities.qanda.Qanda
 import ygmd.kmpquiz.domain.repository.DraftQanda
 import ygmd.kmpquiz.domain.repository.QandaRepository

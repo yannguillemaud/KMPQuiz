@@ -14,6 +14,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
 import ygmd.kmpquiz.data.database.DatabaseDriverFactory
+import ygmd.kmpquiz.data.database.createDatabase
 import ygmd.kmpquiz.data.repository.quiz.PersistenceQuizDao
 import ygmd.kmpquiz.database.KMPQuizDatabase
 import ygmd.kmpquiz.domain.entities.qanda.Question
@@ -39,12 +40,14 @@ class PersistenceQuizDaoTest {
             KMPQuizDatabase.Schema.create(it)
         }
         db = KMPQuizDatabase(driver)
-        dao = PersistenceQuizDao(object : DatabaseDriverFactory {
-            override fun createDriver(): SqlDriver = driver
-            override fun deleteDatabase() {
-                /* no op */
+        dao = PersistenceQuizDao(createDatabase(
+            object : DatabaseDriverFactory {
+                override fun createDriver(): SqlDriver = driver
+                override fun deleteDatabase() {
+                    /* no op */
+                }
             }
-        })
+        ))
     }
 
     @AfterTest
@@ -74,6 +77,7 @@ class PersistenceQuizDaoTest {
                 title = "First Quiz",
                 cron_expression = null,
                 cron_display_name = null,
+                cron_enabled = null
             )
 
             val afterInsert = awaitItem()
@@ -96,6 +100,7 @@ class PersistenceQuizDaoTest {
                 title = "Quiz with Qanda",
                 cron_expression = null,
                 cron_display_name = null,
+                cron_enabled = null
             )
             awaitItem() // quiz sans qandas
 

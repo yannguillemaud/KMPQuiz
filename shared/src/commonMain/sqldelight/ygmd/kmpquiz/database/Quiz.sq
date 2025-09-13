@@ -1,26 +1,28 @@
-CREATE TABLE quiz (
+import com.android.build.gradle.internal.dsl.decorator.SupportedPropertyType.Var.Boolean;
+
+CREATE TABLE IF NOT EXISTS quizEntity (
     id TEXT PRIMARY KEY,
     title TEXT NOT NULL,
     cron_expression TEXT,
-    cron_display_name TEXT
+    cron_display_name TEXT,
+    cron_enabled INTEGER -- todo AS Boolean + columnAdapter. now 0 to false
 );
 
-selectAllQuizzes:
-SELECT * FROM quiz;
+selectAll:
+SELECT * FROM quizEntity;
 
-getQuizById:
-SELECT * FROM quiz q
+getById:
+SELECT * FROM quizEntity q
 WHERE q.id = ?;
 
-insertQuiz:
-INSERT INTO quiz(id, title, cron_expression, cron_display_name)
-VALUES (?, ?, ?, ?);
+insert:
+INSERT INTO quizEntity(id, title, cron_expression, cron_display_name, cron_enabled)
+VALUES ?;
+
+update:
+REPLACE INTO quizEntity(id, title, cron_expression, cron_display_name, cron_enabled)
+VALUES ?;
 
 deleteById:
-DELETE FROM quiz
-WHERE id = ?;
-
-updateQuiz:
-UPDATE quiz
-SET title = ?, cron_expression = ?, cron_display_name = ?
+DELETE FROM quizEntity
 WHERE id = ?;

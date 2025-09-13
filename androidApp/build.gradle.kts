@@ -46,16 +46,9 @@ kotlin {
 
 dependencies {
     implementation(projects.shared)
-    implementation(libs.compose.ui)
-    implementation(libs.compose.ui.tooling.preview)
-    implementation(libs.androidx.activity.compose)
-    implementation(libs.androidx.material3.android)
-    implementation("androidx.compose.material:material-icons-extended:1.7.8")
-    debugImplementation(libs.compose.ui.tooling)
     implementation(libs.koin.android)
     implementation(libs.koin.compose.viewmodel)
     implementation(libs.koin.compose.viewmodel.nav)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.kotlinx.datetime)
-    implementation(libs.coil.compose)
 }

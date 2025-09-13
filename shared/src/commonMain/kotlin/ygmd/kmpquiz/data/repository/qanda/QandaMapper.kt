@@ -12,7 +12,7 @@ class QandaMapper {
         isLenient = true
     }
 
-    fun map(qanda: ygmd.kmpquiz.database.Qanda): Qanda {
+    fun map(qanda: ygmd.kmpquiz.database.QandaEntity): Qanda {
         val incorrectAnswers = json.decodeFromString<List<String>>(qanda.incorrect_answers_text)
         val isTrueFalse = incorrectAnswers.size == 1
         return Qanda(

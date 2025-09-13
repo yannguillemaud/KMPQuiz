@@ -9,7 +9,7 @@ import org.koin.ktor.plugin.Koin
 import org.koin.logger.slf4jLogger
 import ygmd.kmpquiz.db.conf.DBFactory
 import ygmd.kmpquiz.db.conf.SERVER_PORT
-import ygmd.kmpquiz.koin.serverModule
+import ygmd.kmpquiz.di.serverModule
 import ygmd.kmpquiz.ktor.routes
 
 fun main() {

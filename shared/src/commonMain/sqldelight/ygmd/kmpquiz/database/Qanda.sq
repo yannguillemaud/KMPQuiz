@@ -1,4 +1,4 @@
-CREATE TABLE qanda (
+CREATE TABLE qandaEntity (
     id TEXT PRIMARY KEY,
     question_type TEXT NOT NULL DEFAULT "text",
     question_text TEXT,
@@ -6,28 +6,31 @@ CREATE TABLE qanda (
     incorrect_answers_text TEXT NOT NULL,
     correct_answer_text TEXT NOT NULL,
     category TEXT NOT NULL,
-    difficulty TEXT,
     context_key TEXT NOT NULL UNIQUE
 );
 
 -- Index
-CREATE INDEX idx_qanda_category ON qanda(category);
-CREATE INDEX idx_qanda_context_key ON qanda(context_key);
+CREATE INDEX idx_qanda_category ON qandaEntity(category);
+CREATE INDEX idx_qanda_context_key ON qandaEntity(context_key);
 
-selectAllQandas:
-SELECT * FROM qanda;
+selectAll:
+SELECT * FROM qandaEntity;
 
 getById:
-SELECT * FROM qanda q
+SELECT * FROM qandaEntity q
 WHERE q.id = ?;
 
-insertQanda:
-INSERT INTO qanda(id, context_key, question_type, question_text, question_url, incorrect_answers_text, correct_answer_text, category)
-VALUES (?, ?, ?, ?, ?, ?, ?, ?);
+insert:
+INSERT INTO qandaEntity(id, context_key, question_type, question_text, question_url, incorrect_answers_text, correct_answer_text, category)
+VALUES ?;
 
-deleteAllQandas:
-DELETE FROM qanda;
+update:
+REPLACE INTO qandaEntity(id, context_key, question_type, question_text, question_url, incorrect_answers_text, correct_answer_text, category)
+VALUES ?;
 
-deleteQandaById:
-DELETE FROM qanda
+deleteAll:
+DELETE FROM qandaEntity;
+
+deleteById:
+DELETE FROM qandaEntity
 WHERE id = ?;

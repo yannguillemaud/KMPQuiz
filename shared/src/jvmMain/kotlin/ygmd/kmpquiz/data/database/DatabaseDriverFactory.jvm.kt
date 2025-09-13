@@ -1,8 +1,12 @@
 package ygmd.kmpquiz.data.database
 
 import app.cash.sqldelight.db.SqlDriver
+import app.cash.sqldelight.driver.jdbc.sqlite.JdbcSqliteDriver
+import org.koin.core.scope.Scope
+import ygmd.kmpquiz.database.KMPQuizDatabase
 
-actual interface DatabaseDriverFactory {
-    actual fun createDriver(): SqlDriver
-    actual fun deleteDatabase()
+actual fun Scope.sqlDriverFactory(): SqlDriver {
+    val driver = JdbcSqliteDriver(url = JdbcSqliteDriver.IN_MEMORY)
+    KMPQuizDatabase.Schema.create(driver)
+    return driver
 }

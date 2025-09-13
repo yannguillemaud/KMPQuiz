@@ -2,8 +2,8 @@ CREATE TABLE quiz_qandas_relation (
     quiz_id TEXT NOT NULL,
     qanda_id TEXT NOT NULL,
     PRIMARY KEY (quiz_id, qanda_id),
-    FOREIGN KEY (quiz_id) REFERENCES quiz(id) ON DELETE CASCADE ,
-    FOREIGN KEY (qanda_id) REFERENCES qanda(id)
+    FOREIGN KEY (quiz_id) REFERENCES quizEntity(id) ON DELETE CASCADE ,
+    FOREIGN KEY (qanda_id) REFERENCES qandaEntity(id)
 );
 
 getAllRelations:

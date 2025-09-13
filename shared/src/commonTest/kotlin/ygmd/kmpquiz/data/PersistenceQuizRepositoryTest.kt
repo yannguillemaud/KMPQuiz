@@ -13,7 +13,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import ygmd.kmpquiz.data.repository.quiz.PersistenceQuizRepository
-import ygmd.kmpquiz.data.repository.quiz.QuizDao
+import ygmd.kmpquiz.domain.dao.QuizDao
 import ygmd.kmpquiz.domain.entities.quiz.DraftQuiz
 import ygmd.kmpquiz.domain.entities.quiz.Quiz
 import java.util.UUID

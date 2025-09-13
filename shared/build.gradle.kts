@@ -1,10 +1,9 @@
 plugins {
-    alias(libs.plugins.kotlinMultiplatform)
-    alias(libs.plugins.kotlin.serialization)
-    alias(libs.plugins.ksp)
-    alias(libs.plugins.androidLibrary)
-    alias(libs.plugins.sqldelight)
-    id("dev.mokkery") version "2.9.0"
+    kotlin("multiplatform")
+    kotlin("plugin.serialization")
+    id("com.android.library")
+    id("org.jetbrains.kotlin.plugin.compose")
+    id("app.cash.sqldelight")
 }
 
 kotlin {
@@ -15,31 +14,39 @@ kotlin {
 
     sourceSets {
         commonMain.dependencies {
-            //put your multiplatform dependencies here
+            /* LOG*/
             implementation(libs.kermit)
 
+            /* KOTLIN */
             implementation(libs.kotlinx.coroutines.core)
             implementation(libs.kotlinx.serialization.json)
             implementation(libs.kotlinx.datetime)
 
-            implementation(libs.androidx.lifecycle.viewmodel)
-            implementation(libs.androidx.lifecycle.runtime.compose)
-
             implementation(libs.koin.compose.viewmodel.nav)
 
+            /* KTOR */
             implementation(libs.ktor.client.core)
             implementation(libs.ktor.client.content.negotiation)
             implementation(libs.ktor.serialization.kotlinx.json)
             implementation(libs.ktor.client.cio)
 
-            implementation(libs.kermit)
             implementation(libs.kcron.common)
 
+            /* SQLDELIGHT */
             implementation(libs.sqldelight.runtime)
             implementation(libs.sqldelight.coroutines.extensions)
             implementation(libs.sqldelight.primitive.adapters)
 
-            implementation("org.jetbrains.compose.components:components-resources:1.10.0-alpha01")
+            /* COMPOSE */
+            implementation(libs.compose.ui)
+            implementation(libs.compose.foundation)
+            implementation(libs.compose.runtime)
+            implementation(libs.compose.material3)
+            implementation(libs.androidx.lifecycle.runtime.compose)
+            implementation(libs.androidx.lifecycle.viewmodel.compose)
+            implementation(libs.androidx.navigation.compose)
+            implementation(libs.androidx.material.icons)
+            implementation(libs.androidx.material.icons.extended)
         }
 
         commonTest.dependencies {
@@ -58,7 +65,7 @@ kotlin {
             // Koin pour Android
             implementation(libs.koin.android)
             // WorkManager
-            implementation(libs.androidx.work.runtime.ktx)
+//            implementation(libs.androidx.work.runtime.ktx)
             implementation(libs.koin.androidx.workmanager)
             implementation(libs.sqldelight.android.driver)
         }
@@ -86,11 +93,11 @@ kotlin {
 }
 
 android {
-    namespace = "ygmd.kmpquiz.shared"
+    namespace = "ygmd.kmpquiz"
     compileSdk = 36
 
     defaultConfig {
-        minSdk = 26 
+        minSdk = 26
     }
 
     compileOptions {
@@ -105,7 +112,7 @@ tasks.withType<Test>().configureEach {
 
 sqldelight {
     databases {
-        create("KMPQuizDatabase"){
+        create("KMPQuizDatabase") {
             packageName.set("ygmd.kmpquiz.database")
         }
     }

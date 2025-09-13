@@ -1,33 +1,28 @@
 package ygmd.kmpquiz.android
 
-import android.app.ComponentCaller
-import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.runtime.LaunchedEffect
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
-import androidx.navigation.navDeepLink
-import androidx.navigation.toRoute
+import androidx.core.view.WindowCompat
+import org.koin.android.ext.koin.androidContext
 import ygmd.kmpquiz.android.notification.NotificationUtils.requestPermissionNotification
 import ygmd.kmpquiz.android.notification.NotificationUtils.setupNotificationChannel
-import ygmd.kmpquiz.android.ui.views.fetch.success.FetchScreen
-import ygmd.kmpquiz.android.ui.views.home.HomeScreen
-import ygmd.kmpquiz.android.ui.views.notification.NotificationSettingsScreen
-import ygmd.kmpquiz.android.ui.views.quiz.QuizCreationScreen
-import ygmd.kmpquiz.android.ui.views.quiz.QuizScreen
-import ygmd.kmpquiz.android.ui.views.quiz.QuizSessionScreen
-import ygmd.kmpquiz.android.ui.views.saved.SavedScreen
-import ygmd.kmpquiz.android.ui.views.theme.QuizTheme
+import ygmd.kmpquiz.di.initKoin
+import ygmd.kmpquiz.ui.screen.App
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         requestPermissionNotification(this, this)
         setupNotificationChannel(this)
-
+        initKoin {
+            androidContext(this@MainActivity)
+        }
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+        setContent {
+            App()
+        }
+/*
         setContent {
             QuizTheme(darkTheme = false) {
                 val navController = rememberNavController()
@@ -96,13 +91,6 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
-
-
-    }
-
-    // nécessaire pour singleTop pour recevoir le nouvel intent
-    override fun onNewIntent(intent: Intent, caller: ComponentCaller) {
-        super.onNewIntent(intent, caller)
-        setIntent(intent)
+*/
     }
 }

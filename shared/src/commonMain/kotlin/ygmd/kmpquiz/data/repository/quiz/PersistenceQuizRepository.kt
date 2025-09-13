@@ -1,6 +1,7 @@
 package ygmd.kmpquiz.data.repository.quiz
 
 import kotlinx.coroutines.flow.Flow
+import ygmd.kmpquiz.domain.dao.QuizDao
 import ygmd.kmpquiz.domain.entities.quiz.DraftQuiz
 import ygmd.kmpquiz.domain.entities.quiz.Quiz
 import ygmd.kmpquiz.domain.repository.QuizRepository

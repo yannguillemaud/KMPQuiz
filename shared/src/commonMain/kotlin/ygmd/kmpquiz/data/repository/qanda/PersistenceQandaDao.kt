@@ -7,6 +7,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import ygmd.kmpquiz.database.KMPQuizDatabase
+import ygmd.kmpquiz.database.QandaEntity
+import ygmd.kmpquiz.domain.dao.QandaDao
 import ygmd.kmpquiz.domain.entities.qanda.Choice
 import ygmd.kmpquiz.domain.entities.qanda.Qanda
 import ygmd.kmpquiz.domain.entities.qanda.Question
@@ -26,7 +28,7 @@ class PersistenceQandaDao(
 
     override fun observeQandas(): Flow<List<Qanda>> {
         logger.i { "Observing qandas" }
-        return qandaQueries.selectAllQandas()
+        return qandaQueries.selectAll()
             .asFlow()
             .mapToList(dispatcher)
             .map { qandas ->
@@ -37,7 +39,7 @@ class PersistenceQandaDao(
     }
 
     override fun getAllQandas(): List<Qanda> {
-        return qandaQueries.selectAllQandas()
+        return qandaQueries.selectAll()
             .executeAsList()
             .map { mapper.map(it) }
     }
@@ -71,17 +73,19 @@ class PersistenceQandaDao(
             is Question.ImageQuestion -> draftQanda.question.text
         }
 
+        val toInsert = QandaEntity(
+            id = id,
+            context_key = draftQanda.contextKey,
+            question_type = draftQanda.question.type,
+            question_text = questionText,
+            question_url = questionUrl,
+            incorrect_answers_text = mapper.json.encodeToString(incorrectAnswersText),
+            correct_answer_text = draftQanda.answers.correctAnswer.contextKey,
+            category = draftQanda.category
+        )
+
         try {
-            qandaQueries.insertQanda(
-                id = id,
-                context_key = draftQanda.contextKey,
-                question_type = draftQanda.question.type,
-                question_text = questionText,
-                question_url = questionUrl,
-                incorrect_answers_text = mapper.json.encodeToString(incorrectAnswersText),
-                correct_answer_text = draftQanda.answers.correctAnswer.contextKey,
-                category = draftQanda.category
-            )
+            qandaQueries.insert(toInsert)
         } catch (e: Exception) {
             logger.e(e) { "Failed to save qanda: ${draftQanda.contextKey}" }
             throw e
@@ -105,11 +109,11 @@ class PersistenceQandaDao(
         getAllQandas().forEach {
             relationQueries.deleteQandasToQuiz(it.id)
         }
-        qandaQueries.deleteAllQandas()
+        qandaQueries.deleteAll()
     }
 
     override fun deleteQandaById(id: String) {
-        qandaQueries.deleteQandaById(id)
+        qandaQueries.deleteById(id)
         relationQueries.deleteQandasToQuiz(id)
     }
 }

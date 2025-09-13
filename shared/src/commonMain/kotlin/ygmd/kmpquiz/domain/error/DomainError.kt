@@ -1,5 +1,6 @@
 package ygmd.kmpquiz.domain.error
 
+// TODO - refactor
 sealed class DomainError(
     override val message: String,
     override val cause: Throwable? = null

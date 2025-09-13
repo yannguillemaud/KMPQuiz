@@ -6,7 +6,7 @@ import androidx.work.WorkManager
 import androidx.work.workDataOf
 import co.touchlab.kermit.Logger
 import worker.QuizReminderWorker
-import ygmd.kmpquiz.application.scheduler.TaskScheduler
+import ygmd.kmpquiz.domain.scheduler.TaskScheduler
 import ygmd.kmpquiz.domain.entities.cron.CronExpression
 import ygmd.kmpquiz.domain.entities.quiz.Quiz
 import ygmd.kmpquiz.domain.service.CronExecutionCalculator

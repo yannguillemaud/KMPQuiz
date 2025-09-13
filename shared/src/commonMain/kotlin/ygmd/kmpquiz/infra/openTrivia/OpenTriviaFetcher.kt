@@ -16,7 +16,7 @@ import ygmd.kmpquiz.data.service.QandaFetcher
 import ygmd.kmpquiz.domain.entities.qanda.AnswersFactory
 import ygmd.kmpquiz.domain.entities.qanda.Question
 import ygmd.kmpquiz.domain.repository.DraftQanda
-import ygmd.kmpquiz.unescaped
+import ygmd.kmpquiz.infra.unescaped
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
