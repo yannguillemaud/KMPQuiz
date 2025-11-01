@@ -1,15 +1,13 @@
 package ygmd.kmpquiz.domain.dao
 
 import kotlinx.coroutines.flow.Flow
-import ygmd.kmpquiz.domain.entities.quiz.DraftQuiz
-import ygmd.kmpquiz.domain.entities.quiz.Quiz
+import ygmd.kmpquiz.database.QuizEntity
 
 // TODO - mv to correct pkg
 interface QuizDao {
-    fun observeAllQuizzes(): Flow<List<Quiz>>
-    fun getAllQuizzes(): List<Quiz>
-    fun getQuizById(id: String): Quiz?
-    fun insertDraft(draftQuiz: DraftQuiz): String?
-    fun updateQuiz(quizId: String, quiz: Quiz)
+    fun observeAllQuizzes(): Flow<List<QuizEntity>>
+    fun getAllQuizzes(): List<QuizEntity>
+    fun getQuizById(id: String): QuizEntity?
+    fun save(entity: QuizEntity): String?
     fun deleteById(id: String)
 }

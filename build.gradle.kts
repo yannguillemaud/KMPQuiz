@@ -9,4 +9,8 @@ plugins {
     alias(libs.plugins.composeHotReload) apply false
     alias(libs.plugins.compose.multiplatform) apply false
     alias(libs.plugins.sqldelight) apply false
+
+    `maven-publish`
+    signing
+    id("com.github.breadmoirai.github-release") version "2.5.2" apply false
 }

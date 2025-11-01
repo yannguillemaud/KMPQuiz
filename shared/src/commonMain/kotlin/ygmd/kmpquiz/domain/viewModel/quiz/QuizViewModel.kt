@@ -2,138 +2,80 @@ package ygmd.kmpquiz.domain.viewModel.quiz
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import co.touchlab.kermit.Logger
 import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import ygmd.kmpquiz.domain.usecase.qanda.GetQandaUseCase
-import ygmd.kmpquiz.domain.usecase.quiz.CreateQuizUseCase
+import ygmd.kmpquiz.domain.usecase.cron.ToggleCronUseCase
+import ygmd.kmpquiz.domain.usecase.notification.RescheduleTasksUseCase
 import ygmd.kmpquiz.domain.usecase.quiz.DeleteQuizUseCase
 import ygmd.kmpquiz.domain.usecase.quiz.GetQuizUseCase
-import ygmd.kmpquiz.domain.entities.cron.QuizCron
-import ygmd.kmpquiz.domain.entities.qanda.Qanda
-import ygmd.kmpquiz.domain.entities.quiz.Quiz
+import ygmd.kmpquiz.domain.viewModel.displayable.DisplayableQuiz
+import ygmd.kmpquiz.domain.viewModel.displayable.displayable
+import ygmd.kmpquiz.domain.viewModel.error.UiError
 import ygmd.kmpquiz.domain.viewModel.error.UiEvent
+import ygmd.kmpquiz.domain.viewModel.state.UiState
 
-private val logger = Logger.withTag("QuizViewModel")
-
-data class QuizzesUiState(
-    val quizzes: Map<String, QuizState> = emptyMap(),
-    val isLoading: Boolean = false,
-    val isCreating: Boolean = false,
-    val error: String? = null,
-)
-
-data class QuizState(
-    val id: String,
-    val title: String,
-    val qandas: List<Qanda> = emptyList(),
-)
-
-sealed interface QuizIntent {
-    data class CreateQuiz(
-        val title: String,
-        val qandas: List<Qanda>,
-        val cronSetting: QuizCron?,
-    ) : QuizIntent
-
-    data class DeleteQuiz(val quizId: String) : QuizIntent
-}
-
-/**
- * TODO
- * - show snackbar at creation/error/deletion
- * - update back nav -> popstackback
- */
 
 class QuizViewModel(
     private val getQuizUseCase: GetQuizUseCase,
-    private val getQandaUseCase: GetQandaUseCase,
-    private val createQuizUseCase: CreateQuizUseCase,
     private val deleteQuizUseCase: DeleteQuizUseCase,
+    private val toggleCronUseCase: ToggleCronUseCase,
+    private val rescheduleTasksUseCase: RescheduleTasksUseCase,
 ) : ViewModel() {
-    private var _quizzesState = MutableStateFlow(QuizzesUiState())
-    val quizzesState = _quizzesState.asStateFlow()
-    val qandas = getQandaUseCase.observeSaved()
-
-    private val _quizEvents = MutableSharedFlow<UiEvent>(replay = 1)
+    private val _quizEvents = MutableSharedFlow<UiEvent>(replay = 5)
     val quizEvents = _quizEvents.asSharedFlow()
 
-    init {
-        loadQuizzes()
-    }
+    val quizzesState: StateFlow<UiState<List<DisplayableQuiz>>> = getQuizUseCase
+        .observeAll()
+        .map { it.map { quiz -> quiz.displayable() } }
+        .map { UiState.Success(it) }
+        .stateIn(
+            scope = viewModelScope,
+            started = kotlinx.coroutines.flow.SharingStarted.WhileSubscribed(5000),
+            initialValue = UiState.Loading,
+        )
 
-    private fun loadQuizzes() {
-        viewModelScope.launch {
-            getQuizUseCase
-                .observeAll()
-                .collect { quizzes ->
-                    val quizzesById = quizzes
-                        .map { it.toQuizUiState() }
-                        .associateBy { it.id }
 
-                    _quizzesState.value = QuizzesUiState(quizzesById)
-                }
-        }
-    }
-
-    fun processIntent(quizIntent: QuizIntent) {
-        when (quizIntent) {
-            is QuizIntent.CreateQuiz -> {
-                return createQuiz(
-                    title = quizIntent.title,
-                    qandas = quizIntent.qandas,
-                    cronSetting = quizIntent.cronSetting,
-                )
+    fun processIntent(quizzesIntent: QuizzesIntent) {
+        when (quizzesIntent) {
+            is QuizzesIntent.DeleteQuiz -> {
+                deleteQuiz(quizzesIntent.quizId)
+                rescheduleAllQuizzes()
             }
-
-            is QuizIntent.DeleteQuiz -> deleteQuiz(quizIntent.quizId)
+            is QuizzesIntent.ToggleCron -> {
+                toggleCron(quizzesIntent.quizId, quizzesIntent.isEnabled)
+            }
         }
     }
 
-    private fun createQuiz(
-        title: String,
-        qandas: List<Qanda>,
-        cronSetting: QuizCron?,
-    ) {
+    private fun rescheduleAllQuizzes(){
         viewModelScope.launch {
-            _quizzesState.value = _quizzesState.value.copy(isCreating = true, error = null)
-            createQuizUseCase.createQuiz(
-                title = title,
-                qandas = qandas,
-                cron = cronSetting
-            ).fold(
-                onSuccess = {
-                    val quizState = QuizState(
-                        id = it.id,
-                        title = it.title,
-                        qandas = it.qandas,
-                    )
+            rescheduleTasksUseCase.rescheduleAll()
+        }
+    }
 
-                    _quizzesState.update { currentState ->
-                        val newMap = currentState.quizzes + (it.id to quizState)
-                        currentState.copy(quizzes = newMap)
+    private fun rescheduleForQuiz(quizId: String){
+        viewModelScope.launch {
+            rescheduleTasksUseCase.rescheduleQuiz(quizId)
+        }
+    }
+
+    private fun toggleCron(quizId: String, isEnabled: Boolean) {
+        viewModelScope.launch {
+            toggleCronUseCase.toggleCron(quizId, isEnabled)
+                .fold(
+                    onSuccess = {
+                        val newValue = if(isEnabled) "enabled" else "disabled"
+                        _quizEvents.emit(UiEvent.Success("Reminder for quiz is now $newValue"))
+                        rescheduleForQuiz(quizId)
+                    },
+                    onFailure = {
+                        _quizEvents.emit(UiEvent.Error(UiError.SaveFailed))
                     }
-
-                    logger.i { "Created quiz: $title with id: ${it.id} and cron: ${cronSetting?.cron}" }
-                    _quizEvents.tryEmit(
-                        UiEvent.Success(
-                            message = "Quiz created successfully",
-                        )
-                    )
-                },
-                onFailure = {
-                    logger.e(it) { "Error creating quiz: $title" }
-                    _quizEvents.tryEmit(
-                        UiEvent.Success(
-                            message = "Error creating quiz: ${it.message}",
-                        )
-                    )
-                }
-            )
+                )
         }
     }
 
@@ -142,21 +84,12 @@ class QuizViewModel(
             deleteQuizUseCase.deleteQuiz(quizId)
                 .fold(
                     onSuccess = {
-                        _quizzesState.update { currentState ->
-                            currentState.copy(quizzes = currentState.quizzes - quizId)
-                        }
-                        logger.i { "Deleted quiz: $quizId" }
+                        _quizEvents.emit(UiEvent.Success("Quiz deleted"))
                     },
                     onFailure = {
-                        logger.e(it) { "Error deleting quiz: $quizId" }
+                        _quizEvents.emit(UiEvent.Error(UiError.SaveFailed))
                     }
                 )
         }
     }
 }
-
-private fun Quiz.toQuizUiState() = QuizState(
-    id = id,
-    title = title,
-    qandas = qandas,
-)

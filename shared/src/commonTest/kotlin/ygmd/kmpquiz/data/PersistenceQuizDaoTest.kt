@@ -13,12 +13,10 @@ import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
-import ygmd.kmpquiz.data.database.DatabaseDriverFactory
 import ygmd.kmpquiz.data.database.createDatabase
 import ygmd.kmpquiz.data.repository.quiz.PersistenceQuizDao
-import ygmd.kmpquiz.database.KMPQuizDatabase
-import ygmd.kmpquiz.domain.entities.qanda.Question
-import ygmd.kmpquiz.domain.entities.quiz.DraftQuiz
+import ygmd.kmpquiz.domain.model.qanda.Question
+import ygmd.kmpquiz.domain.model.quiz.DraftQuiz
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -40,14 +38,7 @@ class PersistenceQuizDaoTest {
             KMPQuizDatabase.Schema.create(it)
         }
         db = KMPQuizDatabase(driver)
-        dao = PersistenceQuizDao(createDatabase(
-            object : DatabaseDriverFactory {
-                override fun createDriver(): SqlDriver = driver
-                override fun deleteDatabase() {
-                    /* no op */
-                }
-            }
-        ))
+        dao = PersistenceQuizDao(createDatabase(driver))
     }
 
     @AfterTest
@@ -72,12 +63,14 @@ class PersistenceQuizDaoTest {
             awaitItem().size shouldBe 0
 
             // 2. Insert quiz
-            db.quizQueries.insertQuiz(
-                id = "1",
-                title = "First Quiz",
-                cron_expression = null,
-                cron_display_name = null,
-                cron_enabled = null
+            db.quizQueries.insert(
+                QuizEntity(
+                    id = "1",
+                    title = "First Quiz",
+                    cron_expression = null,
+                    cron_display_name = null,
+                    cron_enabled = null
+                )
             )
 
             val afterInsert = awaitItem()
@@ -95,29 +88,33 @@ class PersistenceQuizDaoTest {
             awaitItem()
 
             // 2. Insert quiz
-            db.quizQueries.insertQuiz(
-                id = "1",
-                title = "Quiz with Qanda",
-                cron_expression = null,
-                cron_display_name = null,
-                cron_enabled = null
+            db.quizQueries.insert(
+                QuizEntity(
+                    id = "1",
+                    title = "First Quiz",
+                    cron_expression = null,
+                    cron_display_name = null,
+                    cron_enabled = null
+                )
             )
             awaitItem() // quiz sans qandas
 
             // 3. Insert qanda
-            db.qandaQueries.insertQanda(
-                id = "100",
-                context_key = "Question 1|Answer 1",
-                question_type = "text",
-                question_url = null,
-                question_text = "Question 1",
-                incorrect_answers_text = json.encodeToString(listOf("Answer 2", "Answer 3")),
-                correct_answer_text = "Answer 1",
-                category = "test",
+            db.qandaQueries.insert(
+                QandaEntity(
+                    id = "100",
+                    question_type = "text",
+                    question_text = "Question 1",
+                    question_url = null,
+                    incorrect_answers_text = "[Answer 3, Answer 2]",
+                    correct_answer_text = "Answer 1",
+                    category = "",
+                    context_key = ""
+                )
             )
 
             // 4. Add relation
-            db.quizQandasRelationQueries.insertRelation(quiz_id = "1", qanda_id = "100")
+            db.relationQueries.insertRelation(quiz_id = "1", qanda_id = "100")
 
             // Nouvelle émission car relations observées aussi
             val afterRelation = awaitItem()

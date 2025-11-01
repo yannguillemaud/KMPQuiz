@@ -5,13 +5,13 @@ CREATE TABLE qandaEntity (
     question_url TEXT,
     incorrect_answers_text TEXT NOT NULL,
     correct_answer_text TEXT NOT NULL,
-    category TEXT NOT NULL,
-    context_key TEXT NOT NULL UNIQUE
+    category_id TEXT NOT NULL,
+    context_key TEXT NOT NULL UNIQUE,
+    FOREIGN KEY(category_id) REFERENCES categoryEntity(id)
 );
 
--- Index
-CREATE INDEX idx_qanda_category ON qandaEntity(category);
 CREATE INDEX idx_qanda_context_key ON qandaEntity(context_key);
+CREATE INDEX idx_qanda_category_id ON qandaEntity(category_id);
 
 selectAll:
 SELECT * FROM qandaEntity;
@@ -20,12 +20,16 @@ getById:
 SELECT * FROM qandaEntity q
 WHERE q.id = ?;
 
-insert:
-INSERT INTO qandaEntity(id, context_key, question_type, question_text, question_url, incorrect_answers_text, correct_answer_text, category)
-VALUES ?;
+getByCategory:
+SELECT * FROM qandaEntity q
+WHERE q.category_id = ?;
 
-update:
-REPLACE INTO qandaEntity(id, context_key, question_type, question_text, question_url, incorrect_answers_text, correct_answer_text, category)
+getByContextKey:
+SELECT * FROM qandaEntity q
+WHERE q.context_key = ?;
+
+insert:
+INSERT OR REPLACE INTO qandaEntity(id, context_key, question_type, question_text, question_url, incorrect_answers_text, correct_answer_text, category_id)
 VALUES ?;
 
 deleteAll:
@@ -34,3 +38,7 @@ DELETE FROM qandaEntity;
 deleteById:
 DELETE FROM qandaEntity
 WHERE id = ?;
+
+deleteByCategoryId:
+DELETE FROM qandaEntity
+WHERE category_id = ?;

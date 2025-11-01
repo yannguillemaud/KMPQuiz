@@ -1,29 +1,27 @@
 package ygmd.kmpquiz.data
 
-import dev.mokkery.answering.returns
-import dev.mokkery.every
-import dev.mokkery.matcher.any
-import dev.mokkery.mock
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.equals.shouldBeEqual
 import io.kotest.matchers.shouldBe
+import io.mockk.every
+import io.mockk.mockk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
-import ygmd.kmpquiz.data.repository.quiz.PersistenceQuizRepository
+import ygmd.kmpquiz.data.repository.quiz.QuizRepositoryImpl
 import ygmd.kmpquiz.domain.dao.QuizDao
-import ygmd.kmpquiz.domain.entities.quiz.DraftQuiz
-import ygmd.kmpquiz.domain.entities.quiz.Quiz
+import ygmd.kmpquiz.domain.model.quiz.DraftQuiz
+import ygmd.kmpquiz.domain.model.quiz.Quiz
 import java.util.UUID
 import kotlin.test.Test
 
 
 @OptIn(ExperimentalCoroutinesApi::class) // Requis pour runTest dans certaines versions
 class PersistenceQuizRepositoryTest {
-    private val dao = mock<QuizDao>()
-    private val repository = PersistenceQuizRepository(dao)
+    private val dao = mockk<QuizDao>()
+    private val repository = QuizRepositoryImpl(dao)
 
     @Test
     fun `observeAll - empty database returns empty flow list`() = runTest {

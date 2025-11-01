@@ -1,0 +1,21 @@
+CREATE TABLE categoryEntity(
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL UNIQUE
+);
+
+selectAllCategories:
+SELECT * FROM categoryEntity;
+
+getCategoryById:
+SELECT * FROM categoryEntity WHERE id = ?;
+
+getCategoryByName:
+SELECT * FROM categoryEntity WHERE name = ?;
+
+insertCategory:
+INSERT OR REPLACE INTO categoryEntity
+VALUES ?;
+
+deleteById:
+DELETE FROM categoryEntity
+WHERE id = ?;

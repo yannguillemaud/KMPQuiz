@@ -3,44 +3,52 @@ package ygmd.kmpquiz.data.repository.fetch
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.update
-import ygmd.kmpquiz.domain.repository.DraftQanda
+import ygmd.kmpquiz.domain.model.draftqanda.DraftQanda
+import ygmd.kmpquiz.domain.model.fetcher.QandaFetcher
 import ygmd.kmpquiz.domain.repository.FetchRepository
+import ygmd.kmpquiz.domain.result.FetchResult
+import ygmd.kmpquiz.domain.service.Fetcher
 
-class FetchRepositoryImpl : FetchRepository {
-    private val _fetched = MutableStateFlow(emptySet<DraftQanda>())
+class FetchRepositoryImpl(
+    private val fetchers: List<Fetcher>
+) : FetchRepository {
+    private val _fetchers = MutableStateFlow(
+        fetchers.map {
+            QandaFetcher(
+                id = it.id,
+                name = it.name,
+                isEnabled = it.isEnabled,
+                fetcher = it
+            )
+        }
+    )
 
-    override fun observeFetched(): Flow<List<DraftQanda>> = _fetched.asStateFlow().map { it.toList() }
+    override fun observeFetchers(): Flow<List<QandaFetcher>> = _fetchers.asStateFlow()
 
-    override suspend fun saveDrafted(qandas: List<DraftQanda>): Result<Unit> =
-        try {
-            _fetched.update {
-                it + qandas
+    override fun getFetcherById(fetcherId: String): Result<QandaFetcher> =
+        fetchers.firstOrNull { it.id == fetcherId }
+            ?.let {
+                Result.success(
+                    QandaFetcher(
+                        it.id,
+                        it.name,
+                        it.isEnabled,
+                        it
+                    )
+                )
             }
-            Result.success(Unit)
-        } catch (e: Throwable) {
-            Result.failure(e)
-        }
+            ?: Result.failure(IllegalArgumentException("Fetcher with id $fetcherId not found"))
 
-    override suspend fun removeFetched(qandas: List<DraftQanda>): Result<Unit> =
-        try {
-            val contextKeysToRemove = qandas.map { it.contextKey }.toSet()
-            _fetched.update { current ->
-                current.filter { fetchedQanda ->
-                    fetchedQanda.contextKey !in contextKeysToRemove
-                }.toSet()
-            }
-            Result.success(Unit)
-        } catch (e: Throwable) {
-            Result.failure(e)
-        }
+    override suspend fun fetch(qandaFetcher: QandaFetcher): FetchResult<List<DraftQanda>> {
+        return qandaFetcher.fetcher.fetch()
+    }
 
-    override suspend fun clearAllFetched(): Result<Unit> =
-        try {
-            _fetched.update { emptySet() }
-            Result.success(Unit)
-        } catch (e: Throwable) {
-            Result.failure(e)
+    override fun updateFetcher(
+        fetcherId: String,
+        qandaFetcher: QandaFetcher
+    ) {
+        _fetchers.value = _fetchers.value.map {
+            if (it.id == fetcherId) qandaFetcher else it
         }
+    }
 }

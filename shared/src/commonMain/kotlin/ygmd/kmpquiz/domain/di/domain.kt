@@ -1,22 +1,35 @@
 package ygmd.kmpquiz.domain.di
 
 import org.koin.dsl.module
-import ygmd.kmpquiz.domain.usecase.fetch.DeleteFetchQandasUseCase
-import ygmd.kmpquiz.domain.usecase.fetch.FetchQandasUseCase
-import ygmd.kmpquiz.domain.usecase.fetch.GetFetchQandasUseCase
+import ygmd.kmpquiz.domain.usecase.category.CategoryUseCase
+import ygmd.kmpquiz.domain.usecase.cron.ToggleCronUseCase
+import ygmd.kmpquiz.domain.usecase.fetch.FetchUseCase
+import ygmd.kmpquiz.domain.usecase.fetch.GetFetchersUseCase
 import ygmd.kmpquiz.domain.usecase.notification.RescheduleTasksUseCase
 import ygmd.kmpquiz.domain.usecase.qanda.DeleteQandasUseCase
 import ygmd.kmpquiz.domain.usecase.qanda.GetQandaUseCase
+import ygmd.kmpquiz.domain.usecase.qanda.QandaEditUseCase
 import ygmd.kmpquiz.domain.usecase.qanda.SaveQandasUseCase
 import ygmd.kmpquiz.domain.usecase.quiz.CreateQuizUseCase
 import ygmd.kmpquiz.domain.usecase.quiz.DeleteQuizUseCase
 import ygmd.kmpquiz.domain.usecase.quiz.GetQuizUseCase
-import ygmd.kmpquiz.domain.usecase.quiz.UpdateQuizUseCase
-import ygmd.kmpquiz.domain.viewModel.coordinator.FetchScreenCoordinator
+import ygmd.kmpquiz.domain.usecase.quiz.QuizEditUseCase
+import ygmd.kmpquiz.domain.usecase.quizSession.QuizSessionUseCase
 
 // Domain Layer - Use Cases
 val domainModule = module {
-    // Qanda Use Cases
+    factory {
+        GetFetchersUseCase(
+            fetchersRepository = get()
+        )
+    }
+
+    factory {
+        FetchUseCase(
+            fetchRepository = get(),
+        )
+    }
+
     factory {
         GetQandaUseCase(
             repository = get()
@@ -24,8 +37,9 @@ val domainModule = module {
     }
 
     factory {
-        SaveQandasUseCase (
-            repository = get(),
+        SaveQandasUseCase(
+            qandaRepository = get(),
+            categoryRepository = get(),
         )
     }
 
@@ -35,9 +49,12 @@ val domainModule = module {
         )
     }
 
-    // Quiz Use Cases
     factory {
         GetQuizUseCase(quizRepository = get())
+    }
+
+    factory {
+        QuizSessionUseCase(quizSessionRepository = get())
     }
 
     factory {
@@ -46,34 +63,14 @@ val domainModule = module {
         )
     }
 
-    // Fetch Use Cases
     factory {
-        GetFetchQandasUseCase(
-            repository = get()
-        )
-    }
-
-    factory {
-        FetchQandasUseCase(
-            fetcher = get(),
-            fetchRepository = get()
-        )
-    }
-
-    factory {
-        DeleteFetchQandasUseCase(
-            fetchRepository = get()
-        )
-    }
-
-    factory {
-        UpdateQuizUseCase(
+        DeleteQuizUseCase(
             quizRepository = get()
         )
     }
 
     factory {
-        DeleteQuizUseCase(
+        ToggleCronUseCase(
             quizRepository = get()
         )
     }
@@ -86,9 +83,22 @@ val domainModule = module {
     }
 
     factory {
-        FetchScreenCoordinator(
-            fetchQandasViewModel = get(),
-            savedQandasViewModel = get()
+        QuizEditUseCase(
+            quizRepository = get(),
+            quizEditRepository = get(),
+            qandaRepository = get(),
         )
+    }
+
+    factory {
+        QandaEditUseCase(
+            qandaRepository = get(),
+            qandaEditRepository = get(),
+            categoryRepository = get(),
+        )
+    }
+
+    factory {
+        CategoryUseCase(get())
     }
 }

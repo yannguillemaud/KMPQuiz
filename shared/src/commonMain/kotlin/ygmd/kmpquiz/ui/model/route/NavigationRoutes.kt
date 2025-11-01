@@ -10,20 +10,33 @@ sealed class Route(val name: String) {
     data object Home : Route("Home")
 
     @Serializable
-    data object Fetch: Route("Fetch")
+    data object Fetch : Route("Fetch")
 
     @Serializable
-    data object Qandas: Route("Qandas")
+    data object Qandas : Route("Qandas")
 
     @Serializable
-    data object Settings: Route("Settings")
+    data object Settings : Route("Settings")
 
     @Serializable
-    data object Quizzes: Route("Quizzes")
+    data object Quizzes : Route("Quizzes")
 
     @Serializable
-    data object QuizCreation
+    data class PlayQuiz(val quizId: String) : Route("PlayQuiz/$quizId")
 
     @Serializable
-    data class PlayQuiz(val quizId: String)
+    data class QandaEdit(val qandaId: String) : Route("QandaEdit/$qandaId")
+
+    @Serializable
+    data class QandaCreation(val categoryId: String? = null) : Route(
+        "QandaCreation${categoryId?.let { "/$it" }.orEmpty()}")
+
+    @Serializable
+    data class QuizSettings(val quizId: String) : Route("QuizSettings/$quizId")
+
+    @Serializable
+    data object QuizCreation : Route("QuizCreation")
+
+    @Serializable
+    data class Category(val categoryId: String) : Route("Category/$categoryId")
 }

@@ -1,55 +1,32 @@
 package ygmd.kmpquiz.domain.usecase.qanda
 
 import co.touchlab.kermit.Logger
-import ygmd.kmpquiz.domain.entities.qanda.Qanda
-import ygmd.kmpquiz.domain.error.DomainError.PersistenceError.DatabaseError
+import ygmd.kmpquiz.domain.model.qanda.Qanda
 import ygmd.kmpquiz.domain.repository.QandaRepository
-import kotlin.Result.Companion.failure
-import kotlin.Result.Companion.success
+import ygmd.kmpquiz.domain.result.DeleteResult
 
 private val logger = Logger.withTag("DeleteQandasUseCase")
 
 class DeleteQandasUseCase(
     private val repository: QandaRepository,
 ) {
-    suspend fun delete(qanda: Qanda): Result<Unit> {
+    suspend fun delete(qanda: Qanda): DeleteResult {
         logger.i { "Deleting qanda with id: ${qanda.id}" }
-        val id = qanda.id
-
-        return repository.deleteById(id).fold(
-            onSuccess = {
-                logger.i { "Successfully deleted qanda ${qanda.id}" }
-                success(Unit)
-            },
-            onFailure = {
-                logger.e { "Could not delete qanda ${qanda.id}" }
-                val errorMessage = it.message ?: "Unknown error"
-                failure(DatabaseError(errorMessage))
-            }
-        )
+        return repository.deleteById(qanda.id)
     }
 
-    suspend fun deleteAll() {
+    suspend fun deleteAll(): DeleteResult {
         logger.i { "Deleting all qandas from repository" }
-        repository.deleteAll()
+        return repository.deleteAll()
     }
 
-    suspend fun deleteById(id: String): Result<Unit> {
+    suspend fun deleteById(id: String): DeleteResult {
         logger.i { "Deleting qanda $id"}
-        return repository.deleteById(id).fold(
-            onSuccess = {
-                logger.i { "Successfully deleted"}
-                success(Unit)
-            },
-            onFailure = {
-                logger.e(it){ "Failed: ${it.message}"}
-                failure(it)
-            }
-        )
+        return repository.deleteById(id)
     }
 
-    suspend fun deleteAllByCategory(category: String){
-        repository.getAll().filter { it.metadata.category == category }
-            .forEach { delete(it) }
+    suspend fun deleteByCategory(categodyId: String): DeleteResult {
+        logger.i { "Deleting qandas with category $categodyId"}
+        return repository.deleteByCategory(categodyId)
     }
 }

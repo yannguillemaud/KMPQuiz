@@ -18,7 +18,7 @@
         <activity
             android:name=".MainActivity"
             android:exported="true"
-            android:launchMode="singleTop"> <!-- 👈 mets launchMode ici -->
+            android:launchMode="singleTop">
 
             <!-- Point d'entrée normal -->
             <intent-filter>

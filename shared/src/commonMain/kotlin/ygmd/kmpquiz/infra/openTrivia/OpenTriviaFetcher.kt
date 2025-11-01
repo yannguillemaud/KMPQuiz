@@ -9,14 +9,14 @@ import io.ktor.http.HttpStatusCode.Companion.TooManyRequests
 import io.ktor.http.isSuccess
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
-import ygmd.kmpquiz.data.service.FailureType
-import ygmd.kmpquiz.data.service.FetchConfig
-import ygmd.kmpquiz.data.service.FetchResult
-import ygmd.kmpquiz.data.service.QandaFetcher
-import ygmd.kmpquiz.domain.entities.qanda.AnswersFactory
-import ygmd.kmpquiz.domain.entities.qanda.Question
-import ygmd.kmpquiz.domain.repository.DraftQanda
+import ygmd.kmpquiz.domain.model.draftqanda.DraftQanda
+import ygmd.kmpquiz.domain.model.qanda.AnswersFactory
+import ygmd.kmpquiz.domain.model.qanda.Question
+import ygmd.kmpquiz.domain.result.FailureType
+import ygmd.kmpquiz.domain.result.FetchResult
+import ygmd.kmpquiz.domain.service.Fetcher
 import ygmd.kmpquiz.infra.unescaped
+import java.util.UUID
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
@@ -24,14 +24,17 @@ private val logger = Logger.withTag("OpenTriviaFetcher")
 
 class OpenTriviaFetcher(
     private val client: HttpClient,
-) : QandaFetcher {
-    override val isEnabled: Boolean = true
+) : Fetcher {
+    override val name: String
+        get() = "Open Trivia"
 
     private val url = OpenTriviaUrlBuilder().withAmount(50)
+    private val uuid = UUID.randomUUID().toString()
 
-    override suspend fun fetch(
-        fetchConfig: FetchConfig
-    ): FetchResult<List<DraftQanda>> =
+    override val id: String
+        get() = uuid
+
+    override suspend fun fetch(): FetchResult<List<DraftQanda>> =
         try {
             val response = client.get(url.build())
             handleHttpResponse(response)
@@ -151,7 +154,7 @@ fun OpenTriviaQandaDto.toFetchedQanda(): DraftQanda {
             unescapedCorrectAnswer,
             unescapedIncorrectAnswers
         ),
-        category = unescapedCategory
+        categoryName = unescapedCategory
     )
 }
 

@@ -1,10 +1,10 @@
 package ygmd.kmpquiz.domain.usecase.quiz
 
 import co.touchlab.kermit.Logger
-import ygmd.kmpquiz.domain.entities.cron.QuizCron
-import ygmd.kmpquiz.domain.entities.qanda.Qanda
-import ygmd.kmpquiz.domain.entities.quiz.DraftQuiz
-import ygmd.kmpquiz.domain.entities.quiz.Quiz
+import ygmd.kmpquiz.domain.model.cron.QuizCron
+import ygmd.kmpquiz.domain.model.qanda.Qanda
+import ygmd.kmpquiz.domain.model.quiz.DraftQuiz
+import ygmd.kmpquiz.domain.model.quiz.Quiz
 import ygmd.kmpquiz.domain.repository.QuizRepository
 
 private val logger = Logger.withTag("CreateQuizUseCase")

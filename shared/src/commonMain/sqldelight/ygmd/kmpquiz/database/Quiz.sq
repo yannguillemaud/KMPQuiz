@@ -16,11 +16,7 @@ SELECT * FROM quizEntity q
 WHERE q.id = ?;
 
 insert:
-INSERT INTO quizEntity(id, title, cron_expression, cron_display_name, cron_enabled)
-VALUES ?;
-
-update:
-REPLACE INTO quizEntity(id, title, cron_expression, cron_display_name, cron_enabled)
+INSERT OR REPLACE INTO quizEntity(id, title, cron_expression, cron_display_name, cron_enabled)
 VALUES ?;
 
 deleteById:

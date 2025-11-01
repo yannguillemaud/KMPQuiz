@@ -1,8 +1,8 @@
 package ygmd.kmpquiz.domain.usecase.notification
 
 import co.touchlab.kermit.Logger
-import ygmd.kmpquiz.domain.scheduler.TaskScheduler
 import ygmd.kmpquiz.domain.repository.QuizRepository
+import ygmd.kmpquiz.domain.scheduler.TaskScheduler
 
 private val logger = Logger.withTag("RescheduleTasksUseCase")
 
@@ -10,8 +10,18 @@ class RescheduleTasksUseCase(
     private val taskScheduler: TaskScheduler,
     private val quizRepository: QuizRepository,
 ) {
-    suspend fun execute(){
+    suspend fun rescheduleAll() {
         logger.i { "Executing rescheduler" }
-        taskScheduler.rescheduleQuizReminders(quizRepository.getAllQuizzes())
+        val quizzes = quizRepository.getAllQuizzes()
+        taskScheduler.rescheduleQuizReminders(quizzes)
+    }
+
+    suspend fun rescheduleQuiz(quizId: String){
+        logger.i { "Executing rescheduler for quiz $quizId" }
+        quizRepository.getQuizById(quizId)
+            .fold(
+                onSuccess = { taskScheduler.updateQuizReminder(it.id, it.quizCron) },
+                onFailure = { logger.e(it) { "Error getting quiz $quizId" } }
+            )
     }
 }

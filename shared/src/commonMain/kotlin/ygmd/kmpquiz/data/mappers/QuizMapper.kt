@@ -1,6 +1,6 @@
 package ygmd.kmpquiz.data.mappers
 
-import ygmd.kmpquiz.domain.entities.quiz.DraftQuiz
+import ygmd.kmpquiz.domain.model.quiz.DraftQuiz
 
 data class QuizInsert(
     val title: String,

@@ -1,22 +1,51 @@
 package ygmd.kmpquiz.domain.dao
 
 import kotlinx.coroutines.flow.Flow
-import ygmd.kmpquiz.domain.entities.qanda.Qanda
-import ygmd.kmpquiz.domain.repository.DraftQanda
+import ygmd.kmpquiz.database.QandaEntity
 
 interface QandaDao {
-    fun observeQandas(): Flow<List<Qanda>>
+    /**
+     * Observe la liste complète des questions avec les détails de leur catégorie.
+     * Retourne un Flow de QandaWithCategory.
+     */
+    fun observeQandasEntity(): Flow<List<QandaEntity>>
 
-    fun getAllQandas(): List<Qanda>
-    fun getQandaByContextKey(contextKey: String): Qanda?
-    fun getQandaById(id: String): Qanda?
-    fun getQandasByCategory(category: String): List<Qanda>
+    /**
+     * Récupère la liste complète des questions avec les détails de leur catégorie.
+     * Retourne une List de QandaEntity.
+     */
+    suspend fun getAll(): List<QandaEntity>
 
-    fun saveDraft(draftQanda: DraftQanda): String
-    fun saveAllDraft(draftQandas: List<DraftQanda>)
+    /**
+     * Récupère une question par son ID, avec les détails de sa catégorie.
+     */
+    suspend fun getById(id: String): QandaEntity?
 
-    fun updateQanda(qandaId: String, qanda: Qanda)
+    /**
+     * Récupère les questions d'une catégorie donnée, par son ID.
+     */
+    suspend fun getByCategory(categoryId: String): List<QandaEntity>
 
-    fun deleteAllQandas()
-    fun deleteQandaById(id: String)
+    /**
+     * Récupère une question par sa clé de contexte.
+     */
+    suspend fun getByContextKey(contextKey: String): QandaEntity?
+
+    /**
+     * Sauvegarde une entité question. Note : cette méthode prend toujours un QandaEntity
+     * car on insère dans la table de base, pas dans la vue.
+     */
+    suspend fun save(entity: QandaEntity): QandaEntity
+
+    /**
+     * Supprime toutes les questions.
+     */
+    suspend fun deleteAll()
+
+    /**
+     * Supprime une question par son ID.
+     */
+    suspend fun deleteById(id: String)
+
+    suspend fun deleteByCategoryId(categoryId: String)
 }
