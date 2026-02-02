@@ -28,6 +28,7 @@ class QuizSessionUseCase(
 
 interface QuizSessionRepository {
     fun observeSession(): Flow<QuizSession?>
+    suspend fun getQuizById(quizId: String): QuizSession?
     suspend fun initSession(quiz: Quiz)
     suspend fun nextState()
     suspend fun selectAnswer(choice: Choice)
@@ -39,12 +40,14 @@ class QuizSessionRepositoryImpl : QuizSessionRepository {
     override fun observeSession() = session.asStateFlow()
 
     override suspend fun initSession(quiz: Quiz) {
-        val qanda = quiz.qandas.firstOrNull()
+        val qandas = quiz.qandas.shuffled()
         session.value = QuizSession(
-            quiz = quiz,
-            currentShuffledAnswers = qanda?.answers?.shuffled()
+            quiz = quiz.copy(qandas = qandas),
+            currentShuffledAnswers = qandas.first().answers.shuffled()
         )
     }
+
+    override suspend fun getQuizById(quizId: String): QuizSession? = session.value
 
     override suspend fun nextState() {
         val quizSession = session.value

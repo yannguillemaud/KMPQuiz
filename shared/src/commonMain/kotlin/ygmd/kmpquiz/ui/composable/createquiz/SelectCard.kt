@@ -1,6 +1,5 @@
 package ygmd.kmpquiz.ui.composable.createquiz
 
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -17,6 +16,7 @@ import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedFilterChip
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -30,6 +30,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import ygmd.kmpquiz.ui.theme.Dimens
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun <T> SelectCard(
     items: List<T>,
@@ -68,30 +69,28 @@ fun <T> SelectCard(
                 )
             }
 
-            AnimatedVisibility(visible = isExpended) {
-                Column {
-                    Spacer(modifier = Modifier.height(Dimens.PaddingMedium))
-                    FlowColumn(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(Dimens.PaddingSmall),
-                    ) {
-                        items.forEach { item ->
-                            val isSelected = selectedItem == item
-                            ElevatedFilterChip(
-                                selected = isSelected,
-                                label = { Text(text = itemLabel(item)) },
-                                leadingIcon = {
-                                    if (isSelected) Icon(
-                                        Icons.Default.Check,
-                                        contentDescription = "selected item"
-                                    ) else Spacer(Modifier.width(24.dp))
-                                },
-                                onClick = {
-                                    selectedItem = if (item == selectedItem) null else item
-                                    onSelectionChanged(selectedItem)
-                                }
-                            )
-                        }
+            if (isExpended) {
+                Spacer(modifier = Modifier.height(Dimens.PaddingMedium))
+                FlowColumn(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(Dimens.PaddingSmall),
+                ) {
+                    items.forEach { item ->
+                        val isSelected = selectedItem == item
+                        ElevatedFilterChip(
+                            selected = isSelected,
+                            label = { Text(text = itemLabel(item)) },
+                            leadingIcon = {
+                                if (isSelected) Icon(
+                                    Icons.Default.Check,
+                                    contentDescription = "selected item"
+                                ) else Spacer(Modifier.width(24.dp))
+                            },
+                            onClick = {
+                                selectedItem = if (item == selectedItem) null else item
+                                onSelectionChanged(selectedItem)
+                            }
+                        )
                     }
                 }
             }

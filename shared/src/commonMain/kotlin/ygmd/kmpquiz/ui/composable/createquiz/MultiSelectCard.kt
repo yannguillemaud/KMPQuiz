@@ -1,8 +1,8 @@
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.FlowColumn
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -42,10 +42,12 @@ fun <T> MultiSelectCard(
     var selectedItems by remember { mutableStateOf(initialSelected) }
 
     Card(
-        modifier = modifier.fillMaxWidth().animateContentSize(),
-        elevation = CardDefaults.cardElevation(Dimens.CardElevation),
-        shape = MaterialTheme.shapes.large,
-        onClick = { isExpended = !isExpended }) {
+        modifier = modifier
+            .fillMaxWidth()
+            .clickable { isExpended = !isExpended }
+            .animateContentSize(),
+        elevation = CardDefaults.cardElevation(Dimens.CardElevation)
+    ) {
         Column(modifier = Modifier.padding(Dimens.DefaultPadding)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -71,13 +73,11 @@ fun <T> MultiSelectCard(
                 )
             }
 
-            AnimatedVisibility(
-                visible = isExpended,
-            ) {
+            if (isExpended) {
                 Spacer(modifier = Modifier.height(Dimens.DefaultPadding))
-                FlowRow(
-                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                FlowColumn(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(Dimens.PaddingSmall),
                 ) {
                     items.forEach { item ->
                         val isSelected = item in selectedItems

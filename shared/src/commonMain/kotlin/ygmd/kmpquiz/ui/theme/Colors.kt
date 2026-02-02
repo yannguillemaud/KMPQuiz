@@ -21,8 +21,8 @@ val OnSurfaceLight = Color(0xFF1C1C1C)
 // Couleurs succès/erreur custom
 val SuccessContainerLight = Color(0xFF4CAF50)
 val OnSuccessContainerLight = Color.White
-val WarningContainerLight = Color(0xFFFFC107)
-val OnWarningContainerLight = Color.Black
+val SuccessContainerDark = Color(0xFF388E3C)
+val OnSuccessContainerDark = Color.White
 
 // Thème sombre
 val PrimaryDark = Color(0xFF90CAF9)
@@ -39,8 +39,7 @@ val BackgroundDark = Color(0xFF121212)
 val OnBackgroundDark = Color(0xFFECECEC)
 val SurfaceDark = Color(0xFF1E1E1E)
 val OnSurfaceDark = Color(0xFFECECEC)
-
-val SuccessContainerDark = Color(0xFF388E3C)
-val OnSuccessContainerDark = Color.White
 val WarningContainerDark = Color(0xFFFFB300)
 val OnWarningContainerDark = Color.Black
+val ErrorContainerDark = Color.Red
+val OnErrorContainerDark = Color.Red

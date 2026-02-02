@@ -43,6 +43,12 @@ sealed interface UiError {
         override val canRetry: Boolean = false
     }
 
+    data class SaveQandasFailed(
+        override val message: String
+    ): UiError {
+        override val canRetry: Boolean = false
+    }
+
     data object LoadCategoryFailed: UiError {
         override val message: String
             get() = "Load category failed"

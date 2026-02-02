@@ -13,7 +13,7 @@ sealed class Route(val name: String) {
     data object Fetch : Route("Fetch")
 
     @Serializable
-    data object Qandas : Route("Qandas")
+    data object Categories : Route("Categories")
 
     @Serializable
     data object Settings : Route("Settings")

@@ -80,11 +80,6 @@ fun HomeScreen() {
                             .align(Alignment.CenterHorizontally),
                         contentScale = ContentScale.Fit
                     )
-                    Spacer(Modifier.height(8.dp))
-                    Text(
-                        "Parcequ'on n'a pas de mémoire",
-                        fontSize = 12.sp,
-                    )
                 }
             }
 

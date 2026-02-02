@@ -26,8 +26,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.flow.collectLatest
 import org.koin.compose.viewmodel.koinViewModel
+import ygmd.kmpquiz.domain.viewModel.category.CategoryViewModel
 import ygmd.kmpquiz.domain.viewModel.error.UiEvent
-import ygmd.kmpquiz.domain.viewModel.qandas.saved.SavedQandasViewModel
 import ygmd.kmpquiz.domain.viewModel.quiz.edit.QuizEditIntent
 import ygmd.kmpquiz.domain.viewModel.quiz.edit.QuizEditUiState
 import ygmd.kmpquiz.domain.viewModel.quiz.edit.QuizEditViewModel
@@ -45,10 +45,10 @@ fun QuizSettingsScreen(
     onNavigateBack: () -> Unit = {},
     onFinished: () -> Unit = {},
     quizEditViewModel: QuizEditViewModel = koinViewModel(),
-    savedQandasViewModel: SavedQandasViewModel = koinViewModel(),
+    categoryViewModel: CategoryViewModel = koinViewModel(),
 ) {
     val editUiState: UiState<QuizEditUiState> by quizEditViewModel.quizEditUiState.collectAsState()
-    val availableCategories = savedQandasViewModel.availableCategories.collectAsState()
+    val availableCategories = categoryViewModel.categories.collectAsState()
     val availableCrons = quizEditViewModel.availableCrons.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
 

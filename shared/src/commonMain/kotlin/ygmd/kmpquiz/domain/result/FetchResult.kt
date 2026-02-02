@@ -8,7 +8,6 @@ sealed class FetchResult<out T> {
     data class Failure(
         val type: FailureType,
         val message: String,
-        val retryAfter: Duration? = null,
         val cause: Throwable? = null
     ) : FetchResult<Nothing>()
 }

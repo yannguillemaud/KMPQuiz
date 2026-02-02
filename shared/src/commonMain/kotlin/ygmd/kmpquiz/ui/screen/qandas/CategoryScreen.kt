@@ -8,7 +8,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
-import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -35,31 +34,25 @@ import ygmd.kmpquiz.domain.viewModel.displayable.DisplayableQanda
 import ygmd.kmpquiz.domain.viewModel.error.UiEvent
 import ygmd.kmpquiz.domain.viewModel.qandas.edit.QandaEditViewModel
 import ygmd.kmpquiz.domain.viewModel.qandas.saved.PersistanceIntent
-import ygmd.kmpquiz.domain.viewModel.qandas.saved.QandaFilterIntent
-import ygmd.kmpquiz.domain.viewModel.qandas.saved.SavedQandasViewModel
+import ygmd.kmpquiz.domain.viewModel.qandas.saved.QandaOfCategoryViewModel
 import ygmd.kmpquiz.domain.viewModel.state.UiState
 import ygmd.kmpquiz.ui.composable.createquiz.LoadingState
 import ygmd.kmpquiz.ui.composable.playquiz.ErrorState
-import ygmd.kmpquiz.ui.composable.qanda.SavedQandaCard
-import ygmd.kmpquiz.ui.theme.Dimens.PaddingSmall
+import ygmd.kmpquiz.ui.composable.qanda.QandaCard
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SavedCategoryScreen(
+fun CategoryScreen(
     categoryId: String,
     onNavigateToEdit: (String) -> Unit = {},
     onNavigateToQandaCreation: (String) -> Unit = {},
     onNavigateBack: () -> Unit = {},
-    savedQandasViewModel: SavedQandasViewModel = koinViewModel(),
+    qandaOfCategoryViewModel: QandaOfCategoryViewModel = koinViewModel(parameters = { parametersOf(categoryId) }),
     editViewModel: QandaEditViewModel = koinViewModel(parameters = { parametersOf(null) })
 ) {
-    val qandasUiState by savedQandasViewModel.savedState.collectAsState(UiState.Loading)
+    val qandasUiState by qandaOfCategoryViewModel.savedState.collectAsState(UiState.Loading)
     val snackbarHostState = remember { SnackbarHostState() }
-
-    LaunchedEffect(categoryId){
-        savedQandasViewModel.processFilterIntent(QandaFilterIntent.CategoryFilter(categoryId))
-    }
 
     LaunchedEffect(Unit) {
         editViewModel.qandaEditEvents.collectLatest {
@@ -84,15 +77,17 @@ fun SavedCategoryScreen(
                     )
                 },
                 navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
+                    IconButton(onClick = {
+                        onNavigateBack()
+                    }) {
                         Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = "Back")
                     }
                 },
-                actions = {
-                    IconButton(onClick = { onNavigateToQandaCreation(categoryId) }) {
-                        Icon(Icons.Outlined.Add, contentDescription = "Add")
-                    }
-                }
+//                actions = {
+//                    IconButton(onClick = { onNavigateToQandaCreation(categoryId) }) {
+//                        Icon(Icons.Outlined.Add, contentDescription = "Add")
+//                    }
+//                }
             )
         },
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
@@ -112,7 +107,7 @@ fun SavedCategoryScreen(
                     } else {
                         QandaList(
                             data = data,
-                            onDeleteQanda = { savedQandasViewModel.processPersistenceIntent(PersistanceIntent.DeleteQanda(it)) },
+                            onDeleteQanda = { qandaOfCategoryViewModel.processPersistenceIntent(PersistanceIntent.DeleteQanda(it)) },
                             onEditQanda = onNavigateToEdit
                         )
                     }
@@ -137,8 +132,7 @@ private fun QandaList(
             items = data,
             key = { it.id }
         ) {
-            SavedQandaCard(
-                modifier = Modifier.fillParentMaxWidth().padding(PaddingSmall),
+            QandaCard(
                 qanda = it,
                 onDelete = { onDeleteQanda(it.id) },
                 onEdit = { onEditQanda(it.id) }

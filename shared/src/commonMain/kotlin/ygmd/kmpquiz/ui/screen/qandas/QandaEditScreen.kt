@@ -46,7 +46,7 @@ fun QandaEditScreen(
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("Qanda settings", fontWeight = FontWeight.Bold, fontSize = 22.sp) },
+                title = { Text("Edit Qanda", fontWeight = FontWeight.Bold, fontSize = 22.sp) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(

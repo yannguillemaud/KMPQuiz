@@ -52,7 +52,7 @@ class CommonTaskScheduler(
      * Cette méthode est idéale pour une synchronisation de fond complète.
      * Elle détermine intelligemment les actions à prendre (annuler, planifier, ignorer) pour chaque quiz.
      */
-    override suspend fun rescheduleQuizReminders(quizzes: List<Quiz>) {
+    override suspend fun rescheduleAllQuizzes(quizzes: List<Quiz>) {
         logger.i { "Resynchronisation complète des rappels de quiz..." }
 
         try {
@@ -129,7 +129,7 @@ class CommonTaskScheduler(
      * Planifie ou met à jour le rappel pour un seul quiz.
      * Cette méthode est plus efficace pour des mises à jour ponctuelles.
      */
-    override suspend fun updateQuizReminder(quizId: String, newCronValue: QuizCron?) {
+    override suspend fun rescheduleQuiz(quizId: String, newCronValue: QuizCron?) {
         logger.i { "Updating quiz reminder for quiz $quizId" }
         try {
             val currentlyScheduledCrons = schedulerDataStore.scheduledCrons.first()
