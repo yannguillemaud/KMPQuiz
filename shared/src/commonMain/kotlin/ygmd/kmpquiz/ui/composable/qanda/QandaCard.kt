@@ -1,27 +1,24 @@
 package ygmd.kmpquiz.ui.composable.qanda
 
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
-import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material.icons.outlined.Edit
-import androidx.compose.material.icons.outlined.ExpandLess
-import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -30,76 +27,81 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImagePainter
 import coil3.compose.rememberAsyncImagePainter
 import ygmd.kmpquiz.domain.model.qanda.Question
 import ygmd.kmpquiz.domain.viewModel.displayable.DisplayableQanda
-import ygmd.kmpquiz.ui.theme.Dimens
-import ygmd.kmpquiz.ui.theme.Dimens.DefaultPadding
+import ygmd.kmpquiz.ui.theme.KMPQuizTypography
 
 @Composable
-fun SavedQandaCard(
-    modifier: Modifier = Modifier,
+fun QandaCard(
     qanda: DisplayableQanda,
-    onDelete: () -> Unit,
-    onEdit: () -> Unit,
+    onDelete: () -> Unit = {},
+    onEdit: () -> Unit = {},
+    modifier: Modifier = Modifier
 ) {
-    var isExpended by remember { mutableStateOf(false) }
+    var isExpanded by remember { mutableStateOf(false) }
 
-    Card(
-        modifier = modifier.animateContentSize(),
-        elevation = CardDefaults.cardElevation(Dimens.CardElevation),
-        shape = MaterialTheme.shapes.large
+    ElevatedCard(
+        modifier = modifier.fillMaxWidth().padding(
+            horizontal = 16.dp,
+            vertical = 8.dp
+        ),
+        shape = RoundedCornerShape(16.dp),
+        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp)
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .clickable { isExpended = !isExpended }
-                .padding(DefaultPadding)
+            modifier = Modifier.animateContentSize()
+                .padding(16.dp)
         ) {
             Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+                modifier = Modifier.fillMaxWidth().clickable { isExpanded = !isExpanded },
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Column(modifier = Modifier.fillMaxHeight()) {
-                    QuestionView(question = qanda.question)
-                }
+                Text(
+                    text = when (qanda.question) {
+                        is Question.TextQuestion -> qanda.question.text
+                        is Question.ImageQuestion -> qanda.answers.correctAnswer.contextKey
+                    },
+                    style = KMPQuizTypography().titleMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    modifier = Modifier.weight(1f),
+                    maxLines = if (isExpanded) Int.MAX_VALUE else 2,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Icon(
+                    imageVector = if (isExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                    contentDescription = if (isExpanded) "Collapse" else "Expand"
+                )
             }
-            Box {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.End,
-                ) {
-                    IconButton(onClick = onDelete) {
-                        Icon(Icons.Outlined.Delete, contentDescription = "Delete")
-                    }
-                    IconButton(onClick = onEdit) {
-                        Icon(Icons.Outlined.Edit, contentDescription = "Edit")
-                    }
-                }
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Center,
-                ) {
-                    Icon(
-                        imageVector = if(isExpended) Icons.Outlined.ExpandLess else Icons.Default.ExpandMore,
-                        contentDescription = "Expand"
+
+            if (isExpanded) {
+                Spacer(modifier = Modifier.height(12.dp))
+                if (qanda.question is Question.ImageQuestion) {
+                    ImageView(
+                        imageUrl = qanda.question.imageUrl,
+                        modifier = Modifier.fillMaxWidth()
+                            .clip(RoundedCornerShape(12.dp)),
                     )
+                    Spacer(modifier = Modifier.height(12.dp))
                 }
-            }
-            AnimatedVisibility(visible = isExpended){
-                Column(modifier = Modifier.fillMaxSize().animateContentSize()) {
-                    val correctAnswer = remember { qanda.answers.correctAnswer }
-                    qanda.answers.choices.forEach { answer ->
-                        Card {
-                            Text(
-                                answer.contextKey,
-                                color = if(correctAnswer == answer) Color.Green else Color.Red
-                            )
-                        }
+
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    qanda.answers.forEach { choice ->
+                        val isCorrectChoice = qanda.answers.correctAnswer == choice
+                        Text(
+                            choice.contextKey,
+                            color = if (isCorrectChoice) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+                        )
                     }
                 }
             }
@@ -109,37 +111,38 @@ fun SavedQandaCard(
 
 
 @Composable
-fun QuestionView(
-    question: Question
-) {
-    when (question) {
-        is Question.TextQuestion -> {
-            Text(
-                text = question.text,
-                style = MaterialTheme.typography.titleLarge,
-            )
-        }
-
-        is Question.ImageQuestion -> {
-            ImageQuestionView(question.imageUrl)
-        }
-    }
-}
-
-@Composable
-fun ImageQuestionView(
+fun ImageView(
     imageUrl: String,
+    modifier: Modifier = Modifier
 ) {
     val painter = rememberAsyncImagePainter(imageUrl)
     val state by painter.state.collectAsState()
 
     when (state) {
         AsyncImagePainter.State.Empty,
-        is AsyncImagePainter.State.Loading -> CircularProgressIndicator()
+        is AsyncImagePainter.State.Loading -> {
+            CircularProgressIndicator(
+                modifier = Modifier
+                    .size(48.dp)
+                    .padding(16.dp)
+            )
+        }
 
-        is AsyncImagePainter.State.Error -> Text(text = "Error")
-        is AsyncImagePainter.State.Success ->
-            Image(painter, contentDescription = imageUrl)
+        is AsyncImagePainter.State.Error -> {
+            Text(
+                text = "Erreur de chargement de l'image",
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodySmall
+            )
+        }
+
+        is AsyncImagePainter.State.Success -> {
+            Image(
+                modifier = modifier,
+                painter = painter,
+                contentDescription = "Image de la question",
+                contentScale = ContentScale.Fit
+            )
+        }
     }
 }
-

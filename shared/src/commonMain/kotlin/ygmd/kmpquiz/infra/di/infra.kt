@@ -1,7 +1,7 @@
 package ygmd.kmpquiz.infra.di
 
 import io.ktor.client.HttpClient
-import io.ktor.client.engine.cio.CIO
+import io.ktor.client.engine.HttpClientEngine
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.http.ContentType
 import io.ktor.serialization.kotlinx.json.json
@@ -12,14 +12,14 @@ import ygmd.kmpquiz.data.database.createDatabase
 import ygmd.kmpquiz.data.database.sqlDriverFactory
 import ygmd.kmpquiz.domain.scheduler.TaskScheduler
 import ygmd.kmpquiz.domain.service.Fetcher
-import ygmd.kmpquiz.infra.appVersionProvider.AppVersionUpdateChecker
 import ygmd.kmpquiz.infra.cs2.CS2MapPositionsFetcher
-import ygmd.kmpquiz.infra.openTrivia.OpenTriviaFetcher
 import ygmd.kmpquiz.infra.scheduler.CommonTaskScheduler
+
+expect fun platformEngine(): HttpClientEngine
 
 val infraModule = module {
     single {
-        HttpClient(CIO) { // Assurez-vous d'utiliser le moteur client approprié pour votre KMP setup
+        HttpClient(platformEngine()) {
             install(ContentNegotiation) {
                 json(
                     Json {
@@ -33,7 +33,7 @@ val infraModule = module {
                     Json {
                         prettyPrint = true
                         isLenient = true
-                        ignoreUnknownKeys = true // Important pour la robustesse
+                        ignoreUnknownKeys = true
                     },
                     contentType = ContentType.Text.Plain
                 )
@@ -43,10 +43,6 @@ val infraModule = module {
 
     single<Fetcher>(named("CS2MapPositions")) {
         CS2MapPositionsFetcher(httpClient = get())
-    }
-
-    single<Fetcher>(named("OpenTrivia")) {
-        OpenTriviaFetcher(client = get())
     }
 
     single {
@@ -62,13 +58,6 @@ val infraModule = module {
             quizWorkManager = get(),
             schedulerDataStore = get(),
             cronExecutionCalculator = get(),
-        )
-    }
-    
-    single {
-        AppVersionUpdateChecker(
-            httpClient = get(),
-            appVersionProvider = get()
         )
     }
 }

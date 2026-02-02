@@ -13,14 +13,14 @@ class RescheduleTasksUseCase(
     suspend fun rescheduleAll() {
         logger.i { "Executing rescheduler" }
         val quizzes = quizRepository.getAllQuizzes()
-        taskScheduler.rescheduleQuizReminders(quizzes)
+        taskScheduler.rescheduleAllQuizzes(quizzes)
     }
 
     suspend fun rescheduleQuiz(quizId: String){
         logger.i { "Executing rescheduler for quiz $quizId" }
         quizRepository.getQuizById(quizId)
             .fold(
-                onSuccess = { taskScheduler.updateQuizReminder(it.id, it.quizCron) },
+                onSuccess = { taskScheduler.rescheduleQuiz(it.id, it.quizCron) },
                 onFailure = { logger.e(it) { "Error getting quiz $quizId" } }
             )
     }

@@ -76,17 +76,17 @@ class FetchQandasViewModel(
     private fun performFetch(fetcherId: String) {
         logger.d { "Fetching Q&As from fetcher $fetcherId" }
         viewModelScope.launch(coroutineExceptionHandler) {
-            val result = fetchQandaUseCase.execute(fetcherId)
-            when (result) {
+            when (val result = fetchQandaUseCase.execute(fetcherId)) {
                 is FetchResult.Failure -> _events.emit(
                     UiEvent.Error(UiError.FetchFailed(result))
                 )
 
                 is FetchResult.Success<List<DraftQanda>> -> {
-                    _events.emit(UiEvent.Success("Fetch success"))
-                    result.data.forEach {
-                        saveQandaUseCase.save(it)
-                    }
+                    saveQandaUseCase.saveAll(result.data)
+                        .fold(
+                            onSuccess = { _events.emit(UiEvent.Success("Fetch success")) },
+                            onFailure = { _events.emit(UiEvent.Error(UiError.SaveQandasFailed(it.message ?: "Unknown error"))) }
+                        )
                 }
             }
         }

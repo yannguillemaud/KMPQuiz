@@ -4,7 +4,7 @@ import org.koin.dsl.module
 import ygmd.kmpquiz.domain.viewModel.category.CategoryViewModel
 import ygmd.kmpquiz.domain.viewModel.fetch.FetchQandasViewModel
 import ygmd.kmpquiz.domain.viewModel.qandas.edit.QandaEditViewModel
-import ygmd.kmpquiz.domain.viewModel.qandas.saved.SavedQandasViewModel
+import ygmd.kmpquiz.domain.viewModel.qandas.saved.QandaOfCategoryViewModel
 import ygmd.kmpquiz.domain.viewModel.quiz.QuizViewModel
 import ygmd.kmpquiz.domain.viewModel.quiz.edit.QuizEditViewModel
 import ygmd.kmpquiz.domain.viewModel.quiz.session.QuizSessionViewModel
@@ -19,8 +19,9 @@ val viewModelModule = module {
         )
     }
 
-    factory {
-        SavedQandasViewModel(
+    factory { (categoryId: String) ->
+        QandaOfCategoryViewModel(
+            categoryId = categoryId,
             deleteQandasUseCase = get(),
             saveQandaUseCase = get(),
             getQandaUseCase = get(),

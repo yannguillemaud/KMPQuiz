@@ -4,10 +4,12 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.mutableStateOf
 import androidx.core.net.toUri
 import androidx.core.view.WindowCompat
-import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -18,7 +20,6 @@ import ygmd.kmpquiz.android.notification.NotificationUtils.setupNotificationChan
 import ygmd.kmpquiz.di.initKoin
 import ygmd.kmpquiz.di.platformModule
 import ygmd.kmpquiz.domain.usecase.notification.RescheduleTasksUseCase
-import ygmd.kmpquiz.infra.appVersionProvider.AppVersionUpdateChecker
 import ygmd.kmpquiz.navigation.AppNavigationState
 import ygmd.kmpquiz.navigation.InitialNavigationEvent
 import ygmd.kmpquiz.ui.App
@@ -37,18 +38,17 @@ class MainActivity : ComponentActivity() {
         }
         WindowCompat.setDecorFitsSystemWindows(window, false)
         scheduleInitialReminders()
-//        checkForLatestRelease()
         handleStartingIntentIfExists(intent)
         setContent {
             if (showUpdateDialog.value) {
-                androidx.compose.material3.AlertDialog(
+                AlertDialog(
                     onDismissRequest = {
                         // Appelée si l'utilisateur clique en dehors de la dialog
                         showUpdateDialog.value = false
                     },
-                    title = { androidx.compose.material3.Text("Update available") },
+                    title = { Text("Update available") },
                     confirmButton = {
-                        androidx.compose.material3.TextButton(
+                        TextButton(
                             onClick = {
                                 showUpdateDialog.value = false
                                 val url = "https://github.com/yannguillemaud/KMPQuiz/releases"
@@ -56,14 +56,14 @@ class MainActivity : ComponentActivity() {
                                 startActivity(intent)
                             }
                         ) {
-                            androidx.compose.material3.Text("Update")
+                            Text("Update")
                         }
                     },
                     dismissButton = {
-                        androidx.compose.material3.TextButton(
+                        TextButton(
                             onClick = { showUpdateDialog.value = false }
                         ) {
-                            androidx.compose.material3.Text("Later")
+                            Text("Later")
                         }
                     }
                 )
@@ -77,15 +77,6 @@ class MainActivity : ComponentActivity() {
         super.onNewIntent(intent)
         setIntent(intent)
         handleStartingIntentIfExists(intent)
-    }
-
-    private fun checkForLatestRelease() {
-        val appVersionUpdateChecker by inject<AppVersionUpdateChecker>()
-        lifecycleScope.launch {
-            if (appVersionUpdateChecker.isUpdateAvailable()) {
-                showUpdateDialog.value = true
-            }
-        }
     }
 
     private fun handleStartingIntentIfExists(intent: Intent?) {

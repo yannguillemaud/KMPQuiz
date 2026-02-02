@@ -1,12 +1,9 @@
 package ygmd.kmpquiz.domain.usecase.fetch
 
-import co.touchlab.kermit.Logger
 import ygmd.kmpquiz.domain.model.draftqanda.DraftQanda
 import ygmd.kmpquiz.domain.repository.FetchRepository
 import ygmd.kmpquiz.domain.result.FailureType
 import ygmd.kmpquiz.domain.result.FetchResult
-
-private val logger = Logger.withTag("FetchQandasUseCase")
 
 class FetchUseCase(
     private val fetchRepository: FetchRepository,

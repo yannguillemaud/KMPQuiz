@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import co.touchlab.kermit.Logger
 import kotlinx.coroutines.flow.SharingStarted.Companion.WhileSubscribed
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
@@ -45,7 +46,7 @@ class QuizSessionViewModel(
             session to categories.associateBy { it.id }
         }
         .map { (session, categoriesById) ->
-            if (session == null) UiState.Error(null, UiError.LoadQuizFailed)
+            if (session == null) UiState.Loading
             else UiState.Success(
                 data =
                     if (session.isCompleted) Completed(session, results = computeResults(session))
@@ -58,18 +59,18 @@ class QuizSessionViewModel(
                                 UiError.LoadQandaFailed
                             )
                         } else {
-                            val category = categoriesById[currentQanda.categoryId]
-                            if(category == null) return@map UiState.Error(
-                                null,
-                                UiError.LoadQandaFailed
-                            )
+                            val category =
+                                categoriesById[currentQanda.categoryId] ?: return@map UiState.Error(
+                                    null,
+                                    UiError.LoadCategoryFailed
+                                )
                             InProgress(
                                 session = session,
                                 currentQanda = DisplayableQanda(
                                     id = currentQanda.id,
                                     contextKey = currentQanda.contextKey,
                                     question = currentQanda.question,
-                                    answers = currentQanda.answers,
+                                    answers = answers,
                                     category = DisplayableCategory(category.id, category.name)
                                 ),
                                 selectedAnswer = session.selectedAnswer,
@@ -79,6 +80,7 @@ class QuizSessionViewModel(
                     }
             )
         }
+        .catch { UiState.Error(null, UiError.LoadQuizFailed) }
         .stateIn(
             scope = viewModelScope,
             started = WhileSubscribed(5000),

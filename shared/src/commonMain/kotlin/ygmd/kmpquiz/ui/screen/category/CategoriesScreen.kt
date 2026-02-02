@@ -1,4 +1,4 @@
-package ygmd.kmpquiz.ui.screen.qandas
+package ygmd.kmpquiz.ui.screen.category
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -23,21 +23,21 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import org.koin.compose.viewmodel.koinViewModel
-import ygmd.kmpquiz.domain.viewModel.displayable.DisplayableQanda
+import ygmd.kmpquiz.domain.viewModel.category.CategoryViewModel
+import ygmd.kmpquiz.domain.viewModel.displayable.DisplayableCategory
 import ygmd.kmpquiz.domain.viewModel.qandas.saved.PersistanceIntent
-import ygmd.kmpquiz.domain.viewModel.qandas.saved.SavedQandasViewModel
 import ygmd.kmpquiz.domain.viewModel.state.UiState
 import ygmd.kmpquiz.ui.composable.createquiz.LoadingState
-import ygmd.kmpquiz.ui.composable.qanda.SavedCategoryCard
+import ygmd.kmpquiz.ui.composable.qanda.CategoryCard
 import ygmd.kmpquiz.ui.theme.Dimens.DefaultPadding
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SavedCategoriesScreen(
-    viewmodel: SavedQandasViewModel = koinViewModel(),
-    onNavigateToSavedByCategory: (categoryId: String) -> Unit = {},
+fun CategoriesScreen(
+    viewmodel: CategoryViewModel = koinViewModel(),
+    onNavigateToCategory: (categoryId: String) -> Unit = {},
 ) {
-    val savedState = viewmodel.savedState.collectAsState(UiState.Loading)
+    val categoriesState = viewmodel.categories.collectAsState(UiState.Loading)
     val snackbarHostState = remember { SnackbarHostState() }
 
     Scaffold(
@@ -55,18 +55,18 @@ fun SavedCategoriesScreen(
                 .padding(paddingValues)
                 .fillMaxSize()
         ) {
-            when (val state = savedState.value) {
+            when (val state = categoriesState.value) {
                 is UiState.Loading -> LoadingState()
                 is UiState.Error<*> -> ErrorState(state.error.message)
-                is UiState.Success<List<DisplayableQanda>> -> {
+                is UiState.Success<List<DisplayableCategory>> -> {
+                    val categories = state.data
                     Box {
-                        if (state.data.isEmpty()) {
+                        if (categories.isEmpty()) {
                             Text(
                                 modifier = Modifier.align(Alignment.Center),
                                 text = "No saved categories"
                             )
                         } else {
-                            val qandasByCategory = state.data.groupBy { it.category }
                             LazyColumn(
                                 modifier = Modifier
                                     .fillMaxSize()
@@ -74,21 +74,20 @@ fun SavedCategoriesScreen(
                                 verticalArrangement = Arrangement.spacedBy(DefaultPadding),
                             ) {
                                 items(
-                                    items = qandasByCategory.keys.toList(),
+                                    items = categories.toList(),
                                     key = { it.id }
-                                ) { entry ->
-                                    SavedCategoryCard(
+                                ) { displayableCategory ->
+                                    CategoryCard(
                                         modifier = Modifier
                                             .fillMaxWidth()
                                             .clickable {
-                                                onNavigateToSavedByCategory(entry.id)
+                                                onNavigateToCategory(displayableCategory.id)
                                             },
-                                        category = entry.name,
-                                        questionsSize = qandasByCategory[entry]?.size ?: 0,
+                                        category = displayableCategory.name,
                                         onDeleteCategory = {
-                                            viewmodel.processPersistenceIntent(
+                                            viewmodel.processIntent(
                                                 PersistanceIntent.DeleteCategory(
-                                                    entry.id
+                                                    displayableCategory.id
                                                 )
                                             )
                                         },

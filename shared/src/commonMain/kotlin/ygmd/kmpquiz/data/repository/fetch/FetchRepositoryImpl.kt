@@ -17,7 +17,6 @@ class FetchRepositoryImpl(
             QandaFetcher(
                 id = it.id,
                 name = it.name,
-                isEnabled = it.isEnabled,
                 fetcher = it
             )
         }
@@ -32,7 +31,6 @@ class FetchRepositoryImpl(
                     QandaFetcher(
                         it.id,
                         it.name,
-                        it.isEnabled,
                         it
                     )
                 )

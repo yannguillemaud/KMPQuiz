@@ -7,12 +7,9 @@ import io.ktor.client.plugins.ClientRequestException
 import io.ktor.client.plugins.RedirectResponseException
 import io.ktor.client.plugins.ServerResponseException
 import io.ktor.client.request.get
-import io.ktor.client.request.header
 import io.ktor.http.HttpStatusCode
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import ygmd.kmpquiz.domain.git.GitTreeNode
 import ygmd.kmpquiz.domain.git.GitTreeResponse
 import ygmd.kmpquiz.domain.model.draftqanda.DraftQanda
@@ -26,73 +23,60 @@ import ygmd.kmpquiz.domain.result.FetchResult
 import ygmd.kmpquiz.domain.service.Fetcher
 import java.util.UUID
 
-const val GITHUB_API_BASE_URL = "https://api.github.com"
-const val GITHUB_REPO_OWNER = "yannguillemaud"
-const val GITHUB_REPO_NAME = "cs2-map-positions"
-const val GITHUB_BRANCH = "main"
-const val GITHUB_RAW_BASE_URL = "https://raw.githubusercontent.com"
+private const val GITHUB_API_BASE_URL = "https://api.github.com"
+private const val GITHUB_REPO_OWNER = "yannguillemaud"
+private const val GITHUB_REPO_NAME = "cs2-map-positions"
+private const val GITHUB_BRANCH = "main"
+private const val GITHUB_RAW_BASE_URL = "https://raw.githubusercontent.com"
 private val logger = Logger.withTag("LocalImageFetcher")
 
-/**
- * TODO - refacto is needed to avoid github's rate limit
- * maybe use last commit date or hash
- * TODO - implement pagination if response.truncated is true
- */
+private const val TREE_API_URL = "git/trees/$GITHUB_BRANCH?recursive=1"
+
+data class PositionInfos(
+    val name: String,
+    val url: String,
+)
+
 class CS2MapPositionsFetcher(
     private val httpClient: HttpClient,
 ) : Fetcher {
-    override val name: String
-        get() = "CS2 Map Position Fetcher"
-    private val treeApiUrl = buildGithubApiUrl("/git/trees/$GITHUB_BRANCH?recursive=1")
     private val uuid = UUID.randomUUID().toString()
+    override val id: String = uuid
 
-    override val id: String
-        get() = uuid
+    override val name: String
+        get() = "CS2 Callouts"
+
+    private val cs2ApiUrl: String =
+        "$GITHUB_API_BASE_URL/repos/$GITHUB_REPO_OWNER/$GITHUB_REPO_NAME/$TREE_API_URL"
 
     override suspend fun fetch(): FetchResult<List<DraftQanda>> {
+        logger.i { "Fetching images from: $cs2ApiUrl" }
         return try {
-            logger.i { "Fetching images from: $treeApiUrl" }
-            val gitTreeResponse = httpClient.get(treeApiUrl) {
-                header("Accept", "application/vnd.github.v3+json")
-                System.getenv("GITHUB_TOKEN")?.let { token -> "token $token" }
-            }.body<GitTreeResponse>()
-
+            val gitTreeResponse: GitTreeResponse = withContext(Dispatchers.IO) {
+                httpClient.get(cs2ApiUrl).body<GitTreeResponse>()
+            }
             if (gitTreeResponse.truncated) {
                 logger.w { "Git Tree Api Response is trunated. Implementation for recursive fetch is not implemented yet" }
             }
-
-            val qandas = coroutineScope {
-                handleTreeNodes(gitTreeResponse.tree, this)
-            }
+            val qandas = handleTreeNodes(gitTreeResponse.tree)
             FetchResult.Success(qandas)
         } catch (e: RedirectResponseException) { // 3xx errors
-            logger.e(e) { "GitHub API request was redirected. URL: $treeApiUrl" }
+            logger.e(e) { "GitHub API request was redirected. URL: $TREE_API_URL" }
             FetchResult.Failure(
                 type = NETWORK_ERROR,
                 message = "Network error (redirection): ${e.response.status.description}"
             )
         } catch (e: ClientRequestException) { // 4xx errors
-            logger.e(e) { "Client error during GitHub API request. URL: $treeApiUrl, Status: ${e.response.status}" }
-            if (e.response.status == HttpStatusCode.Forbidden) {
-                logger.w { "GitHub API rate limit likely exceeded or token is invalid/missing." }
-                FetchResult.Failure(
-                    type = RATE_LIMIT,
-                    message = "Rate limit exceeded"
-                )
-            } else {
-                FetchResult.Failure(
-                    type = NETWORK_ERROR,
-                    message = "Client error: ${e.response.status.description}"
-                )
-            }
+            logger.e(e) { "Client error during GitHub API request. URL: $TREE_API_URL, Status: ${e.response.status}" }
+            handleClientRequestException(e)
         } catch (e: ServerResponseException) { // 5xx errors
-            logger.e(e) { "Server error during GitHub API request. URL: $treeApiUrl" }
+            logger.e(e) { "Server error during GitHub API request. URL: $TREE_API_URL" }
             FetchResult.Failure(
                 type = SERVER_ERROR, // Nouveau type d'erreur possible
                 message = "Github server error: ${e.response.status.description}"
             )
         } catch (e: Exception) { // serializationException, unknownHostException...
-            logger.e(e) { "Generic error while fetching images from GitHub. URL: $treeApiUrl" }
+            logger.e(e) { "Generic error while fetching images from GitHub. URL: $TREE_API_URL" }
             FetchResult.Failure(
                 type = UNKNOWN_ERROR,
                 message = "Unknown error: ${e.message ?: "Unknown error occured"}"
@@ -100,52 +84,65 @@ class CS2MapPositionsFetcher(
         }
     }
 
-    private suspend fun handleTreeNodes(
-        nodes: List<GitTreeNode>,
-        scope: CoroutineScope
-    ): List<DraftQanda> {
-        val nodesByMap = nodes.groupBy { it.path.substringBefore('/') }
+    private fun handleClientRequestException(e: ClientRequestException): FetchResult.Failure =
+        if (e.response.status == HttpStatusCode.Forbidden) {
+            logger.w { "GitHub API rate limit likely exceeded or token is invalid/missing." }
+            FetchResult.Failure(
+                type = RATE_LIMIT,
+                message = "Rate limit exceeded"
+            )
+        } else {
+            FetchResult.Failure(
+                type = NETWORK_ERROR,
+                message = "Client error: ${e.response.status.description}"
+            )
+        }
 
-        val deferredQandas = nodesByMap.mapNotNull { (mapName, mapNodes) ->
-            scope.async {
-                try {
-                    val answersByFile = mapNodes
-                        .filter { it.path.isImageFile() }
-                        .associate {
-                            it.path.substringAfterLast('/')
-                                .substringBeforeLast('.') to buildGithubRawUrl(it.path)
-                        }
-                    answersByFile.map {
-                        DraftQanda(
-                            question = Question.ImageQuestion(imageUrl = it.value),
-                            answers = AnswersFactory.createMultipleTextChoices(
-                                correctAnswer = it.key,
-                                incorrectAnswers = answersByFile.keys.filter { key -> key != it.key }.shuffled()
-                                    .take(3)
-                            ),
-                            categoryName = "CS2 - $mapName"
-                        )
+    private fun handleTreeNodes(nodes: List<GitTreeNode>): List<DraftQanda> {
+        return nodes
+            .toMap()
+            .flatMap { (mapName, groupNodes) ->
+                if (groupNodes.size < 2) {
+                    logger.w { "Not enough nodes for map $mapName. Skipping." }
+                    return@flatMap emptyList()
+                }
+
+                val shuffledNodes = groupNodes.shuffled()
+                val size = shuffledNodes.size
+                val actualWrongCount = minOf(3, size - 1)
+
+                shuffledNodes.mapIndexed { index, currentNode ->
+                    val incorrectPaths = (1..actualWrongCount).map { offset ->
+                        shuffledNodes[(index + offset) % size].path
                     }
-                } catch (e: Exception) {
-                    logger.e(e) { "Failed to process map node: $mapName" }
-                    null
+
+                    DraftQanda(
+                        question = Question.ImageQuestion(
+                            imageUrl = buildGithubRawUrl(currentNode.path),
+                            text = "How is this callout called ?"
+                        ),
+                        answers = AnswersFactory.createMultipleTextChoices(
+                            correctAnswer = currentNode.path.substringAfter("/")
+                                .substringBeforeLast("."),
+                            incorrectAnswers = incorrectPaths.map {
+                                it.substringAfter("/").substringBeforeLast(".")
+                            }
+                        ),
+                        categoryName = mapName
+                    )
                 }
             }
-        }
-        return deferredQandas.awaitAll().filterNotNull().flatten()
     }
 
-    private fun buildGithubApiUrl(path: String): String {
-        return "$GITHUB_API_BASE_URL/repos/$GITHUB_REPO_OWNER/$GITHUB_REPO_NAME$path"
-    }
 
     private fun buildGithubRawUrl(filePath: String): String {
         return "$GITHUB_RAW_BASE_URL/$GITHUB_REPO_OWNER/$GITHUB_REPO_NAME/$GITHUB_BRANCH/$filePath"
     }
 }
 
-private val String.extensionFile get() = substringAfterLast(".")
+private fun List<GitTreeNode>.toMap(): Map<String, List<GitTreeNode>> =
+    filter { it.type == "blob" && it.path.isImageFile() }
+        .groupBy { it.path.substringBefore("/") }
 
-private fun String.isImageFile(): Boolean =
-    extensionFile in listOf("jpg", "jpeg", "png")
+private fun String.isImageFile(): Boolean = endsWith(".png")
 
