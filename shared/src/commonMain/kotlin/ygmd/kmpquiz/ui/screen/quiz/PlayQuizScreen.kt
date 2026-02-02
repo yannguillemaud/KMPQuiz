@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
-import androidx.compose.material.icons.filled.HourglassEmpty
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FabPosition
@@ -99,7 +98,7 @@ fun PlayQuizScreen(
                                 .alpha(if (isNextEnabled) 1f else 0f)
                         ) {
                             Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ArrowForward
+                                imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                                 null
                             )
                         }
