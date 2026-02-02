@@ -9,8 +9,8 @@ android {
 
     defaultConfig {
         minSdk = 26
-
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        versionCode = System.currentTimeMillis().toInt()
     }
 
     compileOptions {
