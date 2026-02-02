@@ -25,7 +25,7 @@ jobs:
         run: chmod +x ./gradlew
 
       - name: Build APK (debug)
-        run: ./gradlew :app:assembleDebug --no-daemon --stacktrace --info
+        run: ./gradlew :androidApp:assembleDebug --stacktrace --info --build-cache
 
       - name: Inspect build outputs
         run: |
