@@ -1,24 +1,47 @@
-import com.android.build.gradle.internal.dsl.decorator.SupportedPropertyType.Var.Boolean;
+import kotlin.Boolean;
 
-CREATE TABLE IF NOT EXISTS quizEntity (
+CREATE TABLE IF NOT EXISTS quiz_entity (
     id TEXT PRIMARY KEY,
     title TEXT NOT NULL,
-    cron_expression TEXT,
-    cron_display_name TEXT,
-    cron_enabled INTEGER -- todo AS Boolean + columnAdapter. now 0 to false
+    cron_id TEXT,
+    active_scheduling TEXT AS Boolean,
+    FOREIGN KEY (cron_id) REFERENCES quiz_cron_entity(id)
 );
 
 selectAll:
-SELECT * FROM quizEntity;
+SELECT
+    q.id,
+    q.title,
+    cron.id AS cronId,
+    cron.name AS cronName,
+    cron.expression AS cronExpression,
+    q.active_scheduling AS cronEnabled,
+    conf.config_details AS configuration
+FROM quiz_entity q
+LEFT JOIN quiz_cron_entity cron ON q.cron_id = cron.id
+LEFT JOIN quiz_configuration_entity conf ON q.id = conf.quiz_id
+GROUP BY q.id;
+
+countQuestionsForQuiz:
+SELECT COUNT(DISTINCT qanda.id)
+FROM qanda_entity qanda
+JOIN quiz_category_relation quizCategoryRelation
+    ON qanda.category_id = quizCategoryRelation.category_id
+WHERE quizCategoryRelation.quiz_id = ?;
 
 getById:
-SELECT * FROM quizEntity q
+SELECT *
+FROM quiz_entity q
 WHERE q.id = ?;
 
 insert:
-INSERT OR REPLACE INTO quizEntity(id, title, cron_expression, cron_display_name, cron_enabled)
-VALUES ?;
+INSERT OR REPLACE INTO quiz_entity VALUES (?, ?, ?, ?);
 
 deleteById:
-DELETE FROM quizEntity
+DELETE FROM quiz_entity
+WHERE id = ?;
+
+scheduleQuiz:
+UPDATE quiz_entity
+SET active_scheduling = ?
 WHERE id = ?;

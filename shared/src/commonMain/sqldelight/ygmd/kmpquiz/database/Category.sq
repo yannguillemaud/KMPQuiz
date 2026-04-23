@@ -1,21 +1,27 @@
-CREATE TABLE categoryEntity(
+CREATE TABLE category_entity (
     id TEXT PRIMARY KEY,
     name TEXT NOT NULL UNIQUE
 );
 
 selectAllCategories:
-SELECT * FROM categoryEntity;
+SELECT * FROM category_entity;
+
+selectAllCategoriesWithCount:
+SELECT
+    c.*,
+    (SELECT COUNT(*) FROM qanda_entity q WHERE c.id = q.category_id) AS questionCount
+FROM category_entity c;
 
 getCategoryById:
-SELECT * FROM categoryEntity WHERE id = ?;
+SELECT * FROM category_entity WHERE id = ?;
 
 getCategoryByName:
-SELECT * FROM categoryEntity WHERE name = ?;
+SELECT * FROM category_entity WHERE name = ?;
 
 insertCategory:
-INSERT OR REPLACE INTO categoryEntity
+INSERT OR REPLACE INTO category_entity
 VALUES ?;
 
 deleteById:
-DELETE FROM categoryEntity
+DELETE FROM category_entity
 WHERE id = ?;

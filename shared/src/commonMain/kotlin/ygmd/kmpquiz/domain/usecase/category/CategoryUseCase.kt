@@ -9,7 +9,9 @@ class CategoryUseCase(
     private val categoryRepository: CategoryRepository
 ){
     fun observeCategories() = categoryRepository.observeCategories()
-    fun getById(id: String) = categoryRepository.getById(id).getOrThrow()
+    fun observeCategoriesWithCount() = categoryRepository.observeCategoriesWithCount()
+    fun getAll() = categoryRepository.getAllCategories()
+    fun getById(id: String) = categoryRepository.getById(id)
     fun save(name: String) = categoryRepository.addCategory(name)
     fun delete(categoryId: String) = categoryRepository.removeCategory(categoryId)
 }

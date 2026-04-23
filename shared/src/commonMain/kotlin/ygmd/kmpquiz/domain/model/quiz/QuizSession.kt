@@ -6,16 +6,17 @@ import ygmd.kmpquiz.domain.model.qanda.Qanda
 
 data class QuizSession(
     val quiz: Quiz,
+    val qandas: List<Qanda>,
     val currentIndex: Int = 0,
     val userAnswers: Map<Int, Choice> = emptyMap(),
     val currentShuffledAnswers: Answers?,
 ) {
     val isCompleted: Boolean
-        get() = currentIndex >= quiz.qandas.size
+        get() = currentIndex >= qandas.size
 
     val selectedAnswer: Choice? = userAnswers[currentIndex]
 
-    val currentQanda: Qanda? get() = quiz.qandas.getOrNull(currentIndex)
+    val currentQanda: Qanda? get() = qandas.getOrNull(currentIndex)
 }
 
 // TODO

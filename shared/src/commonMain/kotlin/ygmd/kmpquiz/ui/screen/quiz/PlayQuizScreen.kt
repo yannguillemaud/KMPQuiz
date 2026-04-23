@@ -64,7 +64,7 @@ fun PlayQuizScreen(
                         val session = state.data.session
                         QuizProgressIndicator(
                             currentStep = session.currentIndex + 1,
-                            totalSteps = session.quiz.qandas.size
+                            totalSteps = session.qandas.size
                         )
                     } else {
                         Text("Quiz")

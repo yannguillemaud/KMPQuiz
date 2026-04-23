@@ -46,7 +46,7 @@ fun CategoriesScreen(
         },
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("Saved Categories", fontWeight = FontWeight.Bold, fontSize = 22.sp) },
+                title = { Text("Categories", fontWeight = FontWeight.Bold, fontSize = 22.sp) },
             )
         }
     ) { paddingValues ->

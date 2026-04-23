@@ -44,7 +44,7 @@ class QandaOfCategoryViewModel(
         )
 
     private fun toDisplayableQanda(qanda: Qanda): DisplayableQanda {
-        val category = categoryUseCase.getById(qanda.categoryId)
+        val category = categoryUseCase.getById(qanda.categoryId).getOrNull() ?: error("Category not found for qanda $qanda")
         return DisplayableQanda(
             id = qanda.id,
             contextKey = qanda.contextKey,

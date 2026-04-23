@@ -23,16 +23,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
-import kotlinx.coroutines.flow.collectLatest
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
 import ygmd.kmpquiz.domain.viewModel.category.CategoryViewModel
-import ygmd.kmpquiz.domain.viewModel.error.UiEvent
 import ygmd.kmpquiz.domain.viewModel.qandas.edit.QandaEditIntent
-import ygmd.kmpquiz.domain.viewModel.qandas.edit.QandaEditUiState
 import ygmd.kmpquiz.domain.viewModel.qandas.edit.QandaEditViewModel
 import ygmd.kmpquiz.domain.viewModel.state.UiState
 import ygmd.kmpquiz.domain.viewModel.state.getOrDefault
+import ygmd.kmpquiz.events.event.Event.NavBackEvent
+import ygmd.kmpquiz.events.event.Event.SnackbarEvent
 import ygmd.kmpquiz.ui.composable.createquiz.LoadingState
 import ygmd.kmpquiz.ui.composable.playquiz.ErrorState
 import ygmd.kmpquiz.ui.composable.qanda.QandaEditForm
@@ -41,27 +40,20 @@ import ygmd.kmpquiz.ui.theme.Dimens.DefaultPadding
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun QandaCreationScreen(
-    initialCategoryId: String? = null,
     onNavigateBack: () -> Unit = {},
     qandaEditViewModel: QandaEditViewModel = koinViewModel(parameters = { parametersOf(null) }),
     categoryViewModel: CategoryViewModel = koinViewModel(),
 ) {
-    val editUiState: UiState<QandaEditUiState> by qandaEditViewModel.qandaEditState.collectAsState()
+    val editUiState = qandaEditViewModel.qandaEditState.collectAsState()
     val availableCategories by categoryViewModel.categories.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(Unit) {
-        qandaEditViewModel.qandaEditEvents.collectLatest { event ->
+        qandaEditViewModel.qandaEditEvents.collect { event ->
             when (event) {
-                is UiEvent.Error -> snackbarHostState.showSnackbar(message = event.error.message)
-                is UiEvent.Success -> onNavigateBack()
+                is SnackbarEvent -> snackbarHostState.showSnackbar(event.message)
+                is NavBackEvent -> onNavigateBack()
             }
-        }
-    }
-
-    LaunchedEffect(initialCategoryId) {
-        initialCategoryId?.let {
-            qandaEditViewModel.processIntent(QandaEditIntent.UpdateCategory(it))
         }
     }
 
@@ -80,21 +72,14 @@ fun QandaCreationScreen(
             )
         },
         floatingActionButton = {
-            FloatingActionButton(
-                onClick = {
-                    qandaEditViewModel.processIntent(QandaEditIntent.Save)
-                }
-            ) {
-                Icon(
-                    imageVector = Icons.Outlined.Save,
-                    contentDescription = "Save"
-                )
+            FloatingActionButton(onClick = { qandaEditViewModel.processIntent(QandaEditIntent.Save) }) {
+                Icon(imageVector = Icons.Outlined.Save, contentDescription = "Save")
             }
         },
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { paddingValues ->
         Column(modifier = Modifier.fillMaxSize().padding(paddingValues).padding(DefaultPadding)) {
-            when (val state = editUiState) {
+            when (val state = editUiState.value) {
                 is UiState.Loading -> LoadingState()
                 is UiState.Error -> ErrorState(message = state.error.message)
                 is UiState.Success -> {
@@ -104,12 +89,13 @@ fun QandaCreationScreen(
                             question = question,
                             availableCategories = availableCategories.getOrDefault(emptyList()),
                             selectedCategory = category,
-                            onCategorySelected = {
-                                qandaEditViewModel.processIntent(QandaEditIntent.UpdateCategory(it.id))
-                            },
                             correctAnswer = correctAnswer,
                             incorrectAnswers = incorrectAnswers,
                             canAddIncorrectAnswer = canAddIncorrectAnswer,
+
+                            onCategorySelected = {
+                                qandaEditViewModel.processIntent(QandaEditIntent.UpdateCategory(it.id))
+                            },
                             onUpdateQuestion = {
                                 qandaEditViewModel.processIntent(QandaEditIntent.UpdateQuestion(it))
                             },

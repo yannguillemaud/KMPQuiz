@@ -25,13 +25,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
-import kotlinx.coroutines.flow.collectLatest
 import org.koin.compose.viewmodel.koinViewModel
-import ygmd.kmpquiz.domain.viewModel.error.UiEvent
 import ygmd.kmpquiz.domain.viewModel.quiz.QuizViewModel
-import ygmd.kmpquiz.domain.viewModel.quiz.QuizzesIntent
-import ygmd.kmpquiz.domain.viewModel.quiz.edit.QuizEditViewModel
-import ygmd.kmpquiz.domain.viewModel.state.UiState
+import ygmd.kmpquiz.domain.viewModel.quiz.QuizzesUiState
+import ygmd.kmpquiz.events.event.Event
 import ygmd.kmpquiz.ui.composable.createquiz.LoadingState
 import ygmd.kmpquiz.ui.composable.playquiz.ErrorState
 import ygmd.kmpquiz.ui.composable.playquiz.QuizCard
@@ -41,27 +38,21 @@ import ygmd.kmpquiz.ui.theme.Dimens.DefaultPadding
 @Composable
 fun QuizzesScreen(
     quizViewModel: QuizViewModel = koinViewModel(),
-    quizEditViewModel: QuizEditViewModel = koinViewModel(),
     onNavigateToQuizCreation: () -> Unit = {},
     onNavigateToQuizSettings: (quizId: String) -> Unit = {},
     onNavigateToPlayQuiz: (quizId: String) -> Unit = {},
 ) {
-    val quizzesState = quizViewModel.quizzesState.collectAsState(UiState.Loading)
+    val quizzesState = quizViewModel.quizzesState.collectAsState(QuizzesUiState(isLoading = true))
     val snackbarhostState = remember { SnackbarHostState() }
 
-    LaunchedEffect(Unit){
-        quizViewModel.quizEvents.collectLatest { event ->
-            if (event is UiEvent.Success) snackbarhostState.showSnackbar(
-                message = event.message,
-                duration = SnackbarDuration.Short
-            )
-        }
-
-        quizEditViewModel.events.collectLatest { event ->
-            if (event is UiEvent.Success)
+    LaunchedEffect(Unit) {
+        quizViewModel.quizEvents.collect { event ->
+            if (event is Event.SnackbarEvent) {
                 snackbarhostState.showSnackbar(
                     message = event.message,
+                    duration = SnackbarDuration.Short
                 )
+            }
         }
     }
 
@@ -81,20 +72,21 @@ fun QuizzesScreen(
         }
     ) { innerPadding ->
         Box(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
-            when (val state = quizzesState.value) {
-                is UiState.Loading -> LoadingState(modifier = Modifier.fillMaxSize())
-                is UiState.Error -> ErrorState(
+            val quizzesUiState = quizzesState.value
+            when {
+                quizzesUiState.isLoading -> LoadingState(modifier = Modifier.fillMaxSize())
+                quizzesUiState.error != null -> ErrorState(
                     modifier = Modifier.fillMaxSize(),
-                    message = state.error.message,
+                    message = quizzesUiState.error.message,
                 )
 
-                is UiState.Success -> {
+                else -> {
                     LazyColumn(
                         modifier = Modifier.fillMaxSize().padding(DefaultPadding),
                         verticalArrangement = Arrangement.spacedBy(DefaultPadding),
                     ) {
                         items(
-                            items = state.data,
+                            items = quizzesUiState.quizzes,
                             key = { it.id }
                         ) { quiz ->
                             QuizCard(
@@ -103,15 +95,15 @@ fun QuizzesScreen(
                                 isEnabled = quiz.questionsSize > 0,
                                 onClick = { onNavigateToPlayQuiz(quiz.id) },
                                 onEdit = { onNavigateToQuizSettings(quiz.id) },
-                                onDelete = {
-                                    quizViewModel.processIntent(
-                                        QuizzesIntent.DeleteQuiz(quiz.id)
-                                    )
-                                },
-                                onToggleCron = {
-                                    quizViewModel.processIntent(
-                                        QuizzesIntent.ToggleCron(quiz.id, isEnabled = it)
-                                    )
+                                onDelete = { quizViewModel.deleteQuiz(quiz.id) },
+                                onToggleCron = { newValue ->
+                                    quiz.cron?.let { quizCron ->
+                                        quizViewModel.toggleCron(
+                                            quizId = quiz.id,
+                                            cronId = quizCron.id,
+                                            isEnabled = newValue
+                                        )
+                                    }
                                 }
                             )
                         }

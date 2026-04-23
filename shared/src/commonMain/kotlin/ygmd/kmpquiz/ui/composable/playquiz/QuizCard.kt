@@ -96,7 +96,7 @@ fun QuizCard(
                                     )
                                 }
                                 Text(
-                                    text = it.cron.displayName,
+                                    text = it.name,
                                     style = MaterialTheme.typography.labelSmall
                                 )
                             }

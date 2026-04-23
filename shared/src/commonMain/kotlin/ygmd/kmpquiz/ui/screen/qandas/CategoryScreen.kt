@@ -27,15 +27,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import kotlinx.coroutines.flow.collectLatest
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
 import ygmd.kmpquiz.domain.viewModel.displayable.DisplayableQanda
-import ygmd.kmpquiz.domain.viewModel.error.UiEvent
 import ygmd.kmpquiz.domain.viewModel.qandas.edit.QandaEditViewModel
 import ygmd.kmpquiz.domain.viewModel.qandas.saved.PersistanceIntent
 import ygmd.kmpquiz.domain.viewModel.qandas.saved.QandaOfCategoryViewModel
 import ygmd.kmpquiz.domain.viewModel.state.UiState
+import ygmd.kmpquiz.events.event.Event.NavBackEvent
+import ygmd.kmpquiz.events.event.Event.SnackbarEvent
 import ygmd.kmpquiz.ui.composable.createquiz.LoadingState
 import ygmd.kmpquiz.ui.composable.playquiz.ErrorState
 import ygmd.kmpquiz.ui.composable.qanda.QandaCard
@@ -55,10 +55,10 @@ fun CategoryScreen(
     val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(Unit) {
-        editViewModel.qandaEditEvents.collectLatest {
+        editViewModel.qandaEditEvents.collect {
             when (it) {
-                is UiEvent.Error -> snackbarHostState.showSnackbar(it.error.message)
-                is UiEvent.Success -> snackbarHostState.showSnackbar(it.message)
+                is SnackbarEvent -> snackbarHostState.showSnackbar(it.message)
+                is NavBackEvent -> onNavigateBack()
             }
         }
     }

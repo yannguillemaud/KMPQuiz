@@ -1,8 +1,11 @@
 package ygmd.kmpquiz.domain.model.cron
 
-data class QuizCron(
-    val cron: CronExpression,
-    val isEnabled: Boolean = true,
-)
+import kotlinx.serialization.Serializable
 
-data class CronExpression(val expression: String, val displayName: String)
+@Serializable
+data class QuizCron(
+    val id: String,
+    val name: String,
+    val expression: String,
+    val isEnabled: Boolean = false,
+)

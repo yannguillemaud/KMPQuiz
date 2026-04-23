@@ -54,19 +54,4 @@ sealed interface UiError {
             get() = "Load category failed"
         override val canRetry: Boolean = false
     }
-
-
 }
-
-sealed interface UiEvent {
-    data class Success(val message: String): UiEvent
-    data class Error(
-        val error: UiError,
-        val action: SnackbarAction? = null,
-    ): UiEvent
-}
-
-data class SnackbarAction(
-    val label: String,
-    val action: () -> Unit,
-)

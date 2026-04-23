@@ -1,149 +1,282 @@
 package ygmd.kmpquiz.domain.viewModel.quiz.edit
 
+
+import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import co.touchlab.kermit.Logger
-import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import ygmd.kmpquiz.domain.model.cron.CronExpression
-import ygmd.kmpquiz.domain.model.cron.QuizCronPreset
+import ygmd.kmpquiz.domain.model.category.Category
+import ygmd.kmpquiz.domain.model.category.CategoryWithCount
+import ygmd.kmpquiz.domain.model.cron.QuizCron
+import ygmd.kmpquiz.domain.model.quiz.Quiz
+import ygmd.kmpquiz.domain.model.quiz.QuizConfigDetails
 import ygmd.kmpquiz.domain.usecase.category.CategoryUseCase
-import ygmd.kmpquiz.domain.usecase.notification.RescheduleTasksUseCase
-import ygmd.kmpquiz.domain.usecase.quiz.QuizEditUseCase
+import ygmd.kmpquiz.domain.usecase.cron.CronUseCase
+import ygmd.kmpquiz.domain.usecase.quiz.QuizUseCase
 import ygmd.kmpquiz.domain.viewModel.displayable.DisplayableCategory
-import ygmd.kmpquiz.domain.viewModel.error.UiError
-import ygmd.kmpquiz.domain.viewModel.error.UiEvent
-import ygmd.kmpquiz.domain.viewModel.state.UiState
+import ygmd.kmpquiz.domain.viewModel.displayable.DisplayableCategoryWithCount
+import ygmd.kmpquiz.domain.viewModel.displayable.DisplayableQuizCron
+import ygmd.kmpquiz.domain.viewModel.displayable.DisplayableQuizMode
+import ygmd.kmpquiz.events.event.Event
+import java.util.UUID
+
+@Immutable
+data class MetadataState(
+    val isLoading: Boolean = false,
+    val isSaving: Boolean = false,
+    val error: String? = null
+)
+
+@Immutable
+data class ContentState(
+    val id: String? = null,
+    val title: String = "",
+    val availableCategories: ImmutableList<DisplayableCategory> = persistentListOf(),
+    val availableCrons: ImmutableList<DisplayableQuizCron> = persistentListOf(),
+) {
+    val titleError: String? = if (title.isBlank()) "Title cannot be empty" else null
+}
+
+@Immutable
+data class ConfigurationState(
+    val selectedCategories: ImmutableList<DisplayableCategory> = persistentListOf(),
+    val selectedCron: DisplayableQuizCron? = null,
+    val selectedQuizMode: DisplayableQuizMode = DisplayableQuizMode.Full,
+    val totalAvailableQuestions: Int = 0,
+)
+
+@Immutable
+data class QuizEditUiState(
+    val metadata: MetadataState = MetadataState(),
+    val content: ContentState = ContentState(),
+    val configuration: ConfigurationState = ConfigurationState()
+) {
+    // Validation simple pour l'UI
+    val canSave: Boolean = content.title.isNotBlank() && !metadata.isSaving
+}
 
 private val logger = Logger.withTag("QuizEditViewModel")
 
 class QuizEditViewModel(
-    private val quizEditUseCase: QuizEditUseCase,
-    categoryUseCase: CategoryUseCase,
-    private val rescheduleTasksUseCase: RescheduleTasksUseCase,
+    private val quizUseCase: QuizUseCase,
+    private val categoryUseCase: CategoryUseCase,
+    private val cronUseCase: CronUseCase,
 ) : ViewModel() {
-    val _quizEditUiState = quizEditUseCase.observeQuizEdit()
 
-    val quizEditUiState: StateFlow<UiState<QuizEditUiState>> = _quizEditUiState
-        .catch { logger.e(it) { "Error loading quiz" } }
-        .combine(categoryUseCase.observeCategories()) { quiz, categories ->
-            val categoriesById = categories.associateBy { it.id }
-            if (quiz == null) {
-                UiState.Error(null, UiError.LoadQuizFailed)
-            } else {
-                val categories = quiz.categories.map {
-                    categoriesById[it] ?: return@combine UiState.Error(
-                        null,
-                        UiError.LoadCategoryFailed
-                    )
-                }
-                UiState.Success(
-                    QuizEditUiState(
-                        title = quiz.title,
-                        titleError = when {
-                            quiz.title.isEmpty() -> "Title cannot be empty"
-                            quiz.title.length > 15 -> "Quiz cannot be longer than 15 characters"
-                            else -> null
-                        },
-                        categories = categories
-                            .map { DisplayableCategory(it.id, it.name) },
-                        cron = quiz.cron?.cron,
-                        cronEnabled = quiz.cron?.isEnabled == true
-                    )
-                )
-            }
-        }.stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = UiState.Loading
-        )
+    /* inputs */
+    private val _isLoading = MutableStateFlow(false)
+    private val _isSaving = MutableStateFlow(false)
+    private val _quizId = MutableStateFlow<String?>(null)
+    private val _title = MutableStateFlow("")
+    private val _selectedCategoryIds = MutableStateFlow<Set<String>>(emptySet())
+    private val _selectedCronId = MutableStateFlow<String?>(null)
+    private val _domainConfig =
+        MutableStateFlow<QuizConfigDetails>(QuizConfigDetails.AllQuestions())
 
-    private val _availableCrons = MutableStateFlow(emptyList<CronExpression>())
-    val availableCrons = _availableCrons.asStateFlow()
+    /* DB flows */
+    private val _categoriesWithCount =
+        categoryUseCase.observeCategoriesWithCount().distinctUntilChanged()
+    private val _crons = cronUseCase.observeCrons().distinctUntilChanged()
 
-    private val _events = MutableSharedFlow<UiEvent>(replay = 1)
-    val events = _events.asSharedFlow()
-
-    init {
-        loadCrons()
-    }
-
-    private fun loadCrons() {
-        viewModelScope.launch {
-            _availableCrons.value = QuizCronPreset.entries
-                .map { it.toCronExpression() }
-        }
-    }
-
-    private fun loadQuiz(quizId: String) {
-        viewModelScope.launch {
-            quizEditUseCase.load(quizId)
-        }
-    }
-
-    fun processIntent(intent: QuizEditIntent) {
-        when (intent) {
-            is QuizEditIntent.Save -> {
-                trySave()
-            }
-            is QuizEditIntent.UpdateTitle -> {
-                updateTitle(intent.title)
-            }
-            is QuizEditIntent.UpdateCategories -> {
-                updateCategories(intent.categories)
-            }
-            is QuizEditIntent.UpdateCron -> {
-                updateCron(intent.cron)
-            }
-            is QuizEditIntent.Load -> {
-                loadQuiz(intent.quizId)
-            }
-        }
-    }
-
-    private fun trySave(){
-        viewModelScope.launch {
-            val currentState = _quizEditUiState.first()
-            if(currentState == null) {
-                _events.emit(UiEvent.Error(UiError.SaveFailed))
-                return@launch
-            } else quizEditUseCase.trySave().fold(
-                onFailure = {
-                    logger.e(it) { "Error saving quiz" }
-                    _events.emit(UiEvent.Error(UiError.SaveFailed))
-                },
-                onSuccess = {
-                    _events.emit(UiEvent.Success("Quiz saved"))
-                    rescheduleTasksUseCase.rescheduleQuiz(it)
-                }
+    /* partitioning */
+    private val metadataState = combine(_isLoading, _isSaving) { loading, saving ->
+        MetadataState(isLoading = loading, isSaving = saving)
+    }.distinctUntilChanged()
+    private val contentState =
+        combine(_quizId, _title, _categoriesWithCount, _crons) { id, title, categories, crons ->
+            ContentState(
+                id = id,
+                title = title,
+                availableCategories = categories.map { DisplayableCategory(it.id, it.name) }
+                    .toImmutableList(),
+                availableCrons = crons.map {
+                    DisplayableQuizCron(it.id, it.name, it.expression, it.isEnabled)
+                }.toImmutableList(),
             )
-        }
-    }
+        }.distinctUntilChanged()
+    private val configurationState = combine(
+        _selectedCategoryIds,
+        _selectedCronId,
+        _domainConfig,
+        _categoriesWithCount,
+        _crons
+    ) { selectedIds, cronId, config, allCatsWithCount, allCrons ->
+        val selectedQuizMode = mapToDisplayableMode(config, allCatsWithCount, selectedIds)
+        val selectedCategoriesWithCount = allCatsWithCount.filter { it.id in selectedIds }
+        val displayableCategories =
+            selectedCategoriesWithCount.map { DisplayableCategory(it.id, it.name) }
+        ConfigurationState(
+            selectedCategories = displayableCategories.toImmutableList(),
+            selectedCron = allCrons.find { it.id == cronId }
+                ?.let { DisplayableQuizCron(it.id, it.name, it.expression, it.isEnabled) },
+            selectedQuizMode = selectedQuizMode,
+            totalAvailableQuestions = countQuestions(selectedCategoriesWithCount, selectedQuizMode)
+        )
+    }.distinctUntilChanged()
 
-    private fun updateCron(cron: CronExpression?) {
-        quizEditUseCase.updateCron(cron)
-    }
+    /* UI STATE */
+    val quizState: StateFlow<QuizEditUiState> = combine(
+        metadataState,
+        contentState,
+        configurationState
+    ) { meta, content, config ->
+        QuizEditUiState(meta, content, config)
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), QuizEditUiState())
 
-    private fun updateCategories(categories: List<DisplayableCategory>) {
-        quizEditUseCase.updateCategories(categories.map { it.id })
-    }
+    private val _events = Channel<Event>()
+    val events = _events.receiveAsFlow()
 
-    private fun updateTitle(title: String) {
-        quizEditUseCase.updateTitle(title)
-    }
-
-    override fun onCleared() {
+    /* init */
+    fun setUp(quizId: String) {
         viewModelScope.launch {
-            quizEditUseCase.reset()
+            _isLoading.value = true
+            val quiz = quizUseCase.getById(quizId) ?: run {
+                _isLoading.value = false
+                return@launch
+            }
+
+            _quizId.value = quiz.id
+            _title.value = quiz.title
+            _selectedCategoryIds.value = quiz.categories.map { it.id }.toSet()
+            _selectedCronId.value = quiz.cron?.id
+            _domainConfig.value = quiz.config
+            _isLoading.value = false
         }
     }
-}
+
+    fun updateTitle(newTitle: String) {
+        _title.value = newTitle
+    }
+
+    fun toggleSelectCron(id: String?) {
+        _selectedCronId.value = id
+    }
+
+    fun toggleSelectCategory(id: String) {
+        _selectedCategoryIds.update { if (id in it) it - id else it + id }
+    }
+
+
+    fun switchConfigMode(newConfigMode: DisplayableQuizMode) {
+        fun hasConfigChanged(): Boolean = with(_domainConfig.value) {
+            when (this) {
+                is QuizConfigDetails.AllQuestions if newConfigMode is DisplayableQuizMode.Full -> false
+                is QuizConfigDetails.TotalLimited if newConfigMode is DisplayableQuizMode.Limited -> false
+                is QuizConfigDetails.ByCategory if newConfigMode is DisplayableQuizMode.ByCategory -> false
+                else -> true
+            }
+        }
+        if (!hasConfigChanged()) return
+        _domainConfig.value = when (newConfigMode) {
+            is DisplayableQuizMode.Full -> QuizConfigDetails.AllQuestions()
+            is DisplayableQuizMode.Limited -> QuizConfigDetails.TotalLimited()
+            is DisplayableQuizMode.ByCategory -> QuizConfigDetails.ByCategory()
+        }
+    }
+
+    fun updateGlobalLimit(newLimit: Int) {
+        _domainConfig.update { currentMode ->
+            if (currentMode is QuizConfigDetails.TotalLimited) {
+                currentMode.copy(count = newLimit)
+            } else currentMode
+        }
+    }
+
+    fun updateCategoryLimit(categoryId: String, newLimit: Int) {
+        _domainConfig.update { currentMode ->
+            if (currentMode is QuizConfigDetails.ByCategory) {
+                val newConfigByCategory = currentMode.limitByCategory
+                    .toMutableMap()
+                    .apply { this[categoryId] = newLimit }
+                currentMode.copy(limitByCategory = newConfigByCategory)
+            } else currentMode
+        }
+    }
+
+    fun saveQuiz() {
+        if (!quizState.value.canSave) return
+        viewModelScope.launch {
+            _isSaving.value = true
+            val quiz = quizState.value
+            val (_, content, config) = quiz
+            try {
+                val quiz = Quiz(
+                    id = content.id ?: UUID.randomUUID().toString(),
+                    title = content.title,
+                    cron = config.selectedCron?.let {
+                        QuizCron(it.id, it.name, it.expression, it.isEnabled)
+                    },
+                    categories = config.selectedCategories.map { Category(it.id, it.name) },
+                    config = when (val configMode = config.selectedQuizMode) {
+                        is DisplayableQuizMode.Full -> QuizConfigDetails.AllQuestions()
+                        is DisplayableQuizMode.Limited -> QuizConfigDetails.TotalLimited(count = configMode.limit)
+                        is DisplayableQuizMode.ByCategory -> {
+                            val configByCategory = configMode.limits.mapKeys { it.key.id }
+                            QuizConfigDetails.ByCategory(limitByCategory = configByCategory)
+                        }
+                    },
+                    questionsCount = config.totalAvailableQuestions
+                )
+                quizUseCase.save(quiz).onSuccess { _events.send(Event.NavBackEvent) }
+            } catch (e: Exception) {
+                _events.send(Event.SnackbarEvent("Save failed ${e.message?.let { ": $it" }}"))
+                logger.e(e) { "Failed to save quiz" }
+            } finally {
+                _isSaving.value = false
+            }
+        }
+
+    }
+
+    /* Helpers */
+    private fun mapToDisplayableMode(
+        config: QuizConfigDetails,
+        allCats: List<CategoryWithCount>,
+        selectedIds: Set<String>
+    ): DisplayableQuizMode {
+        val maxQuestions = allCats.filter { it.id in selectedIds }.sumOf { it.questionsCount }
+        return when (config) {
+            is QuizConfigDetails.AllQuestions -> DisplayableQuizMode.Full
+            is QuizConfigDetails.TotalLimited -> DisplayableQuizMode.Limited(
+                config.count,
+                maxQuestions
+            )
+
+            is QuizConfigDetails.ByCategory -> {
+                val limits = allCats.filter { it.id in selectedIds }
+                    .associate { cat ->
+                        DisplayableCategoryWithCount(
+                            cat.id,
+                            cat.name,
+                            cat.questionsCount
+                        ) to (config.limitByCategory[cat.id] ?: 0)
+                    }
+                DisplayableQuizMode.ByCategory(limits)
+            }
+        }
+    }
+
+    private fun countQuestions(
+        selectedCategoriesWithCount: List<CategoryWithCount>,
+        mode: DisplayableQuizMode
+    ): Int {
+        return when (mode) {
+            is DisplayableQuizMode.Full -> selectedCategoriesWithCount.sumOf { it.questionsCount }
+            is DisplayableQuizMode.Limited -> mode.limit
+            is DisplayableQuizMode.ByCategory -> mode.limits.values.sum()
+        }
+    }
+} 

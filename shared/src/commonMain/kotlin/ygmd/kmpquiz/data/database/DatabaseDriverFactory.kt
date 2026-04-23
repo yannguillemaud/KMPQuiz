@@ -8,4 +8,8 @@ expect fun Scope.sqlDriverFactory(): SqlDriver
 
 fun createDatabase(
     driver: SqlDriver,
-): KMPQuizDatabase = KMPQuizDatabase(driver)
+): KMPQuizDatabase = KMPQuizDatabase(
+    driver = driver,
+    quiz_configuration_entityAdapter = DatabaseAdapters.quizConfigAdapter,
+    quiz_entityAdapter = DatabaseAdapters.quizAdapter,
+)

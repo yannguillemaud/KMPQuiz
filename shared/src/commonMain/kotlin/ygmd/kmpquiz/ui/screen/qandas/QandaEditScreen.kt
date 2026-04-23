@@ -80,13 +80,13 @@ fun QandaEditScreen(
                         modifier = Modifier.fillMaxSize(),
                         question = state.data.question,
                         availableCategories = categories.getOrDefault(emptyList()),
-                        onCategorySelected = {
-                            qandaEditViewModel.processIntent(QandaEditIntent.UpdateCategory(it.id))
-                        },
                         selectedCategory = state.data.category,
                         correctAnswer = state.data.correctAnswer,
                         incorrectAnswers = state.data.incorrectAnswers,
                         canAddIncorrectAnswer = state.data.canAddIncorrectAnswer,
+                        onCategorySelected = {
+                            qandaEditViewModel.processIntent(QandaEditIntent.UpdateCategory(it.id))
+                        },
                         onUpdateQuestion = {
                             qandaEditViewModel.processIntent(QandaEditIntent.UpdateQuestion(it))
                         },

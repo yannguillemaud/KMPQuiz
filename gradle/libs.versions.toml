@@ -1,12 +1,9 @@
 [versions]
 # Android & Gradle
 agp = "9.0.0"
-compileSdk = "36"
-minSdk = "23"
-targetSdk = "33"
 
 # AndroidX
-androidx-activity = "1.12.2"
+androidx-activity = "1.12.3"
 androidx-appcompat = "1.7.1"
 androidx-core = "1.17.0"
 androidx-lifecycle = "2.9.6"
@@ -33,7 +30,7 @@ koin = "4.1.1"
 ktor = "3.4.0"
 
 # SQLDelight
-sqldelight = "2.2.1"
+sqldelight = "2.3.2"
 
 # Logging
 kermit = "2.0.8"
@@ -42,7 +39,10 @@ kermit = "2.0.8"
 kcron-common = "0.31.7"
 
 # Material
-material = "1.10.0"
+material = "1.13.0"
+
+# Hot Reload
+compose-hot-reload = "1.0.0-alpha01"
 
 [libraries]
 # AndroidX Core
@@ -90,6 +90,7 @@ kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-c
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlin-coroutines" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlin-serialization-json" }
 kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlin-datetime" }
+kotlinx-collections-immutable = { module = "org.jetbrains.kotlinx:kotlinx-collections-immutable", version = "0.4.0"}
 
 # Ktor
 ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
@@ -102,13 +103,14 @@ ktor-serialization-kotlinx-json = { module = "io.ktor:ktor-serialization-kotlinx
 # SQLDelight
 sqldelight-coroutines-extensions = { module = "app.cash.sqldelight:coroutines-extensions", version.ref = "sqldelight" }
 sqldelight-android-driver = { module = "app.cash.sqldelight:android-driver", version.ref = "sqldelight" }
-sqldelight-jvm-jdbc-driver = { module = "app.cash.sqldelight:jdbc-driver", version.ref = "sqldelight" }
+sqldelight-jvm-sqlite-driver = { module = "app.cash.sqldelight:sqlite-driver", version.ref = "sqldelight" }
 
 # Logging
 kermit = { module = "co.touchlab:kermit", version.ref = "kermit" }
 
 # Cron
 kcron-common = { module = "com.ucasoft.kcron:kcron-common", version.ref = "kcron-common" }
+kcron-ui-builder = { module = "com.ucasoft.kcron:kcron-ui-builder", version.ref = "kcron-common" }
 
 [plugins]
 # Android
@@ -124,3 +126,6 @@ compose-multiplatform = { id = "org.jetbrains.compose", version.ref = "compose-m
 
 # SQLDelight
 sqldelight = { id = "app.cash.sqldelight", version.ref = "sqldelight" }
+
+# Hot Reload
+compose-hot-reload = { id = "org.jetbrains.compose.hot-reload", version.ref = "compose-hot-reload" }

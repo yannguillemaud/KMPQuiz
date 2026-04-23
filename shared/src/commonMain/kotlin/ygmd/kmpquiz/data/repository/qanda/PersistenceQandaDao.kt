@@ -7,7 +7,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
 import ygmd.kmpquiz.database.KMPQuizDatabase
-import ygmd.kmpquiz.database.QandaEntity
+import ygmd.kmpquiz.database.Qanda_entity
 import ygmd.kmpquiz.domain.dao.QandaDao
 
 
@@ -20,38 +20,38 @@ class PersistenceQandaDao(
 ) : QandaDao {
     private val qandaQueries = database.qandaQueries
 
-    override fun observeQandasEntity(): Flow<List<QandaEntity>> {
+    override fun observeQandasEntity(): Flow<List<Qanda_entity>> {
         logger.i { "Observing all qandas with categories" }
         return qandaQueries.selectAll()
             .asFlow()
             .mapToList(dispatcher)
     }
 
-    override suspend fun getAll(): List<QandaEntity> {
+    override suspend fun getAll(): List<Qanda_entity> {
         return withContext(dispatcher) {
             qandaQueries.selectAll().executeAsList()
         }
     }
 
-    override suspend fun getById(id: String): QandaEntity? {
+    override suspend fun getById(id: String): Qanda_entity? {
         return withContext(dispatcher) {
             qandaQueries.getById(id).executeAsOneOrNull()
         }
     }
 
-    override suspend fun getByCategory(categoryId: String): List<QandaEntity> {
+    override suspend fun getByCategory(categoryId: String): List<Qanda_entity> {
         return withContext(dispatcher) {
             qandaQueries.getByCategory(categoryId).executeAsList()
         }
     }
 
-    override suspend fun getByContextKey(contextKey: String): QandaEntity? {
+    override suspend fun getByContextKey(contextKey: String): Qanda_entity? {
         return withContext(dispatcher) {
             qandaQueries.getByContextKey(contextKey).executeAsOneOrNull()
         }
     }
 
-    override suspend fun save(entity: QandaEntity): QandaEntity {
+    override suspend fun save(entity: Qanda_entity): Qanda_entity {
         withContext(dispatcher) {
             qandaQueries.insert(entity)
         }

@@ -5,6 +5,8 @@ plugins {
     alias(libs.plugins.android.kmp.library)
     alias(libs.plugins.sqldelight)
     alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.compose.hot.reload)
+    id("dev.mokkery") version "3.3.0"
 }
 
 kotlin {
@@ -25,7 +27,7 @@ kotlin {
             // Kotlin Core
             implementation(libs.kotlinx.coroutines.core)
             implementation(libs.kotlinx.serialization.json)
-            implementation(libs.kotlinx.datetime)
+            implementation(libs.kotlinx.collections.immutable)
 
             // Koin (ViewModel)
             implementation(libs.koin.compose.viewmodel.nav)
@@ -37,6 +39,8 @@ kotlin {
 
             // Cron
             implementation(libs.kcron.common)
+            implementation("org.jetbrains.compose.material3:material3:1.9.0")
+            implementation(libs.kcron.ui.builder)
 
             // SQLDelight (Database)
             implementation(libs.sqldelight.coroutines.extensions)
@@ -61,10 +65,11 @@ kotlin {
         }
 
         commonTest.dependencies {
-            implementation(libs.kotlin.test)
+            implementation(kotlin("test"))
             implementation(libs.kotlinx.coroutines.test)
             implementation(libs.ktor.client.mock)
             implementation(libs.kotlinx.datetime)
+            implementation("dev.mokkery:mokkery-gradle:3.3.0")
         }
 
         androidMain.dependencies {
@@ -78,8 +83,8 @@ kotlin {
 
         jvmMain.dependencies {
             implementation(libs.ktor.client.cio)
-            implementation(libs.kcron.common)
-            implementation(libs.sqldelight.jvm.jdbc.driver)
+            implementation(libs.sqldelight.jvm.sqlite.driver)
+            implementation(compose.desktop.currentOs)
         }
 
         jvmTest.dependencies {

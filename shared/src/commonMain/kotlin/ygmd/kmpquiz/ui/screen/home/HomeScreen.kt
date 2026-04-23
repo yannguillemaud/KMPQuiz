@@ -6,6 +6,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -20,10 +21,9 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.AddShoppingCart
-import androidx.compose.material.icons.outlined.DownloadDone
-import androidx.compose.material.icons.outlined.Quiz
+import androidx.compose.material.icons.outlined.Download
 import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
@@ -31,6 +31,9 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -40,11 +43,25 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
+import kotlinx.coroutines.flow.collectLatest
+import org.koin.compose.viewmodel.koinViewModel
+import ygmd.kmpquiz.domain.viewModel.fetch.FetchQandasViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen() {
+fun HomeScreen(
+    viewModel: FetchQandasViewModel = koinViewModel()
+) {
     val snackbarHostState = remember { SnackbarHostState() }
+    val isDownloading by viewModel.isDownloading.collectAsState()
+
+    LaunchedEffect(Unit) {
+        viewModel.events.collectLatest { event ->
+            if (event is ygmd.kmpquiz.events.event.Event.SnackbarEvent) {
+                snackbarHostState.showSnackbar(event.message)
+            }
+        }
+    }
 
     Scaffold(
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
@@ -91,29 +108,32 @@ fun HomeScreen() {
                     .padding(top = 12.dp),
                 horizontalAlignment = Alignment.Start,
             ) {
-                Text(
-                    "Fonctionnalités",
-                    fontSize = 22.sp,
-                    fontWeight = FontWeight.Bold,
-                )
-
-                FeatureItem(
-                    title = "Téléchargement des Qandas",
-                    description = "L'application fetch et télécharge automatiquement les nouveaux QCM depuis l'API.",
-                    icon = { Icon(Icons.Outlined.AddShoppingCart, contentDescription = null, tint = Color(0xFF3949AB), modifier = Modifier.size(36.dp)) }
-                )
-
-                FeatureItem(
-                    title = "Qandas sauvegardés par catégories",
-                    description = "Consulte facilement tes Qandas stockés localement, triés par catégories.",
-                    icon = { Icon(Icons.Outlined.DownloadDone, contentDescription = null, tint = Color(0xFF3949AB), modifier = Modifier.size(36.dp)) }
-                )
-
-                FeatureItem(
-                    title = "Créer un quiz programmé",
-                    description = "Planifie tes sessions avec un système de quiz automatiques à horaires définis.",
-                    icon = { Icon(Icons.Outlined.Quiz, contentDescription = null, tint = Color(0xFF3949AB), modifier = Modifier.size(36.dp)) }
-                )
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp)
+                        .background(Color.White, RoundedCornerShape(12.dp))
+                        .padding(12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    if (!isDownloading) {
+                        (Icon(
+                            Icons.Outlined.Download,
+                            contentDescription = null,
+                            tint = Color(0xFF3949AB),
+                            modifier = Modifier.size(36.dp).clickable { viewModel.fetch() }
+                        ))
+                    } else CircularProgressIndicator()
+                    Spacer(Modifier.width(16.dp))
+                    Column {
+                        Text(
+                            "Téléchargement des qandas",
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 16.sp,
+                            color = Color(0xFF303F9F)
+                        )
+                    }
+                }
             }
         }
     }
@@ -122,7 +142,6 @@ fun HomeScreen() {
 @Composable
 fun FeatureItem(
     title: String,
-    description: String,
     icon: @Composable (() -> Unit)
 ) {
     Row(
@@ -142,7 +161,6 @@ fun FeatureItem(
                 fontSize = 16.sp,
                 color = Color(0xFF303F9F)
             )
-            Text(description, fontSize = 12.sp, color = Color(0xFF607D8B))
         }
     }
 }

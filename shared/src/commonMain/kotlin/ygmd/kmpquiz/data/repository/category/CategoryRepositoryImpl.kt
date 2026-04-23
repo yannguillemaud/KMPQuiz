@@ -2,25 +2,38 @@ package ygmd.kmpquiz.data.repository.category
 
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
-import ygmd.kmpquiz.database.CategoryEntity
+import ygmd.kmpquiz.database.Category_entity
 import ygmd.kmpquiz.domain.dao.CategoryDao
 import ygmd.kmpquiz.domain.model.category.Category
+import ygmd.kmpquiz.domain.model.category.CategoryWithCount
 import ygmd.kmpquiz.domain.repository.CategoryRepository
 import java.util.UUID
 
 class CategoryRepositoryImpl(
     private val categoryDao: CategoryDao
-): CategoryRepository {
+) : CategoryRepository {
     override fun observeCategories(): Flow<List<Category>> {
         return categoryDao.observeCategories()
-            .map { it.map { entity -> Category(entity.id, entity.name) } }
+            .map { it.map { category -> Category(category.id, category.name) } }
+    }
+
+    override fun observeCategoriesWithCount(): Flow<List<CategoryWithCount>> {
+        return categoryDao.observeCategoriesWithCount().map {
+            it.map { categoryWithCount ->
+                CategoryWithCount(
+                    categoryWithCount.id,
+                    categoryWithCount.name,
+                    categoryWithCount.questionCount.toInt()
+                )
+            }
+        }
     }
 
     override fun addCategory(name: String): Result<Unit> {
-        if(categoryDao.getByCategoryName(name) != null){
+        if (categoryDao.getByCategoryName(name) != null) {
             return Result.failure(Exception("Category already exists"))
         }
-        categoryDao.insertCategory(CategoryEntity(UUID.randomUUID().toString(), name))
+        categoryDao.insertCategory(Category_entity(UUID.randomUUID().toString(), name))
         return Result.success(Unit)
     }
 

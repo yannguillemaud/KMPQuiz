@@ -1,5 +1,6 @@
 package ygmd.kmpquiz.ui
 
+import QuizSettingsScreen
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.slideInVertically
@@ -8,7 +9,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AddShoppingCart
 import androidx.compose.material.icons.filled.DownloadDone
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Quiz
@@ -34,23 +34,20 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
-import ygmd.kmpquiz.navigation.AppNavigationState
+import ygmd.kmpquiz.events.navigation.AppNavigationState
 import ygmd.kmpquiz.ui.model.route.Route
 import ygmd.kmpquiz.ui.model.route.Route.Categories
-import ygmd.kmpquiz.ui.model.route.Route.Fetch
 import ygmd.kmpquiz.ui.model.route.Route.Home
 import ygmd.kmpquiz.ui.model.route.Route.PlayQuiz
 import ygmd.kmpquiz.ui.model.route.Route.QuizSettings
 import ygmd.kmpquiz.ui.model.route.Route.Quizzes
 import ygmd.kmpquiz.ui.screen.category.CategoriesScreen
-import ygmd.kmpquiz.ui.screen.fetch.FetchScreen
 import ygmd.kmpquiz.ui.screen.home.HomeScreen
 import ygmd.kmpquiz.ui.screen.qandas.CategoryScreen
 import ygmd.kmpquiz.ui.screen.qandas.QandaCreationScreen
 import ygmd.kmpquiz.ui.screen.qandas.QandaEditScreen
 import ygmd.kmpquiz.ui.screen.quiz.PlayQuizScreen
 import ygmd.kmpquiz.ui.screen.quiz.QuizCreationScreen
-import ygmd.kmpquiz.ui.screen.quiz.QuizSettingsScreen
 import ygmd.kmpquiz.ui.screen.quiz.QuizzesScreen
 import ygmd.kmpquiz.ui.theme.KMPQuizTheme
 
@@ -61,7 +58,6 @@ fun App(
 ) {
     val navItems = listOf(
         Home to Icons.Default.Home,
-        Fetch to Icons.Default.AddShoppingCart,
         Categories to Icons.Default.DownloadDone,
         Quizzes to Icons.Default.Quiz,
     )
@@ -134,10 +130,6 @@ fun App(
                         HomeScreen()
                     }
 
-                    composable<Fetch> {
-                        FetchScreen()
-                    }
-
                     composable<Categories> {
                         CategoriesScreen(
                             onNavigateToCategory = { category ->
@@ -165,7 +157,6 @@ fun App(
                     composable<Route.QandaCreation> { backStackEntry ->
                         val route = backStackEntry.toRoute<Route.QandaCreation>()
                         QandaCreationScreen(
-                            initialCategoryId = route.categoryId,
                             onNavigateBack = { navController.popBackStack() }
                         )
                     }
@@ -200,14 +191,12 @@ fun App(
                         val quizId = backStackEntry.toRoute<QuizSettings>().quizId
                         QuizSettingsScreen(
                             quizId = quizId,
-                            onFinished = { navController.navigate(Quizzes) },
                             onNavigateBack = { navController.popBackStack() }
                         )
                     }
 
                     composable<Route.QuizCreation> {
                         QuizCreationScreen(
-                            onFinished = { navController.popBackStack() },
                             onNavigateBack = { navController.popBackStack() }
                         )
                     }

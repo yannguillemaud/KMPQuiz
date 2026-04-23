@@ -2,28 +2,20 @@ package ygmd.kmpquiz.domain.di
 
 import org.koin.dsl.module
 import ygmd.kmpquiz.domain.usecase.category.CategoryUseCase
-import ygmd.kmpquiz.domain.usecase.cron.ToggleCronUseCase
+import ygmd.kmpquiz.domain.usecase.cron.CronUseCase
 import ygmd.kmpquiz.domain.usecase.fetch.FetchUseCase
-import ygmd.kmpquiz.domain.usecase.fetch.GetFetchersUseCase
-import ygmd.kmpquiz.domain.usecase.notification.RescheduleTasksUseCase
+import ygmd.kmpquiz.domain.usecase.notification.ScheduleAllQuizzesUseCase
 import ygmd.kmpquiz.domain.usecase.qanda.DeleteQandasUseCase
 import ygmd.kmpquiz.domain.usecase.qanda.GetQandaUseCase
 import ygmd.kmpquiz.domain.usecase.qanda.QandaEditUseCase
 import ygmd.kmpquiz.domain.usecase.qanda.SaveQandasUseCase
-import ygmd.kmpquiz.domain.usecase.quiz.CreateQuizUseCase
 import ygmd.kmpquiz.domain.usecase.quiz.DeleteQuizUseCase
 import ygmd.kmpquiz.domain.usecase.quiz.GetQuizUseCase
-import ygmd.kmpquiz.domain.usecase.quiz.QuizEditUseCase
+import ygmd.kmpquiz.domain.usecase.quiz.QuizUseCase
 import ygmd.kmpquiz.domain.usecase.quizSession.QuizSessionUseCase
 
 // Domain Layer - Use Cases
 val domainModule = module {
-    factory {
-        GetFetchersUseCase(
-            fetchersRepository = get()
-        )
-    }
-
     factory {
         FetchUseCase(
             fetchRepository = get(),
@@ -32,7 +24,7 @@ val domainModule = module {
 
     factory {
         GetQandaUseCase(
-            repository = get()
+            qandaRepository = get()
         )
     }
 
@@ -54,39 +46,39 @@ val domainModule = module {
     }
 
     factory {
-        QuizSessionUseCase(quizSessionRepository = get())
-    }
-
-    factory {
-        CreateQuizUseCase(
-            quizRepository = get(),
+        QuizSessionUseCase(
+            quizSessionRepository = get(),
+            qandaRepository = get(),
+            quizRepository = get()
         )
     }
 
     factory {
         DeleteQuizUseCase(
-            quizRepository = get()
+            quizRepository = get(),
+            taskScheduler = get()
         )
     }
 
     factory {
-        ToggleCronUseCase(
-            quizRepository = get()
+        CronUseCase(
+            quizRepository = get(),
+            cronRepository = get(),
+            taskScheduler = get(),
         )
     }
 
     factory {
-        RescheduleTasksUseCase(
+        ScheduleAllQuizzesUseCase(
             taskScheduler = get(),
             quizRepository = get(),
         )
     }
 
     factory {
-        QuizEditUseCase(
+        QuizUseCase(
             quizRepository = get(),
-            quizEditRepository = get(),
-            qandaRepository = get(),
+            taskScheduler = get(),
         )
     }
 

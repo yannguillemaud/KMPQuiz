@@ -14,7 +14,6 @@ import ygmd.kmpquiz.domain.model.qanda.Choice
 import ygmd.kmpquiz.domain.model.quiz.QuizResult
 import ygmd.kmpquiz.domain.model.quiz.QuizSession
 import ygmd.kmpquiz.domain.usecase.category.CategoryUseCase
-import ygmd.kmpquiz.domain.usecase.quiz.GetQuizUseCase
 import ygmd.kmpquiz.domain.usecase.quizSession.QuizSessionUseCase
 import ygmd.kmpquiz.domain.viewModel.displayable.DisplayableCategory
 import ygmd.kmpquiz.domain.viewModel.displayable.DisplayableQanda
@@ -33,9 +32,8 @@ private val logger = Logger.withTag("QuizViewModel")
 
 class QuizSessionViewModel(
     val quizId: String,
-    private val getQuizUseCase: GetQuizUseCase,
     private val quizSessionUseCase: QuizSessionUseCase,
-    private val categoryUseCase: CategoryUseCase,
+    categoryUseCase: CategoryUseCase,
 ) : ViewModel() {
     init {
         initQuizSession(quizId)
@@ -89,15 +87,11 @@ class QuizSessionViewModel(
 
     private fun initQuizSession(quizId: String) {
         viewModelScope.launch {
-            getQuizUseCase.getQuizById(quizId)
-                .fold(
-                    onSuccess = {
-                        quizSessionUseCase.initSession(it)
-                    },
-                    onFailure = {
-                        logger.e(it) { "Failed to load quiz" }
-                    }
-                )
+            quizSessionUseCase.initSession(quizId)
+                .onFailure {
+                    logger.e("Failed to initialize quiz session", it)
+                    // todo send event
+                }
         }
     }
 
@@ -121,10 +115,11 @@ class QuizSessionViewModel(
     }
 
     private fun computeResults(session: QuizSession): QuizResult {
-        val score = session.userAnswers.count { (index, choice) ->
-            session.quiz.qandas[index].correctAnswer == choice
-        }
-
-        return QuizResult(session.userAnswers.size, score)
+        return QuizResult(0, 0) // todo
+//        val score = session.userAnswers.count { (index, choice) ->
+//            session.quiz.qandas[index].correctAnswer == choice
+//        }
+//
+//        return QuizResult(session.userAnswers.size, score)
     }
 }

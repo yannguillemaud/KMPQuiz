@@ -3,13 +3,12 @@ package ygmd.kmpquiz.domain.viewModel.qandas.edit
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import co.touchlab.kermit.Logger
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import ygmd.kmpquiz.domain.model.qanda.QandaEdit
@@ -17,11 +16,8 @@ import ygmd.kmpquiz.domain.usecase.category.CategoryUseCase
 import ygmd.kmpquiz.domain.usecase.qanda.QandaEditUseCase
 import ygmd.kmpquiz.domain.viewModel.displayable.DisplayableCategory
 import ygmd.kmpquiz.domain.viewModel.error.UiError
-import ygmd.kmpquiz.domain.viewModel.error.UiError.SaveQandaFailed
-import ygmd.kmpquiz.domain.viewModel.error.UiEvent
-import ygmd.kmpquiz.domain.viewModel.error.UiEvent.Error
-import ygmd.kmpquiz.domain.viewModel.error.UiEvent.Success
 import ygmd.kmpquiz.domain.viewModel.state.UiState
+import ygmd.kmpquiz.events.event.Event
 
 sealed interface QandaEditIntent {
     data class UpdateQuestion(val question: String) : QandaEditIntent
@@ -41,18 +37,18 @@ class QandaEditViewModel(
     private val categoryUseCase: CategoryUseCase,
 ) : ViewModel() {
     val qandaEditState: StateFlow<UiState<QandaEditUiState>> = qandaEditUseCase.observeQandaEdit()
-        .catch { e -> logger.e(e) { "Error loading qanda" } }
         .map { qandaEdit ->
             mapToUiState(qandaEdit, qandaId)
         }
+        .catch { e -> logger.e(e) { "Error loading qanda" } }
         .stateIn(
             viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
             UiState.Loading
         )
 
-    private val _qandaEditEvents: MutableSharedFlow<UiEvent> = MutableSharedFlow(replay = 1)
-    val qandaEditEvents: SharedFlow<UiEvent> = _qandaEditEvents.asSharedFlow()
+    private val _qandaEditEvents = Channel<Event>()
+    val qandaEditEvents = _qandaEditEvents.receiveAsFlow()
 
     private fun mapToUiState(
         qandaEdit: QandaEdit?,
@@ -68,7 +64,7 @@ class QandaEditViewModel(
         )
 
         else -> {
-            val category = qandaEdit.categoryId?.let { categoryUseCase.getById(it) } ?: return UiState.Error<QandaEditUiState>(null, UiError.LoadQandaFailed)
+            val category = qandaEdit.categoryId?.let { categoryUseCase.getById(it) }?.getOrNull() ?: return UiState.Error<QandaEditUiState>(null, UiError.LoadQandaFailed)
             UiState.Success(
                 QandaEditUiState(
                     question = TextField(qandaEdit.question, "Question"),
@@ -104,15 +100,11 @@ class QandaEditViewModel(
                 viewModelScope.launch {
                     qandaEditUseCase.save()
                         .fold(
-                            onSuccess = { _qandaEditEvents.emit(Success("Qanda saved")) },
+                            onSuccess = {
+                                _qandaEditEvents.send(Event.NavBackEvent)
+                            },
                             onFailure = {
-                                _qandaEditEvents.emit(
-                                    Error(
-                                        SaveQandaFailed(
-                                            it.message ?: "Save failed"
-                                        )
-                                    )
-                                )
+                                _qandaEditEvents.send(Event.SnackbarEvent("Failed to save qanda"))
                             }
                         )
                 }

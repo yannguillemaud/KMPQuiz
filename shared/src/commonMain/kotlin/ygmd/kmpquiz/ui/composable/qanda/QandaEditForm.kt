@@ -41,15 +41,15 @@ fun QandaEditForm(
     question: TextField,
     selectedCategory: DisplayableCategory?,
     availableCategories: List<DisplayableCategory>,
-    onCategorySelected: (DisplayableCategory) -> Unit,
     correctAnswer: TextField,
     incorrectAnswers: Map<Int, TextField>,
     canAddIncorrectAnswer: Boolean,
-    onUpdateQuestion: (String) -> Unit,
-    onAddNewIncorrectAnswer: () -> Unit,
-    onRemoveIncorrectAnswer: (Int) -> Unit,
-    onUpdateIncorrectAnswer: (Int, String) -> Unit,
-    onUpdateCorrectAnswer: (String) -> Unit
+    onCategorySelected: (DisplayableCategory) -> Unit = {},
+    onUpdateQuestion: (String) -> Unit = {},
+    onAddNewIncorrectAnswer: () -> Unit = {},
+    onRemoveIncorrectAnswer: (Int) -> Unit = {},
+    onUpdateIncorrectAnswer: (Int, String) -> Unit = { _, _ -> },
+    onUpdateCorrectAnswer: (String) -> Unit = {},
 ) {
     val scroll = rememberScrollState()
     var isCategoryMenuExpanded by remember { mutableStateOf(false) }

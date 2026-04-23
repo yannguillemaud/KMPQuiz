@@ -13,7 +13,6 @@ import ygmd.kmpquiz.domain.viewModel.quiz.session.QuizSessionViewModel
 val viewModelModule = module {
     factory {
         FetchQandasViewModel(
-            getFetchersUseCase = get(),
             fetchQandaUseCase = get(),
             saveQandaUseCase = get()
         )
@@ -32,7 +31,6 @@ val viewModelModule = module {
     factory { (quizId: String) ->
         QuizSessionViewModel(
             quizId = quizId,
-            getQuizUseCase = get(),
             quizSessionUseCase = get(),
             categoryUseCase = get(),
         )
@@ -42,16 +40,16 @@ val viewModelModule = module {
         QuizViewModel(
             getQuizUseCase = get(),
             deleteQuizUseCase = get(),
-            toggleCronUseCase = get(),
-            rescheduleTasksUseCase = get(),
+            cronUseCase = get(),
+            scheduleAllQuizzesUseCase = get(),
         )
     }
 
     factory {
         QuizEditViewModel(
-            quizEditUseCase = get(),
+            quizUseCase = get(),
             categoryUseCase = get(),
-            rescheduleTasksUseCase = get()
+            cronUseCase = get(),
         )
     }
 

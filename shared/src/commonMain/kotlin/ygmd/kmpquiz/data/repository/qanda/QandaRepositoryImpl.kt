@@ -4,7 +4,7 @@ import co.touchlab.kermit.Logger
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.serialization.json.Json
-import ygmd.kmpquiz.database.QandaEntity
+import ygmd.kmpquiz.database.Qanda_entity
 import ygmd.kmpquiz.domain.dao.QandaDao
 import ygmd.kmpquiz.domain.model.qanda.AnswersFactory
 import ygmd.kmpquiz.domain.model.qanda.Choice
@@ -129,7 +129,7 @@ class QandaRepositoryImpl(
         return DeleteResult.Success
     }
 
-    private fun Qanda.mapToEntity() = QandaEntity(
+    private fun Qanda.mapToEntity() = Qanda_entity(
         id = UUID.randomUUID().toString(),
         question_type = question.type,
         question_text = if (question is Question.TextQuestion) question.text else null,
@@ -148,7 +148,7 @@ class QandaRepositoryImpl(
         context_key = contextKey
     )
 
-    private fun mapToQanda(entity: QandaEntity) = Qanda(
+    private fun mapToQanda(entity: Qanda_entity) = Qanda(
         id = entity.id,
         question = when (Question.QuestionType.entries.firstOrNull { it.value == entity.question_type }) {
             Question.QuestionType.TEXT -> Question.TextQuestion(requireNotNull(entity.question_text))

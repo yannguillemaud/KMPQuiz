@@ -1,0 +1,18 @@
+CREATE TABLE quiz_cron_entity (
+    id TEXT PRIMARY KEY,
+    name TEXT UNIQUE NOT NULL,
+    expression TEXT NOT NULL
+);
+
+getAll:
+SELECT * FROM quiz_cron_entity;
+
+countCrons:
+SELECT COUNT(*) AS count
+FROM quiz_cron_entity;
+
+getById:
+SELECT * FROM quiz_cron_entity qc WHERE id = ?;
+
+insertCron:
+INSERT OR REPLACE INTO quiz_cron_entity(id, name, expression) VALUES(?, ?, ?);

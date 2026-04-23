@@ -10,13 +10,10 @@ sealed class Route(val name: String) {
     data object Home : Route("Home")
 
     @Serializable
-    data object Fetch : Route("Fetch")
+    data object Cron : Route("Crons")
 
     @Serializable
     data object Categories : Route("Categories")
-
-    @Serializable
-    data object Settings : Route("Settings")
 
     @Serializable
     data object Quizzes : Route("Quizzes")

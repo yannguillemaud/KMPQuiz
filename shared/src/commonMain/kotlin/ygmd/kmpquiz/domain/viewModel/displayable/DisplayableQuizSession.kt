@@ -27,7 +27,7 @@ sealed interface DisplayableQuizSession {
             get() = session.currentIndex
 
         override val size: Int
-            get() = session.quiz.qandas.size
+            get() = session.qandas.size
     }
 
     data class Completed(
@@ -41,6 +41,6 @@ sealed interface DisplayableQuizSession {
             get() = session.currentIndex +1
 
         override val size: Int
-            get() = session.quiz.qandas.size
+            get() = session.qandas.size
     }
 }

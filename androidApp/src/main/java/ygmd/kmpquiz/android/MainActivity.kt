@@ -13,15 +13,19 @@ import androidx.core.view.WindowCompat
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 import org.koin.android.ext.android.inject
 import org.koin.android.ext.koin.androidContext
 import ygmd.kmpquiz.android.notification.NotificationUtils.requestPermissionNotification
 import ygmd.kmpquiz.android.notification.NotificationUtils.setupNotificationChannel
 import ygmd.kmpquiz.di.initKoin
 import ygmd.kmpquiz.di.platformModule
-import ygmd.kmpquiz.domain.usecase.notification.RescheduleTasksUseCase
-import ygmd.kmpquiz.navigation.AppNavigationState
-import ygmd.kmpquiz.navigation.InitialNavigationEvent
+import ygmd.kmpquiz.domain.model.cron.QuizCronPreset
+import ygmd.kmpquiz.domain.repository.CronRepository
+import ygmd.kmpquiz.domain.usecase.notification.ScheduleAllQuizzesUseCase
+import ygmd.kmpquiz.events.navigation.AppNavigationState
+import ygmd.kmpquiz.events.navigation.InitialNavigationEvent
 import ygmd.kmpquiz.ui.App
 
 class MainActivity : ComponentActivity() {
@@ -38,6 +42,7 @@ class MainActivity : ComponentActivity() {
         }
         WindowCompat.setDecorFitsSystemWindows(window, false)
         scheduleInitialReminders()
+        insertCronsPresetIfAbsent()
         handleStartingIntentIfExists(intent)
         setContent {
             if (showUpdateDialog.value) {
@@ -73,6 +78,18 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    private fun insertCronsPresetIfAbsent() {
+        val cronsRepository by inject<CronRepository>()
+        runBlocking {
+            withContext(Dispatchers.IO) {
+                if (cronsRepository.countCrons() > 0) return@withContext
+                QuizCronPreset.entries.forEach {
+                    cronsRepository.insertCron(it.id, it.name, it.expression)
+                }
+            }
+        }
+    }
+
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
@@ -88,12 +105,9 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun scheduleInitialReminders() {
-        val taskScheduler by inject<RescheduleTasksUseCase>()
-
+        val scheduleAllQuizzes by inject<ScheduleAllQuizzesUseCase>()
         applicationScope.launch {
-            try {
-                taskScheduler.rescheduleAll()
-            } catch (e: Exception) {}
+            scheduleAllQuizzes()
         }
     }
 }
