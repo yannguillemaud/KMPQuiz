@@ -1,10 +1,13 @@
 package ygmd.kmpquiz.domain.scheduler
 
-import ygmd.kmpquiz.domain.model.cron.QuizCron
-import ygmd.kmpquiz.domain.model.quiz.Quiz
+import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.toKotlinLocalDateTime
 
-interface TaskScheduler {
-    suspend fun scheduleAllQuizzes(quizzes: List<Quiz>)
-    suspend fun updateQuizScheduling(quizId: String, newValue: QuizCron?): Result<Unit>
-    suspend fun cancelAllReminders()
+interface QuizScheduler {
+    fun scheduleAlarm(quizId: String, exactTimestampEpochMillis: Long)
+    fun cancelAlarm(quizId: String)
+}
+
+interface TimeProvider {
+    fun now(): LocalDateTime = java.time.LocalDateTime.now().toKotlinLocalDateTime()
 }

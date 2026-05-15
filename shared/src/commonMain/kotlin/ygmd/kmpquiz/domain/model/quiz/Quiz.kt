@@ -1,13 +1,21 @@
 package ygmd.kmpquiz.domain.model.quiz
 
-import ygmd.kmpquiz.domain.model.category.Category
-import ygmd.kmpquiz.domain.model.cron.QuizCron
+import ygmd.kmpquiz.domain.model.category.CategoryWithCount
+import ygmd.kmpquiz.domain.model.cron.SchedulerConfiguration
 
 data class Quiz (
     val id: String,
     val title: String,
-    val categories: List<Category> = emptyList(),
-    val cron: QuizCron? = null,
-    val config: QuizConfigDetails,
-    val questionsCount: Int,
-)
+    val categories: List<CategoryWithCount> = emptyList(),
+//    val oldQuizCron: QuizCron? = null,
+    val schedulerConfiguration: SchedulerConfiguration? = null,
+    val qandasConfiguration: QuizConfigDetails,
+){
+    val questionsCount: Int = when(qandasConfiguration){
+        is QuizConfigDetails.ByCategory -> qandasConfiguration.limitByCategory.values.sum()
+        is QuizConfigDetails.TotalLimited -> qandasConfiguration.count
+        else -> categories.sumOf { it.questionsCount}
+    }
+
+    val isSchedulerActive: Boolean = schedulerConfiguration?.isEnabled == true
+}

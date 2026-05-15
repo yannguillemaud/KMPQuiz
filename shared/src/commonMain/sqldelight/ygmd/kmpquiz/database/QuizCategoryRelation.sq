@@ -6,14 +6,25 @@ CREATE TABLE quiz_category_relation (
     FOREIGN KEY (category_id) REFERENCES category_entity(id) ON DELETE CASCADE
 );
 
-selectAll:
-SELECT * FROM quiz_category_relation;
+getAllCategoriesConfigurationWithCount:
+SELECT
+    quiz.id AS quizId,
+    category.id AS categoryId,
+    category.name AS categoryName,
+    COUNT(qanda.id) AS categoryCount
+FROM quiz_category_relation relation
+INNER JOIN quiz_entity quiz ON relation.quiz_id = quiz.id
+INNER JOIN category_entity category ON relation.category_id = category.id
+INNER JOIN qanda_entity qanda ON category.id = qanda.category_id
+GROUP BY quiz.id;
 
-getCategoriesForQuiz:
-SELECT c.* FROM category_entity c
-INNER JOIN quiz_category_relation qcr
-ON c.id = qcr.category_id
-WHERE quiz_id = ?;
+getCategoriesWithCountForQuiz:
+SELECT category.id, category.name, COUNT(qanda.id) AS questionsSizeForCategory
+FROM category_entity category
+INNER JOIN quiz_category_relation quizCategoryRelation ON category.id = quizCategoryRelation.category_id
+LEFT JOIN qanda_entity qanda ON category.id = qanda.category_id
+WHERE quiz_id = ?
+GROUP BY category.id;
 
 insertQuizCategoryRelation:
 INSERT INTO quiz_category_relation(quiz_id, category_id)

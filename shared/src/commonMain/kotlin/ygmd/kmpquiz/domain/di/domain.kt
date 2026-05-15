@@ -1,17 +1,19 @@
 package ygmd.kmpquiz.domain.di
 
+import dev.brewkits.grant.impl.DefaultGrantManager
 import org.koin.dsl.module
+import ygmd.kmpquiz.domain.scheduler.TimeProvider
 import ygmd.kmpquiz.domain.usecase.category.CategoryUseCase
-import ygmd.kmpquiz.domain.usecase.cron.CronUseCase
+import ygmd.kmpquiz.domain.usecase.cron.ToggleQuizSchedulerUseCase
 import ygmd.kmpquiz.domain.usecase.fetch.FetchUseCase
-import ygmd.kmpquiz.domain.usecase.notification.ScheduleAllQuizzesUseCase
+import ygmd.kmpquiz.domain.usecase.notification.ScheduleQuizUseCase
 import ygmd.kmpquiz.domain.usecase.qanda.DeleteQandasUseCase
 import ygmd.kmpquiz.domain.usecase.qanda.GetQandaUseCase
 import ygmd.kmpquiz.domain.usecase.qanda.QandaEditUseCase
 import ygmd.kmpquiz.domain.usecase.qanda.SaveQandasUseCase
 import ygmd.kmpquiz.domain.usecase.quiz.DeleteQuizUseCase
 import ygmd.kmpquiz.domain.usecase.quiz.GetQuizUseCase
-import ygmd.kmpquiz.domain.usecase.quiz.QuizUseCase
+import ygmd.kmpquiz.domain.usecase.quiz.SaveQuizUseCase
 import ygmd.kmpquiz.domain.usecase.quizSession.QuizSessionUseCase
 
 // Domain Layer - Use Cases
@@ -56,32 +58,35 @@ val domainModule = module {
     factory {
         DeleteQuizUseCase(
             quizRepository = get(),
-            taskScheduler = get()
+            quizScheduler = get(),
         )
     }
 
     factory {
-        CronUseCase(
+        ToggleQuizSchedulerUseCase(
             quizRepository = get(),
-            cronRepository = get(),
-            taskScheduler = get(),
+            scheduleQuizUseCase = get(),
+            permissionRepository = get()
+        )
+    }
+
+    single {
+        DefaultGrantManager(platformDelegate = get())
+    }
+
+    factory {
+        ScheduleQuizUseCase(
+            schedulerStore = get(),
+            alarmScheduler = get()
         )
     }
 
     factory {
-        ScheduleAllQuizzesUseCase(
-            taskScheduler = get(),
+        SaveQuizUseCase(
             quizRepository = get(),
+            scheduleQuizUseCase = get(),
         )
     }
-
-    factory {
-        QuizUseCase(
-            quizRepository = get(),
-            taskScheduler = get(),
-        )
-    }
-
     factory {
         QandaEditUseCase(
             qandaRepository = get(),
@@ -92,5 +97,9 @@ val domainModule = module {
 
     factory {
         CategoryUseCase(get())
+    }
+
+    single<TimeProvider> {
+        object : TimeProvider {}
     }
 }

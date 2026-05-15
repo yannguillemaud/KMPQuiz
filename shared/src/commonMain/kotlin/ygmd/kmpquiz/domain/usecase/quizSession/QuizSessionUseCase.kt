@@ -34,14 +34,14 @@ class QuizSessionUseCase(
     }
 
     private suspend fun getQandasForQuiz(quiz: Quiz): List<Qanda> {
-        return when (quiz.config) {
+        return when (quiz.qandasConfiguration) {
             is QuizConfigDetails.TotalLimited -> quiz.categories
                 .flatMap { qandaRepository.getByCategory(it.id) }
                 .shuffled()
-                .take(quiz.config.count)
+                .take(quiz.qandasConfiguration.count)
             is QuizConfigDetails.AllQuestions -> quiz.categories
                 .flatMap { qandaRepository.getByCategory(it.id) }
-            is QuizConfigDetails.ByCategory -> quiz.config.limitByCategory.flatMap { (categoryId, limit) ->
+            is QuizConfigDetails.ByCategory -> quiz.qandasConfiguration.limitByCategory.flatMap { (categoryId, limit) ->
                 qandaRepository.getByCategory(categoryId)
                     .shuffled()
                     .take(limit)

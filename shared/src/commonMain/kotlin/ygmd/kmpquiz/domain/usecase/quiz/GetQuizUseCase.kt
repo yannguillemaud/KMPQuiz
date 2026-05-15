@@ -8,4 +8,5 @@ class GetQuizUseCase(
     private val quizRepository: QuizRepository,
 ) {
     fun observeAll(): Flow<List<Quiz>> = quizRepository.observeAll()
+    suspend fun getById(quizId: String): Quiz? = quizRepository.getQuizById(quizId).getOrNull()
 }

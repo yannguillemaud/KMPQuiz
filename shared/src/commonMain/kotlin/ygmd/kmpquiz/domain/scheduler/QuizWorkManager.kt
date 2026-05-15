@@ -7,6 +7,7 @@ interface QuizWorkManager {
         repeatIntervalSeconds: Long,
         quizId: String,
         tag: String,
+        isUserScheduleModification: Boolean = false,
     )
 
     fun cancelUniqueWork(uniqueWorkName: String)

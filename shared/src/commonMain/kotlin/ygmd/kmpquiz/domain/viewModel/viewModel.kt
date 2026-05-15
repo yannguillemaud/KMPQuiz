@@ -3,12 +3,12 @@ package ygmd.kmpquiz.domain.viewModel
 import org.koin.dsl.module
 import ygmd.kmpquiz.domain.viewModel.category.CategoryViewModel
 import ygmd.kmpquiz.domain.viewModel.fetch.FetchQandasViewModel
+import ygmd.kmpquiz.domain.viewModel.permission.PermissionViewModel
 import ygmd.kmpquiz.domain.viewModel.qandas.edit.QandaEditViewModel
 import ygmd.kmpquiz.domain.viewModel.qandas.saved.QandaOfCategoryViewModel
 import ygmd.kmpquiz.domain.viewModel.quiz.QuizViewModel
 import ygmd.kmpquiz.domain.viewModel.quiz.edit.QuizEditViewModel
 import ygmd.kmpquiz.domain.viewModel.quiz.session.QuizSessionViewModel
-
 
 val viewModelModule = module {
     factory {
@@ -40,16 +40,18 @@ val viewModelModule = module {
         QuizViewModel(
             getQuizUseCase = get(),
             deleteQuizUseCase = get(),
-            cronUseCase = get(),
-            scheduleAllQuizzesUseCase = get(),
+            toggleQuizSchedulerUseCase = get(),
+            grantManager = get(),
         )
     }
 
     factory {
         QuizEditViewModel(
-            quizUseCase = get(),
+            saveQuizUseCase = get(),
             categoryUseCase = get(),
-            cronUseCase = get(),
+            getQuizUseCase = get(),
+            grantManager = get(),
+            savedStateDelegate = get(),
         )
     }
 
@@ -64,6 +66,12 @@ val viewModelModule = module {
     factory {
         CategoryViewModel(
             categoryUseCase = get(),
+        )
+    }
+
+    factory {
+        PermissionViewModel(
+            grantManager = get(),
         )
     }
 }

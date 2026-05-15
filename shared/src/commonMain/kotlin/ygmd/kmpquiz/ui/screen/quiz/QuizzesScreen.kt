@@ -25,6 +25,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
+import dev.brewkits.grant.compose.GrantDialog
 import org.koin.compose.viewmodel.koinViewModel
 import ygmd.kmpquiz.domain.viewModel.quiz.QuizViewModel
 import ygmd.kmpquiz.domain.viewModel.quiz.QuizzesUiState
@@ -38,8 +39,7 @@ import ygmd.kmpquiz.ui.theme.Dimens.DefaultPadding
 @Composable
 fun QuizzesScreen(
     quizViewModel: QuizViewModel = koinViewModel(),
-    onNavigateToQuizCreation: () -> Unit = {},
-    onNavigateToQuizSettings: (quizId: String) -> Unit = {},
+    onNavigateToQuizEditor: (quizId: String?) -> Unit = {},
     onNavigateToPlayQuiz: (quizId: String) -> Unit = {},
 ) {
     val quizzesState = quizViewModel.quizzesState.collectAsState(QuizzesUiState(isLoading = true))
@@ -61,7 +61,9 @@ fun QuizzesScreen(
             CenterAlignedTopAppBar(
                 title = { Text("Quizzes", fontWeight = FontWeight.Bold, fontSize = 22.sp) },
                 actions = {
-                    IconButton(onClick = onNavigateToQuizCreation) {
+                    IconButton(onClick = {
+                        onNavigateToQuizEditor(null)
+                    }) {
                         Icon(Icons.Outlined.Add, contentDescription = "Create new quiz")
                     }
                 }
@@ -72,6 +74,14 @@ fun QuizzesScreen(
         }
     ) { innerPadding ->
         Box(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
+            GrantDialog(
+                handler = quizViewModel.notificationHandler,
+                rationaleTitle = "Notification Permission Required",
+            )
+            GrantDialog(
+                handler = quizViewModel.exactAlarmHandler,
+                rationaleTitle = "Exact Alarm Permission Required",
+            )
             val quizzesUiState = quizzesState.value
             when {
                 quizzesUiState.isLoading -> LoadingState(modifier = Modifier.fillMaxSize())
@@ -94,16 +104,10 @@ fun QuizzesScreen(
                                 quiz = quiz,
                                 isEnabled = quiz.questionsSize > 0,
                                 onClick = { onNavigateToPlayQuiz(quiz.id) },
-                                onEdit = { onNavigateToQuizSettings(quiz.id) },
+                                onEdit = { onNavigateToQuizEditor(quiz.id) },
                                 onDelete = { quizViewModel.deleteQuiz(quiz.id) },
-                                onToggleCron = { newValue ->
-                                    quiz.cron?.let { quizCron ->
-                                        quizViewModel.toggleCron(
-                                            quizId = quiz.id,
-                                            cronId = quizCron.id,
-                                            isEnabled = newValue
-                                        )
-                                    }
+                                onToggleCron = {
+                                    quizViewModel.toggleScheduler(quiz.id, it)
                                 }
                             )
                         }

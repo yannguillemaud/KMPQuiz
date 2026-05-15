@@ -6,11 +6,10 @@ plugins {
     alias(libs.plugins.sqldelight)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.compose.hot.reload)
-    id("dev.mokkery") version "3.3.0"
 }
 
 kotlin {
-    jvm()
+//    jvm()
 
     androidLibrary {
         compileSdk = 36
@@ -39,7 +38,7 @@ kotlin {
 
             // Cron
             implementation(libs.kcron.common)
-            implementation("org.jetbrains.compose.material3:material3:1.9.0")
+            implementation(libs.material3)
             implementation(libs.kcron.ui.builder)
 
             // SQLDelight (Database)
@@ -57,11 +56,15 @@ kotlin {
             implementation(libs.androidx.compose.material.icons.extended)
 
             // DataStore
-            implementation(libs.androidx.datastore)
+            implementation(libs.androidx.datastore.preferences.core)
 
             // Coil (Image Loading)
             implementation(libs.coil.compose)
             implementation(libs.coil.compose.okhttp)
+
+            implementation(libs.grant.core)
+            implementation(libs.grant.compose)
+            implementation(libs.grant.core.koin)
         }
 
         commonTest.dependencies {
@@ -69,7 +72,6 @@ kotlin {
             implementation(libs.kotlinx.coroutines.test)
             implementation(libs.ktor.client.mock)
             implementation(libs.kotlinx.datetime)
-            implementation("dev.mokkery:mokkery-gradle:3.3.0")
         }
 
         androidMain.dependencies {
@@ -79,6 +81,8 @@ kotlin {
             implementation(libs.sqldelight.android.driver)
             implementation(libs.androidx.activity.compose)
             implementation(libs.androidx.compose.ui.tooling.preview)
+            // Permissions
+            implementation("dev.icerock.moko:permissions:0.20.1")
         }
 
         jvmMain.dependencies {
@@ -104,6 +108,7 @@ sqldelight {
     databases {
         create("KMPQuizDatabase") {
             packageName.set("ygmd.kmpquiz.database")
+            dialect("app.cash.sqldelight:sqlite-3-38-dialect:${libs.versions.sqldelight.get()}")
         }
     }
 }

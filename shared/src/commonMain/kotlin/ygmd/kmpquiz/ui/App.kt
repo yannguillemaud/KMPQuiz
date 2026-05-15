@@ -1,6 +1,6 @@
 package ygmd.kmpquiz.ui
 
-import QuizSettingsScreen
+// import ygmd.kmpquiz.events.navigation.AppNavigationState -> SUPPRIMÉ
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.slideInVertically
@@ -21,7 +21,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
@@ -34,12 +33,11 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
-import ygmd.kmpquiz.events.navigation.AppNavigationState
 import ygmd.kmpquiz.ui.model.route.Route
 import ygmd.kmpquiz.ui.model.route.Route.Categories
 import ygmd.kmpquiz.ui.model.route.Route.Home
 import ygmd.kmpquiz.ui.model.route.Route.PlayQuiz
-import ygmd.kmpquiz.ui.model.route.Route.QuizSettings
+import ygmd.kmpquiz.ui.model.route.Route.QuizEditor
 import ygmd.kmpquiz.ui.model.route.Route.Quizzes
 import ygmd.kmpquiz.ui.screen.category.CategoriesScreen
 import ygmd.kmpquiz.ui.screen.home.HomeScreen
@@ -47,13 +45,15 @@ import ygmd.kmpquiz.ui.screen.qandas.CategoryScreen
 import ygmd.kmpquiz.ui.screen.qandas.QandaCreationScreen
 import ygmd.kmpquiz.ui.screen.qandas.QandaEditScreen
 import ygmd.kmpquiz.ui.screen.quiz.PlayQuizScreen
-import ygmd.kmpquiz.ui.screen.quiz.QuizCreationScreen
+import ygmd.kmpquiz.ui.screen.quiz.QuizEditorScreen
 import ygmd.kmpquiz.ui.screen.quiz.QuizzesScreen
 import ygmd.kmpquiz.ui.theme.KMPQuizTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun App(
+    initialQuizId: String? = null,
+    onDeepLinkConsumed: () -> Unit = {},
     navController: NavHostController = rememberNavController(),
 ) {
     val navItems = listOf(
@@ -62,28 +62,26 @@ fun App(
         Quizzes to Icons.Default.Quiz,
     )
 
-    // On récupère la destination actuelle
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
 
-    // Déterminer si on doit afficher la BottomBar :
-    // On ne l'affiche que si on est sur l'un des 4 onglets principaux
     val shouldShowBottomBar = navItems.any { (route, _) ->
         currentDestination?.hierarchy?.any { it.hasRoute(route::class) } == true
     }
 
-    val navEvent by AppNavigationState.initialNavEvent.collectAsState()
-    LaunchedEffect(navEvent) {
-        navEvent?.let {
-            navController.navigate(PlayQuiz(it.quizId))
-            AppNavigationState.consumeNavEvent()
+    // Remplacement du Singleton par l'état injecté
+    LaunchedEffect(initialQuizId) {
+        if (initialQuizId != null) {
+            navController.navigate(PlayQuiz(initialQuizId)) {
+                launchSingleTop = true
+            }
+            onDeepLinkConsumed()
         }
     }
 
     KMPQuizTheme {
         Scaffold(
             bottomBar = {
-                // Animation pour cacher/montrer la barre proprement
                 AnimatedVisibility(
                     visible = shouldShowBottomBar,
                     enter = slideInVertically(initialOffsetY = { it }),
@@ -107,7 +105,6 @@ fun App(
                                 selected = selected,
                                 onClick = {
                                     navController.navigate(route) {
-                                        // Évite d'empiler les instances des onglets principaux
                                         popUpTo(navController.graph.findStartDestination().id) {
                                             saveState = true
                                         }
@@ -126,81 +123,56 @@ fun App(
                     navController = navController,
                     startDestination = Home,
                 ) {
-                    composable<Home> {
-                        HomeScreen()
-                    }
-
+                    composable<Home> { HomeScreen() }
                     composable<Categories> {
-                        CategoriesScreen(
-                            onNavigateToCategory = { category ->
-                                navController.navigate(
-                                    Route.Category(category)
+                        CategoriesScreen(onNavigateToCategory = {
+                            navController.navigate(
+                                Route.Category(
+                                    it
                                 )
-                            },
-                        )
+                            )
+                        })
                     }
-
                     composable<Route.Category> { backStackEntry ->
                         val category = backStackEntry.toRoute<Route.Category>().categoryId
                         CategoryScreen(
                             categoryId = category,
-                            onNavigateToEdit = {
-                                navController.navigate(Route.QandaEdit(it))
-                            },
-                            onNavigateToQandaCreation = { categoryId ->
-                                navController.navigate(Route.QandaCreation(categoryId))
+                            onNavigateToEdit = { navController.navigate(Route.QandaEdit(it)) },
+                            onNavigateToQandaCreation = {
+                                navController.navigate(
+                                    Route.QandaCreation(
+                                        it
+                                    )
+                                )
                             },
                             onNavigateBack = { navController.popBackStack() }
                         )
                     }
-
-                    composable<Route.QandaCreation> { backStackEntry ->
-                        val route = backStackEntry.toRoute<Route.QandaCreation>()
-                        QandaCreationScreen(
-                            onNavigateBack = { navController.popBackStack() }
-                        )
+                    composable<Route.QandaCreation> {
+                        QandaCreationScreen(onNavigateBack = { navController.popBackStack() })
                     }
-
                     composable<Route.QandaEdit> { backStackEntry ->
                         val qandaId = backStackEntry.toRoute<Route.QandaEdit>().qandaId
                         QandaEditScreen(
                             qandaId = qandaId,
-                            onNavigateBack = { navController.popBackStack() }
-                        )
+                            onNavigateBack = { navController.popBackStack() })
                     }
-
                     composable<Quizzes> {
                         QuizzesScreen(
-                            onNavigateToQuizCreation = { navController.navigate(Route.QuizCreation) },
-                            onNavigateToQuizSettings = { quizId ->
-                                navController.navigate(
-                                    QuizSettings(quizId)
-                                )
-                            },
-                            onNavigateToPlayQuiz = { quizId ->
-                                navController.navigate(
-                                    PlayQuiz(
-                                        quizId
-                                    )
-                                )
-                            },
+                            onNavigateToPlayQuiz = { navController.navigate(PlayQuiz(it)) },
+                            onNavigateToQuizEditor = {
+                                navController.navigate(QuizEditor(it))
+                            }
                         )
                     }
-
-                    composable<QuizSettings> { backStackEntry ->
-                        val quizId = backStackEntry.toRoute<QuizSettings>().quizId
-                        QuizSettingsScreen(
+                    composable<QuizEditor> { backStackEntry ->
+                        val quizId = backStackEntry.toRoute<QuizEditor>().quizToEdit
+                        QuizEditorScreen(
+                            isEditMode = quizId != null,
                             quizId = quizId,
                             onNavigateBack = { navController.popBackStack() }
                         )
                     }
-
-                    composable<Route.QuizCreation> {
-                        QuizCreationScreen(
-                            onNavigateBack = { navController.popBackStack() }
-                        )
-                    }
-
                     composable<PlayQuiz> { backStackEntry ->
                         val quizId = backStackEntry.toRoute<PlayQuiz>().quizId
                         PlayQuizScreen(

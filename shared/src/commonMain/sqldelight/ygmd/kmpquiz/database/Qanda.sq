@@ -42,8 +42,3 @@ WHERE id = ?;
 deleteByCategoryId:
 DELETE FROM qanda_entity
 WHERE category_id = ?;
-
-countQandasByCategory:
-SELECT COUNT(*) AS count
-FROM qanda_entity
-WHERE category_id = ?;

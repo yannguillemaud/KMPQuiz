@@ -1,0 +1,43 @@
+import kotlin.Boolean;
+import ygmd.kmpquiz.domain.model.cron.SchedulerSelection;
+
+CREATE TABLE quiz_scheduler_configuration_entity (
+    id TEXT PRIMARY KEY,
+    quiz_id TEXT NOT NULL,
+    expression TEXT NOT NULL,
+    selection TEXT AS SchedulerSelection NOT NULL,
+    enabled TEXT AS Boolean,
+    name TEXT,
+    FOREIGN KEY (quiz_id) REFERENCES quiz_entity(id) ON DELETE CASCADE
+);
+
+getAll:
+SELECT * FROM quiz_scheduler_configuration_entity;
+
+saveSchedulerConfiguration:
+INSERT INTO quiz_scheduler_configuration_entity (
+    id, quiz_id, expression, selection, enabled, name
+) VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT(id) DO UPDATE SET
+    expression = excluded.expression,
+    selection = excluded.selection,
+    enabled = excluded.enabled,
+    name = excluded.name;
+
+removeSchedulerConfiguration:
+DELETE FROM quiz_scheduler_configuration_entity
+WHERE quiz_id = ?;
+
+scheduleQuiz:
+UPDATE quiz_scheduler_configuration_entity
+SET enabled = ?
+WHERE quiz_id = ?;
+
+getSchedulerConfigurationForQuiz:
+SELECT *
+FROM quiz_scheduler_configuration_entity scheduler
+WHERE scheduler.quiz_id = ?;
+
+getAllScheduled:
+SELECT q.id, scheduler.* FROM quiz_entity q
+INNER JOIN quiz_scheduler_configuration_entity scheduler ON scheduler.quiz_id = q.id
+WHERE scheduler.enabled;

@@ -2,6 +2,11 @@ package ygmd.kmpquiz.domain.viewModel.quiz
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import dev.brewkits.grant.AppGrant.NOTIFICATION
+import dev.brewkits.grant.AppGrant.SCHEDULE_EXACT_ALARM
+import dev.brewkits.grant.GrantHandler
+import dev.brewkits.grant.GrantManager
+import dev.brewkits.grant.GrantStatus.GRANTED
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -9,13 +14,11 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import ygmd.kmpquiz.domain.usecase.cron.CronUseCase
-import ygmd.kmpquiz.domain.usecase.notification.ScheduleAllQuizzesUseCase
+import ygmd.kmpquiz.domain.usecase.cron.ToggleQuizSchedulerUseCase
 import ygmd.kmpquiz.domain.usecase.quiz.DeleteQuizUseCase
 import ygmd.kmpquiz.domain.usecase.quiz.GetQuizUseCase
 import ygmd.kmpquiz.domain.viewModel.displayable.DisplayableCategory
 import ygmd.kmpquiz.domain.viewModel.displayable.DisplayableQuiz
-import ygmd.kmpquiz.domain.viewModel.displayable.DisplayableQuizCron
 import ygmd.kmpquiz.domain.viewModel.error.UiError
 import ygmd.kmpquiz.events.event.Event
 
@@ -28,33 +31,32 @@ data class QuizzesUiState(
 class QuizViewModel(
     private val getQuizUseCase: GetQuizUseCase,
     private val deleteQuizUseCase: DeleteQuizUseCase,
-    private val cronUseCase: CronUseCase,
-    private val scheduleAllQuizzesUseCase: ScheduleAllQuizzesUseCase,
+    private val toggleQuizSchedulerUseCase: ToggleQuizSchedulerUseCase,
+    private val grantManager: GrantManager,
 ) : ViewModel() {
     private val _quizEvents = Channel<Event>()
     val quizEvents = _quizEvents.receiveAsFlow()
+    val notificationHandler = GrantHandler(grantManager, NOTIFICATION, viewModelScope)
+    val exactAlarmHandler = GrantHandler(grantManager, SCHEDULE_EXACT_ALARM, viewModelScope)
 
     val quizzesState: StateFlow<QuizzesUiState> = getQuizUseCase.observeAll()
         .map { quizzes ->
-            val quizzes = quizzes.map { quiz ->
+            val displayableQuizzes = quizzes.map { quiz ->
                 DisplayableQuiz(
                     id = quiz.id,
                     title = quiz.title,
-                    questionsSize = quiz.questionsCount,
-                    categories = quiz.categories.map {
-                        DisplayableCategory(it.id, it.name)
-                    },
-                    cron = quiz.cron?.let {
-                        DisplayableQuizCron(
-                            it.id,
-                            it.name,
-                            it.expression,
-                            it.isEnabled
+                    categories = quiz.categories.map { category ->
+                        DisplayableCategory(
+                            id = category.id,
+                            name = category.name,
                         )
                     },
+                    questionsSize = quiz.questionsCount,
+                    scheduler = quiz.schedulerConfiguration?.selection,
+                    isScheduled = quiz.isSchedulerActive
                 )
             }
-            QuizzesUiState(isLoading = false, quizzes = quizzes)
+            QuizzesUiState(isLoading = false, quizzes = displayableQuizzes)
         }
         .stateIn(
             scope = viewModelScope,
@@ -62,30 +64,31 @@ class QuizViewModel(
             initialValue = QuizzesUiState(isLoading = true),
         )
 
-    fun toggleCron(quizId: String, cronId: String, isEnabled: Boolean) {
+    fun toggleScheduler(quizId: String, wantsToEnable: Boolean) {
         viewModelScope.launch {
-            cronUseCase.toggleCron(quizId, cronId = cronId, newValue = isEnabled)
-                .onFailure {
-                    _quizEvents.send(Event.SnackbarEvent("Failed to update quiz cron"))
-                }
+            if (!wantsToEnable) {
+                toggleQuizSchedulerUseCase(quizId, false)
+                return@launch
+            }
+            val result = notificationHandler.requestSuspend(
+                rationaleMessage = "Notifications are required to schedule quizzes",
+                settingsMessage = "Please enable notifications in Settings"
+            )
+            if (result == GRANTED) toggleQuizSchedulerUseCase(quizId, true)
+            else {
+                val uiEvent = Event.SnackbarEvent("Notifications are required to schedule quizzes")
+                _quizEvents.send(uiEvent)
+            }
         }
     }
 
     fun deleteQuiz(quizId: String) {
         viewModelScope.launch {
-            deleteQuizUseCase.deleteQuiz(quizId)
-                .fold(
-                    onSuccess = {
-                        _quizEvents.send(Event.SnackbarEvent("Quiz deleted"))
-                    },
-                    onFailure = { error ->
-                        _quizEvents.send(
-                            Event.SnackbarEvent(
-                                message = "Failed to delete quiz${error.message?.let { ": $it" }}"
-                            )
-                        )
-                    }
-                )
+            val deleteResult = deleteQuizUseCase.deleteQuiz(quizId)
+            val snackBarMessage =
+                if (!deleteResult.isFailure) "Quiz deleted"
+                else deleteResult.exceptionOrNull()?.message ?: "Failed to delete quiz"
+            _quizEvents.send(Event.SnackbarEvent(snackBarMessage))
         }
     }
 }

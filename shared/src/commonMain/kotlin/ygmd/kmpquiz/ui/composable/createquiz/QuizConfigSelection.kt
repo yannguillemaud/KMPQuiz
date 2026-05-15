@@ -25,8 +25,6 @@ fun QuizConfigSection(
     onCategoryLimitChanged: (String, Int) -> Unit
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-        SectionHeader(title = "Question Limits")
-
         SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
             val modes = listOf("Full", "Limited", "Specific")
             modes.forEachIndexed { index, label ->

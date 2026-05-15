@@ -39,9 +39,7 @@ fun QuizCard(
     onDelete: () -> Unit = {},
     onToggleCron: (Boolean) -> Unit = {},
 ) {
-    val isCronSet = quiz.cron != null
-    val isCronEnabled = isCronSet && quiz.cron.isEnabled
-
+    val isCronSet = quiz.isScheduled
     val cardAlpha = if (isEnabled) 1f else 0.6f
     val cardOnClick = if (isEnabled) onClick else { {} }
 
@@ -80,7 +78,7 @@ fun QuizCard(
                             Icon(Icons.Outlined.Delete, contentDescription = "Delete")
                         }
                     }
-                    quiz.cron?.let {
+                    quiz.scheduler?.let {
                         Box {
                             Column(verticalArrangement = Arrangement.spacedBy(PaddingSmall)) {
                                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -90,15 +88,11 @@ fun QuizCard(
                                         modifier = Modifier.padding(end = 8.dp)
                                     )
                                     Switch(
-                                        checked = isCronEnabled,
+                                        checked = isCronSet,
                                         enabled = isEnabled,
                                         onCheckedChange = { onToggleCron(it) }
                                     )
                                 }
-                                Text(
-                                    text = it.name,
-                                    style = MaterialTheme.typography.labelSmall
-                                )
                             }
                         }
                     }

@@ -1,10 +1,14 @@
 package ygmd.kmpquiz.domain.viewModel.quiz.edit
 
-
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import co.touchlab.kermit.Logger
+import dev.brewkits.grant.AppGrant.NOTIFICATION
+import dev.brewkits.grant.GrantHandler
+import dev.brewkits.grant.GrantManager
+import dev.brewkits.grant.GrantStatus.GRANTED
+import dev.brewkits.grant.SavedStateDelegate
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
@@ -18,17 +22,16 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import ygmd.kmpquiz.domain.model.category.Category
 import ygmd.kmpquiz.domain.model.category.CategoryWithCount
-import ygmd.kmpquiz.domain.model.cron.QuizCron
+import ygmd.kmpquiz.domain.model.cron.SchedulerConfiguration
+import ygmd.kmpquiz.domain.model.cron.SchedulerSelection
 import ygmd.kmpquiz.domain.model.quiz.Quiz
 import ygmd.kmpquiz.domain.model.quiz.QuizConfigDetails
 import ygmd.kmpquiz.domain.usecase.category.CategoryUseCase
-import ygmd.kmpquiz.domain.usecase.cron.CronUseCase
-import ygmd.kmpquiz.domain.usecase.quiz.QuizUseCase
+import ygmd.kmpquiz.domain.usecase.quiz.GetQuizUseCase
+import ygmd.kmpquiz.domain.usecase.quiz.SaveQuizUseCase
 import ygmd.kmpquiz.domain.viewModel.displayable.DisplayableCategory
 import ygmd.kmpquiz.domain.viewModel.displayable.DisplayableCategoryWithCount
-import ygmd.kmpquiz.domain.viewModel.displayable.DisplayableQuizCron
 import ygmd.kmpquiz.domain.viewModel.displayable.DisplayableQuizMode
 import ygmd.kmpquiz.events.event.Event
 import java.util.UUID
@@ -45,17 +48,22 @@ data class ContentState(
     val id: String? = null,
     val title: String = "",
     val availableCategories: ImmutableList<DisplayableCategory> = persistentListOf(),
-    val availableCrons: ImmutableList<DisplayableQuizCron> = persistentListOf(),
 ) {
     val titleError: String? = if (title.isBlank()) "Title cannot be empty" else null
 }
 
 @Immutable
 data class ConfigurationState(
-    val selectedCategories: ImmutableList<DisplayableCategory> = persistentListOf(),
-    val selectedCron: DisplayableQuizCron? = null,
+    val selectedCategories: ImmutableList<DisplayableCategoryWithCount> = persistentListOf(),
+    val selectedScheduler: SchedulerSelectionState = SchedulerSelectionState(),
     val selectedQuizMode: DisplayableQuizMode = DisplayableQuizMode.Full,
     val totalAvailableQuestions: Int = 0,
+)
+
+data class SchedulerSelectionState(
+    val id: String? = null,
+    val selectedScheduler: SchedulerSelection? = null,
+    val isEnabled: Boolean = false,
 )
 
 @Immutable
@@ -64,16 +72,17 @@ data class QuizEditUiState(
     val content: ContentState = ContentState(),
     val configuration: ConfigurationState = ConfigurationState()
 ) {
-    // Validation simple pour l'UI
     val canSave: Boolean = content.title.isNotBlank() && !metadata.isSaving
 }
 
 private val logger = Logger.withTag("QuizEditViewModel")
 
 class QuizEditViewModel(
-    private val quizUseCase: QuizUseCase,
+    private val getQuizUseCase: GetQuizUseCase,
+    private val saveQuizUseCase: SaveQuizUseCase,
     private val categoryUseCase: CategoryUseCase,
-    private val cronUseCase: CronUseCase,
+    private val grantManager: GrantManager,
+    private val savedStateDelegate: SavedStateDelegate,
 ) : ViewModel() {
 
     /* inputs */
@@ -82,46 +91,45 @@ class QuizEditViewModel(
     private val _quizId = MutableStateFlow<String?>(null)
     private val _title = MutableStateFlow("")
     private val _selectedCategoryIds = MutableStateFlow<Set<String>>(emptySet())
-    private val _selectedCronId = MutableStateFlow<String?>(null)
+    private val _selectedScheduler = MutableStateFlow(SchedulerSelectionState())
     private val _domainConfig =
         MutableStateFlow<QuizConfigDetails>(QuizConfigDetails.AllQuestions())
 
     /* DB flows */
     private val _categoriesWithCount =
         categoryUseCase.observeCategoriesWithCount().distinctUntilChanged()
-    private val _crons = cronUseCase.observeCrons().distinctUntilChanged()
 
     /* partitioning */
     private val metadataState = combine(_isLoading, _isSaving) { loading, saving ->
         MetadataState(isLoading = loading, isSaving = saving)
     }.distinctUntilChanged()
+
     private val contentState =
-        combine(_quizId, _title, _categoriesWithCount, _crons) { id, title, categories, crons ->
+        combine(_quizId, _title, _categoriesWithCount) { id, title, categories ->
             ContentState(
                 id = id,
                 title = title,
-                availableCategories = categories.map { DisplayableCategory(it.id, it.name) }
+                availableCategories = categories
+                    .map { DisplayableCategory(it.id, it.name) }
                     .toImmutableList(),
-                availableCrons = crons.map {
-                    DisplayableQuizCron(it.id, it.name, it.expression, it.isEnabled)
-                }.toImmutableList(),
             )
         }.distinctUntilChanged()
+
     private val configurationState = combine(
         _selectedCategoryIds,
-        _selectedCronId,
+        _selectedScheduler,
         _domainConfig,
         _categoriesWithCount,
-        _crons
-    ) { selectedIds, cronId, config, allCatsWithCount, allCrons ->
+    ) { selectedIds, selectedScheduler, config, allCatsWithCount ->
         val selectedQuizMode = mapToDisplayableMode(config, allCatsWithCount, selectedIds)
         val selectedCategoriesWithCount = allCatsWithCount.filter { it.id in selectedIds }
         val displayableCategories =
-            selectedCategoriesWithCount.map { DisplayableCategory(it.id, it.name) }
+            selectedCategoriesWithCount.map {
+                DisplayableCategoryWithCount(it.id, it.name, it.questionsCount)
+            }
         ConfigurationState(
             selectedCategories = displayableCategories.toImmutableList(),
-            selectedCron = allCrons.find { it.id == cronId }
-                ?.let { DisplayableQuizCron(it.id, it.name, it.expression, it.isEnabled) },
+            selectedScheduler = selectedScheduler,
             selectedQuizMode = selectedQuizMode,
             totalAvailableQuestions = countQuestions(selectedCategoriesWithCount, selectedQuizMode)
         )
@@ -136,6 +144,10 @@ class QuizEditViewModel(
         QuizEditUiState(meta, content, config)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), QuizEditUiState())
 
+    /* permission handler */
+    val notificationPermission = GrantHandler(grantManager, NOTIFICATION, viewModelScope, savedStateDelegate)
+
+    /* events */
     private val _events = Channel<Event>()
     val events = _events.receiveAsFlow()
 
@@ -143,7 +155,7 @@ class QuizEditViewModel(
     fun setUp(quizId: String) {
         viewModelScope.launch {
             _isLoading.value = true
-            val quiz = quizUseCase.getById(quizId) ?: run {
+            val quiz = getQuizUseCase.getById(quizId) ?: run {
                 _isLoading.value = false
                 return@launch
             }
@@ -151,24 +163,79 @@ class QuizEditViewModel(
             _quizId.value = quiz.id
             _title.value = quiz.title
             _selectedCategoryIds.value = quiz.categories.map { it.id }.toSet()
-            _selectedCronId.value = quiz.cron?.id
-            _domainConfig.value = quiz.config
+            quiz.schedulerConfiguration?.let {
+                _selectedScheduler.value = SchedulerSelectionState(
+                    id = it.id,
+                    selectedScheduler = it.selection,
+                    isEnabled = it.isEnabled
+                )
+            }
+            _domainConfig.value = quiz.qandasConfiguration
             _isLoading.value = false
         }
+    }
+
+    fun onAppResumed(){
+        notificationPermission.refreshStatus()
     }
 
     fun updateTitle(newTitle: String) {
         _title.value = newTitle
     }
 
-    fun toggleSelectCron(id: String?) {
-        _selectedCronId.value = id
+    /**
+     * Attempts to set a scheduler. This is a suspending operation that sequentially requests
+     * Notification and Exact Alarm permissions from the OS via Grant.
+     * The UI state is only updated if both permissions are GRANTED.
+     */
+    fun setScheduler(schedulerSelection: SchedulerSelection?) {
+        if (schedulerSelection == null) {
+            _selectedScheduler.update { it.copy(selectedScheduler = null) }
+            return
+        }
+
+        viewModelScope.launch {
+            notificationPermission.refreshStatus()
+            val notifResult = notificationPermission.requestSuspend(
+                rationaleMessage = "Notifications are required to schedule quizzes.",
+                settingsMessage = "Please enable notifications in Settings."
+            )
+            if (notifResult != GRANTED) {
+                _events.send(Event.SnackbarEvent("Notification permission is required to schedule quizzes."))
+            } else {
+                _selectedScheduler.update {
+                    SchedulerSelectionState(
+                        id = it.id,
+                        selectedScheduler = schedulerSelection
+                    )
+                }
+            }
+        }
+    }
+
+    fun toggleSelectScheduler(isEnabled: Boolean) {
+        if (!isEnabled) {
+            _selectedScheduler.update { it.copy(isEnabled = false) }
+            return
+        }
+        // cannot toggle without scheduler
+        if(_selectedScheduler.value.selectedScheduler == null) {
+            _events.trySend(Event.SnackbarEvent("No scheduler selected."))
+            return
+        }
+        viewModelScope.launch {
+            val notifResult = notificationPermission.requestSuspend()
+            if (notifResult == GRANTED) _selectedScheduler.update {
+                it.copy(isEnabled = true)
+            } else _events.send(
+                Event.SnackbarEvent("Notification permission is required to schedule quiz.")
+            )
+        }
     }
 
     fun toggleSelectCategory(id: String) {
         _selectedCategoryIds.update { if (id in it) it - id else it + id }
     }
-
 
     fun switchConfigMode(newConfigMode: DisplayableQuizMode) {
         fun hasConfigChanged(): Boolean = with(_domainConfig.value) {
@@ -206,31 +273,54 @@ class QuizEditViewModel(
         }
     }
 
+    /**
+     * Saves the Quiz.
+     * UX Note: If the user previously set a scheduler but manually revoked permissions in OS settings
+     * before hitting save, we DO NOT block the saving process. We gracefully degrade by disabling the cron
+     * and informing the user.
+     */
     fun saveQuiz() {
         if (!quizState.value.canSave) return
         viewModelScope.launch {
             _isSaving.value = true
-            val quiz = quizState.value
-            val (_, content, config) = quiz
+            val quizStateVal = quizState.value
+            val (_, content, config) = quizStateVal
+
             try {
+                val categories = config.selectedCategories.map {
+                    CategoryWithCount(it.id, it.name, it.questionsCount)
+                }
+
+                val configuration = when (val configMode = config.selectedQuizMode) {
+                    is DisplayableQuizMode.Full -> QuizConfigDetails.AllQuestions()
+                    is DisplayableQuizMode.Limited -> QuizConfigDetails.TotalLimited(count = configMode.limit)
+                    is DisplayableQuizMode.ByCategory -> {
+                        val configByCategory = configMode.limits.mapKeys { it.key.id }
+                        QuizConfigDetails.ByCategory(limitByCategory = configByCategory)
+                    }
+                }
+
+                // Handle Scheduler & Permissions Resilience
+                val selectedCron = config.selectedScheduler.selectedScheduler
+                val scheduler = if (selectedCron == null) null else {
+                    SchedulerConfiguration(
+                        id = config.selectedScheduler.id ?: UUID.randomUUID().toString(),
+                        selection = selectedCron,
+                        isEnabled = true
+                    )
+                }
+
                 val quiz = Quiz(
                     id = content.id ?: UUID.randomUUID().toString(),
                     title = content.title,
-                    cron = config.selectedCron?.let {
-                        QuizCron(it.id, it.name, it.expression, it.isEnabled)
-                    },
-                    categories = config.selectedCategories.map { Category(it.id, it.name) },
-                    config = when (val configMode = config.selectedQuizMode) {
-                        is DisplayableQuizMode.Full -> QuizConfigDetails.AllQuestions()
-                        is DisplayableQuizMode.Limited -> QuizConfigDetails.TotalLimited(count = configMode.limit)
-                        is DisplayableQuizMode.ByCategory -> {
-                            val configByCategory = configMode.limits.mapKeys { it.key.id }
-                            QuizConfigDetails.ByCategory(limitByCategory = configByCategory)
-                        }
-                    },
-                    questionsCount = config.totalAvailableQuestions
+                    categories = categories,
+                    qandasConfiguration = configuration,
+                    schedulerConfiguration = scheduler
                 )
-                quizUseCase.save(quiz).onSuccess { _events.send(Event.NavBackEvent) }
+
+                saveQuizUseCase.save(quiz).onSuccess {
+                    _events.send(Event.NavBackEvent)
+                }
             } catch (e: Exception) {
                 _events.send(Event.SnackbarEvent("Save failed ${e.message?.let { ": $it" }}"))
                 logger.e(e) { "Failed to save quiz" }
@@ -238,7 +328,6 @@ class QuizEditViewModel(
                 _isSaving.value = false
             }
         }
-
     }
 
     /* Helpers */
@@ -279,4 +368,4 @@ class QuizEditViewModel(
             is DisplayableQuizMode.ByCategory -> mode.limits.values.sum()
         }
     }
-} 
+}

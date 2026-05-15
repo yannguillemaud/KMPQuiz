@@ -1,135 +1,140 @@
 package ygmd.kmpquiz.ui.composable.createquiz
 
-import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.NotificationsActive
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FilterChipDefaults
+import androidx.compose.material.icons.filled.Schedule
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.ListItem
+import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TimePicker
+import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import ygmd.kmpquiz.domain.viewModel.displayable.DisplayableQuizCron
+import ygmd.kmpquiz.domain.model.cron.SchedulerSelection
 
-/**
- * A flat selection component for quiz reminders.
- * All options are visible immediately to improve data entry speed.
- *
- * @param availableCrons List of possible schedule configurations.
- * @param initialSelected The currently active cron configuration.
- * @param onSelectionChanged Callback when a new schedule is selected.
- */
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun CronReminderSelection(
-    availableCrons: List<DisplayableQuizCron>,
-    initialSelected: DisplayableQuizCron?,
-    onSelectionChanged: (String?) -> Unit,
-    modifier: Modifier = Modifier,
+fun SchedulerSection(
+    currentSelection: SchedulerSelection?,
+    isEnabled: Boolean,
+    onSelectionChange: (SchedulerSelection?) -> Unit,
+    onToggleEnabled: (Boolean) -> Unit = {},
+    defaultHour: Int = 12,
+    defaultMinute: Int = 0
 ) {
-    Card(
-        modifier = modifier.fillMaxWidth(),
-        shape = MaterialTheme.shapes.large,
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            // --- Header (Static) ---
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
+    var showTimePicker by remember { mutableStateOf(false) }
+    val contentAlpha by animateFloatAsState(
+        targetValue = if (isEnabled) 1f else 0.5f,
+        label = "alpha"
+    )
+    val schedulerSelectionLabel = currentSelection?.explicitName ?: "No scheduler selected"
+    Column(modifier = Modifier.fillMaxWidth()) {
+        ListItem(
+            modifier = Modifier.fillMaxWidth().clickable {
+                if(!isEnabled && currentSelection == null) {
+                    showTimePicker = true
+                }
+            },
+            headlineContent = {
+                Text(text = schedulerSelectionLabel, fontWeight = FontWeight.SemiBold)
+            },
+            supportingContent = {
+                AnimatedVisibility(visible = isEnabled) {
+                    val supportingContentText = currentSelection?.explicitName?.let {
+                        "Quiz will be scheduled at $it"
+                    } ?: "Quiz will not be scheduled"
+                    Text(
+                        text = supportingContentText,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.padding(top = 4.dp)
+                    )
+                }
+            },
+            leadingContent = {
                 Icon(
-                    imageVector = Icons.Default.NotificationsActive,
-                    contentDescription = null,
-                    tint = if (initialSelected != null)
-                        MaterialTheme.colorScheme.primary
-                    else
-                        MaterialTheme.colorScheme.outline,
-                    modifier = Modifier.size(22.dp)
+                    imageVector = Icons.Default.Schedule,
+                    contentDescription = "Scheduler",
+                    modifier = Modifier.alpha(contentAlpha)
                 )
-                Spacer(Modifier.width(12.dp))
-                Column {
-                    Text(
-                        text = "Reminder Schedule",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Text(
-                        text = if (initialSelected != null) "Active: ${initialSelected.name}" else "No reminder set",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = if (initialSelected != null)
-                            MaterialTheme.colorScheme.primary
-                        else
-                            MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
+            },
+            trailingContent = { Switch(checked = isEnabled, onCheckedChange = onToggleEnabled) },
+            colors = ListItemDefaults.colors(containerColor = androidx.compose.ui.graphics.Color.Transparent)
+        )
+    }
 
-            Spacer(modifier = Modifier.height(16.dp))
+    if (showTimePicker) {
+        val initialHour =
+            (currentSelection as? SchedulerSelection.SpecificTime)?.hour ?: defaultHour
+        val initialMinute =
+            (currentSelection as? SchedulerSelection.SpecificTime)?.minute ?: defaultMinute
 
-            // --- Selection Logic (Always Visible) ---
-            Text(
-                text = "Frequency:",
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.secondary,
-                modifier = Modifier.padding(bottom = 8.dp)
-            )
+        TimeSelectorDialog(
+            initialHour = initialHour,
+            initialMinute = initialMinute,
+            onConfirm = { hour, minute ->
+                onSelectionChange(SchedulerSelection.SpecificTime(hour, minute))
+                showTimePicker = false
+            },
+            onDismiss = { showTimePicker = false }
+        )
+    }
+}
 
-            FlowRow(
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun TimeSelectorDialog(
+    initialHour: Int,
+    initialMinute: Int,
+    onConfirm: (hour: Int, minute: Int) -> Unit,
+    onDismiss: () -> Unit
+) {
+    val timePickerState = rememberTimePickerState(
+        initialHour = initialHour,
+        initialMinute = initialMinute,
+        is24Hour = true
+    )
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Select Time") },
+        text = {
+            Box(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                contentAlignment = Alignment.Center
             ) {
-                availableCrons.forEach { item ->
-                    val isSelected = initialSelected?.id == item.id
-
-                    FilterChip(
-                        selected = isSelected,
-                        onClick = {
-                            val newValue = if (isSelected) null else item
-                            onSelectionChanged(newValue?.id)
-                        },
-                        label = {
-                            Text(
-                                text = item.name,
-                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
-                            )
-                        },
-                        shape = MaterialTheme.shapes.medium,
-                        colors = FilterChipDefaults.filterChipColors(
-                            selectedContainerColor = MaterialTheme.colorScheme.primary,
-                            selectedLabelColor = MaterialTheme.colorScheme.onPrimary,
-                            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
-                        ),
-                        border = FilterChipDefaults.filterChipBorder(
-                            enabled = true,
-                            selected = isSelected,
-                            selectedBorderColor = MaterialTheme.colorScheme.primary,
-                            borderWidth = 1.dp,
-                            selectedBorderWidth = 2.dp
-                        )
-                    )
-                }
+                TimePicker(state = timePickerState)
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = {
+                onConfirm(timePickerState.hour, timePickerState.minute)
+            }) {
+                Text("Confirm")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel")
             }
         }
-    }
+    )
 }
