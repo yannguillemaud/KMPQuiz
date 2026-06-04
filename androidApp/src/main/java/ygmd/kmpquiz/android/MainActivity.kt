@@ -20,7 +20,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             val quizId by pendingQuizTarget.collectAsState()
             App(
-                initialQuizId = quizId,
+                quizId = quizId,
                 onDeepLinkConsumed = {
                     pendingQuizTarget.value = null
                 }

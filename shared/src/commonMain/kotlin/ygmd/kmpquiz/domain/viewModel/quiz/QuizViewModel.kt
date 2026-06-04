@@ -39,7 +39,7 @@ class QuizViewModel(
     val notificationHandler = GrantHandler(grantManager, NOTIFICATION, viewModelScope)
     val exactAlarmHandler = GrantHandler(grantManager, SCHEDULE_EXACT_ALARM, viewModelScope)
 
-    val quizzesState: StateFlow<QuizzesUiState> = getQuizUseCase.observeAll()
+    val quizzesState: StateFlow<QuizzesUiState> = getQuizUseCase.observeQuizzes()
         .map { quizzes ->
             val displayableQuizzes = quizzes.map { quiz ->
                 DisplayableQuiz(

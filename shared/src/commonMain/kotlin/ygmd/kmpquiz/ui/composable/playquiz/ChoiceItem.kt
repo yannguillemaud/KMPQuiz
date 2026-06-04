@@ -19,7 +19,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
-import ygmd.kmpquiz.domain.model.qanda.Choice
+import ygmd.kmpquiz.domain.model.qanda.AnswerContent
 import ygmd.kmpquiz.ui.theme.Dimens.ChoiceVerticalPadding
 import ygmd.kmpquiz.ui.theme.Dimens.DefaultPadding
 import ygmd.kmpquiz.ui.theme.ExtendedTheme
@@ -27,7 +27,7 @@ import ygmd.kmpquiz.ui.theme.ExtendedTheme
 @Composable
 fun ChoiceItem(
     modifier: Modifier = Modifier,
-    choice: Choice,
+    answerContent: AnswerContent,
     isCorrect: Boolean?, // null = pas encore validé, true = bonne réponse, false = mauvaise réponse
     enabled: Boolean,
     onClick: () -> Unit,
@@ -62,11 +62,11 @@ fun ChoiceItem(
                 .padding(DefaultPadding)
                 .animateContentSize()
         ) {
-            when (choice) {
-                is Choice.ImageChoice -> {
+            when (answerContent) {
+                is AnswerContent.ImageAnswerContent -> {
                     AsyncImage(
-                        model = choice.imageUrl,
-                        contentDescription = "Choix image : ${choice.imageUrl}",
+                        model = answerContent.imageUrl,
+                        contentDescription = "Choix image : ${answerContent.imageUrl}",
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(100.dp)
@@ -75,9 +75,9 @@ fun ChoiceItem(
                     )
                 }
 
-                is Choice.TextChoice -> {
+                is AnswerContent.TextAnswerContent -> {
                     Text(
-                        text = choice.text,
+                        text = answerContent.text,
                         style = MaterialTheme.typography.bodyLarge,
                         textAlign = TextAlign.Start,
                         color = MaterialTheme.colorScheme.onSurface

@@ -1,5 +1,6 @@
 package ygmd.kmpquiz.data.repository.category
 
+import co.touchlab.kermit.Logger
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import ygmd.kmpquiz.database.Category_entity
@@ -8,6 +9,8 @@ import ygmd.kmpquiz.domain.model.category.Category
 import ygmd.kmpquiz.domain.model.category.CategoryWithCount
 import ygmd.kmpquiz.domain.repository.CategoryRepository
 import java.util.UUID
+
+private val logger = Logger.withTag("${CategoryRepositoryImpl::class.simpleName}")
 
 class CategoryRepositoryImpl(
     private val categoryDao: CategoryDao
@@ -29,15 +32,18 @@ class CategoryRepositoryImpl(
         }
     }
 
-    override fun addCategory(name: String): Result<Unit> {
-        if (categoryDao.getByCategoryName(name) != null) {
-            return Result.failure(Exception("Category already exists"))
+    override suspend fun addCategory(name: String): Result<String> {
+        val existingCategory = categoryDao.getByCategoryName(name)
+        if (existingCategory != null) {
+            logger.w { "Category $name already exists" }
+            return Result.success(existingCategory.id)
         }
-        categoryDao.insertCategory(Category_entity(UUID.randomUUID().toString(), name))
-        return Result.success(Unit)
+        val id = UUID.randomUUID().toString()
+        categoryDao.insertCategory(Category_entity(id, name))
+        return Result.success(id)
     }
 
-    override fun removeCategory(id: String): Result<Unit> {
+    override suspend fun removeCategory(id: String): Result<Unit> {
         return try {
             categoryDao.deleteCategory(id)
             Result.success(Unit)
@@ -46,19 +52,18 @@ class CategoryRepositoryImpl(
         }
     }
 
-    override fun getById(id: String): Result<Category> {
-        return categoryDao.getByCategoryId(id)
-            ?.let { Result.success(Category(it.id, it.name)) }
-            ?: Result.failure(Exception("Category not found"))
+    override suspend fun getById(id: String): Category? {
+        return categoryDao.getByCategoryId(id)?.let {
+            Category(it.id, it.name)
+        }
     }
 
-    override fun getByName(name: String): Result<Category> {
+    override suspend fun getByName(name: String): Category? {
         return categoryDao.getByCategoryName(name)
-            ?.let { Result.success(Category(it.id, it.name)) }
-            ?: Result.failure(Exception("Category not found"))
+            ?.let { Category(it.id, it.name) }
     }
 
-    override fun getAllCategories(): List<Category> {
+    override suspend fun getAllCategories(): List<Category> {
         return categoryDao.getAllCategories().map {
             Category(it.id, it.name)
         }

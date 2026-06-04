@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import ygmd.kmpquiz.database.KMPQuizDatabase
 import ygmd.kmpquiz.domain.model.category.CategoryWithCount
-import ygmd.kmpquiz.domain.model.cron.SchedulerConfiguration
+import ygmd.kmpquiz.domain.model.scheduler.SchedulerConfiguration
 import ygmd.kmpquiz.domain.model.quiz.Quiz
 import ygmd.kmpquiz.domain.repository.QuizRepository
 
@@ -63,7 +63,7 @@ class QuizRepositoryImpl(
         }
     }
 
-    override suspend fun getAllQuizzes(): List<Quiz> {
+    override suspend fun getAll(): List<Quiz> {
         val categoriesByQuizId = database.quizCategoryRelationQueries
             .getAllCategoriesConfigurationWithCount()
             .executeAsList()
@@ -71,7 +71,7 @@ class QuizRepositoryImpl(
         val schedulersConfigurationsByQuizId = database.schedulerConfigurationQueries
             .getAll().executeAsList()
             .associate {
-                it.id to SchedulerConfiguration(
+                it.quiz_id to SchedulerConfiguration(
                     id = it.id,
                     selection = it.selection,
                     isEnabled = it.enabled == true
@@ -99,7 +99,7 @@ class QuizRepositoryImpl(
             }
     }
 
-    override suspend fun getQuizById(id: String): Result<Quiz> {
+    override suspend fun getById(id: String): Result<Quiz> {
         val quizEntity = database.quizQueries
             .getById(id)
             .executeAsOneOrNull() ?: return Result.failure(Exception("Quiz not found"))
@@ -108,7 +108,7 @@ class QuizRepositoryImpl(
         val schedulerConfiguration = database.schedulerConfigurationQueries
             .getSchedulerConfigurationForQuiz(quizEntity.id)
             .executeAsOneOrNull()
-            ?.let { scheduler -> SchedulerConfiguration(scheduler.id, scheduler.selection, true) }
+            ?.let { scheduler -> SchedulerConfiguration(scheduler.id, scheduler.selection, scheduler.enabled == true) }
         val quiz = Quiz(
             id = quizEntity.id,
             title = quizEntity.title,
@@ -155,7 +155,6 @@ class QuizRepositoryImpl(
             database.schedulerConfigurationQueries.saveSchedulerConfiguration(
                 id = schedulerConfiguration.id,
                 quiz_id = quizId,
-                expression = schedulerConfiguration.cron,
                 selection = schedulerConfiguration.selection,
                 name = schedulerConfiguration.selection.toString(),
                 enabled = schedulerConfiguration.isEnabled

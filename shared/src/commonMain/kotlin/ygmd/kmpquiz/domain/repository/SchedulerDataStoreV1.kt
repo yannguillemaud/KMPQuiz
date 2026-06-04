@@ -1,7 +1,7 @@
 package ygmd.kmpquiz.domain.repository
 
 import kotlinx.coroutines.flow.Flow
-import ygmd.kmpquiz.domain.model.cron.SchedulerConfiguration
+import ygmd.kmpquiz.domain.model.scheduler.SchedulerConfiguration
 
 interface SchedulerDataStore {
     val configurations: Flow<Map<String, SchedulerConfiguration>>

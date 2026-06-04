@@ -1,15 +1,13 @@
 package ygmd.kmpquiz.domain.usecase.notification
 
 import co.touchlab.kermit.Logger
-import com.ucasoft.kcron.Cron
 import kotlinx.datetime.TimeZone
-import kotlinx.datetime.toInstant
-import ygmd.kmpquiz.domain.model.cron.SchedulerConfiguration
+import kotlinx.datetime.toLocalDateTime
+import ygmd.kmpquiz.domain.model.scheduler.SchedulerConfiguration
+import ygmd.kmpquiz.domain.model.scheduler.SchedulerSelection
 import ygmd.kmpquiz.domain.repository.SchedulerDataStore
 import ygmd.kmpquiz.domain.scheduler.QuizScheduler
-import java.time.Instant.ofEpochMilli
-import java.time.LocalDateTime.ofInstant
-import java.time.ZoneId.systemDefault
+import ygmd.kmpquiz.domain.service.CronSchedulerHelper.computeNextTrigger
 
 private val logger = Logger.withTag("ScheduleQuizUseCase")
 
@@ -24,24 +22,15 @@ class ScheduleQuizUseCase(
      * configure and schedule a quiz.
      * current implementation cancels existing scheduling if exists and schedules a new one.
      */
-    suspend fun configureAndSchedule(quizId: String, config: SchedulerConfiguration) {
+    suspend fun register(quizId: String, config: SchedulerConfiguration) {
         schedulerStore.saveConfiguration(quizId, config)
-        schedule(quizId, config)
     }
 
     /**
      * returns true if a quiz is scheduled, false otherwise
      */
-    suspend fun isScheduled(quizId: String): Boolean =
+    suspend fun isRegistered(quizId: String): Boolean =
         schedulerStore.getConfiguration(quizId) != null
-
-    /**
-     * returns true if a quiz is scheduled and differs from the parameter, false otherwise
-     */
-    suspend fun differs(quizId: String, config: SchedulerConfiguration): Boolean {
-        val existingConfig = schedulerStore.getConfiguration(quizId)
-        return existingConfig != null && existingConfig.selection != config.selection
-    }
 
     /**
      * cancel quiz scheduling
@@ -54,31 +43,15 @@ class ScheduleQuizUseCase(
     /**
      * schedule next occurrence of a quiz
      */
-    fun schedule(quizId: String, config: SchedulerConfiguration) {
-        val nextTriggerMillis = calculateNextTriggerTime(config)
-        if (nextTriggerMillis != null) {
-            alarmScheduler.scheduleAlarm(quizId, nextTriggerMillis)
-            logger.d {
-                "Scheduled alarm for $quizId at ${
-                    ofInstant(ofEpochMilli(nextTriggerMillis), systemDefault())
-                }"
-            }
-        } else {
-            logger.w { "Failed to schedule alarm for $quizId" }
+    fun schedule(id: String, scheduler: SchedulerSelection): Result<Unit> {
+        if (scheduler !is SchedulerSelection.SpecificTime) {
+            logger.w { "Scheduler is not yet handled: $id. Aborting" }
+            return Result.failure(RuntimeException("Scheduler is not yet handled"))
         }
-    }
-
-    private fun calculateNextTriggerTime(config: SchedulerConfiguration): Long? {
-        if (!config.isEnabled) return null
-        return try {
-            Cron.parseAndBuild(config.cron)
-                .nextRun
-                ?.toInstant(TimeZone.currentSystemDefault())
-                ?.toEpochMilliseconds()
-                ?: error("Cannot find next execution for cron: ${config.cron}")
-        } catch (e: Exception) {
-            logger.e(e) { "Failed to calculate next trigger time" }
-            null
-        }
+        val nextTrigger = computeNextTrigger(scheduler)
+        logger.i { "Scheduling quiz: $id at ${nextTrigger.toLocalDateTime(TimeZone.currentSystemDefault())}" }
+        alarmScheduler.scheduleAlarm(id, nextTrigger.toEpochMilliseconds())
+        return Result.success(Unit)
     }
 }
+

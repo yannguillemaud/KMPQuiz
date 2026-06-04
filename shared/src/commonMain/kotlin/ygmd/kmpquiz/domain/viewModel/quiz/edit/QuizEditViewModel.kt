@@ -23,8 +23,8 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import ygmd.kmpquiz.domain.model.category.CategoryWithCount
-import ygmd.kmpquiz.domain.model.cron.SchedulerConfiguration
-import ygmd.kmpquiz.domain.model.cron.SchedulerSelection
+import ygmd.kmpquiz.domain.model.scheduler.SchedulerConfiguration
+import ygmd.kmpquiz.domain.model.scheduler.SchedulerSelection
 import ygmd.kmpquiz.domain.model.quiz.Quiz
 import ygmd.kmpquiz.domain.model.quiz.QuizConfigDetails
 import ygmd.kmpquiz.domain.usecase.category.CategoryUseCase
@@ -49,7 +49,7 @@ data class ContentState(
     val title: String = "",
     val availableCategories: ImmutableList<DisplayableCategory> = persistentListOf(),
 ) {
-    val titleError: String? = if (title.isBlank()) "Title cannot be empty" else null
+    val titleError: String? = if (title.isBlank()) "Title cannot be empty." else null
 }
 
 @Immutable
@@ -58,7 +58,10 @@ data class ConfigurationState(
     val selectedScheduler: SchedulerSelectionState = SchedulerSelectionState(),
     val selectedQuizMode: DisplayableQuizMode = DisplayableQuizMode.Full,
     val totalAvailableQuestions: Int = 0,
-)
+) {
+    val noQuestionsSelectedError: String? =
+        if (totalAvailableQuestions == 0) "Cannot save quiz without questions." else null
+}
 
 data class SchedulerSelectionState(
     val id: String? = null,
@@ -72,7 +75,9 @@ data class QuizEditUiState(
     val content: ContentState = ContentState(),
     val configuration: ConfigurationState = ConfigurationState()
 ) {
-    val canSave: Boolean = content.title.isNotBlank() && !metadata.isSaving
+    val canSave: Boolean = !metadata.isSaving &&
+            content.titleError == null &&
+            configuration.selectedCategories.isNotEmpty()
 }
 
 private val logger = Logger.withTag("QuizEditViewModel")
@@ -97,7 +102,7 @@ class QuizEditViewModel(
 
     /* DB flows */
     private val _categoriesWithCount =
-        categoryUseCase.observeCategoriesWithCount().distinctUntilChanged()
+        categoryUseCase.observeCategories().distinctUntilChanged()
 
     /* partitioning */
     private val metadataState = combine(_isLoading, _isSaving) { loading, saving ->
@@ -145,7 +150,8 @@ class QuizEditViewModel(
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), QuizEditUiState())
 
     /* permission handler */
-    val notificationPermission = GrantHandler(grantManager, NOTIFICATION, viewModelScope, savedStateDelegate)
+    val notificationPermission =
+        GrantHandler(grantManager, NOTIFICATION, viewModelScope, savedStateDelegate)
 
     /* events */
     private val _events = Channel<Event>()
@@ -175,7 +181,7 @@ class QuizEditViewModel(
         }
     }
 
-    fun onAppResumed(){
+    fun onAppResumed() {
         notificationPermission.refreshStatus()
     }
 
@@ -219,7 +225,7 @@ class QuizEditViewModel(
             return
         }
         // cannot toggle without scheduler
-        if(_selectedScheduler.value.selectedScheduler == null) {
+        if (_selectedScheduler.value.selectedScheduler == null) {
             _events.trySend(Event.SnackbarEvent("No scheduler selected."))
             return
         }
@@ -301,12 +307,12 @@ class QuizEditViewModel(
                 }
 
                 // Handle Scheduler & Permissions Resilience
-                val selectedCron = config.selectedScheduler.selectedScheduler
-                val scheduler = if (selectedCron == null) null else {
+                val selectedScheduler = config.selectedScheduler.selectedScheduler
+                val scheduler = if (selectedScheduler == null) null else {
                     SchedulerConfiguration(
                         id = config.selectedScheduler.id ?: UUID.randomUUID().toString(),
-                        selection = selectedCron,
-                        isEnabled = true
+                        selection = selectedScheduler,
+                        isEnabled = config.selectedScheduler.isEnabled
                     )
                 }
 

@@ -1,10 +1,9 @@
 import kotlin.Boolean;
-import ygmd.kmpquiz.domain.model.cron.SchedulerSelection;
+import ygmd.kmpquiz.domain.model.scheduler.SchedulerSelection;
 
 CREATE TABLE quiz_scheduler_configuration_entity (
     id TEXT PRIMARY KEY,
     quiz_id TEXT NOT NULL,
-    expression TEXT NOT NULL,
     selection TEXT AS SchedulerSelection NOT NULL,
     enabled TEXT AS Boolean,
     name TEXT,
@@ -16,9 +15,8 @@ SELECT * FROM quiz_scheduler_configuration_entity;
 
 saveSchedulerConfiguration:
 INSERT INTO quiz_scheduler_configuration_entity (
-    id, quiz_id, expression, selection, enabled, name
-) VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT(id) DO UPDATE SET
-    expression = excluded.expression,
+    id, quiz_id, selection, enabled, name
+) VALUES (?, ?, ?, ?, ?) ON CONFLICT(id) DO UPDATE SET
     selection = excluded.selection,
     enabled = excluded.enabled,
     name = excluded.name;

@@ -15,7 +15,6 @@ import ygmd.kmpquiz.domain.repository.SchedulerDataStore
 import ygmd.kmpquiz.domain.usecase.notification.ScheduleQuizUseCase
 
 class QuizNotificationReceiver : BroadcastReceiver(), KoinComponent {
-
     private val scheduleQuizUseCase by inject<ScheduleQuizUseCase>()
     private val schedulerStore by inject<SchedulerDataStore>()
     private val quizNotifier by inject<QuizNotifier>()
@@ -32,8 +31,12 @@ class QuizNotificationReceiver : BroadcastReceiver(), KoinComponent {
             logger.w { "Received alarm without quizId. Aborting." }
             return
         }
-        logger.i { "Alarm triggered for quiz: $quizId" }
         quizNotifier.showQuizReminder(quizId)
+        logger.d { "Alarm triggered for quiz: $quizId" }
+        handleQuizRescheduling(quizId)
+    }
+
+    private fun handleQuizRescheduling(quizId: String) {
         val pendingResult = goAsync()
         val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
         scope.launch {
@@ -41,7 +44,7 @@ class QuizNotificationReceiver : BroadcastReceiver(), KoinComponent {
                 logger.d { "Fetching scheduler config for chaining next alarm..." }
                 val configuration = schedulerStore.getConfiguration(quizId)
                 if (configuration != null) {
-                    scheduleQuizUseCase.schedule(quizId, configuration)
+                    scheduleQuizUseCase.schedule(quizId, configuration.selection)
                     logger.i { "Successfully scheduled next occurrence for quiz: $quizId" }
                 } else {
                     logger.d { "No configuration found or scheduler disabled. Stopping chain." }

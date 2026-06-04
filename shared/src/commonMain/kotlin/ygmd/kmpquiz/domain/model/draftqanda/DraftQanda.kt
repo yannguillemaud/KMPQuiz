@@ -1,10 +1,10 @@
 package ygmd.kmpquiz.domain.model.draftqanda
 
 import ygmd.kmpquiz.domain.model.qanda.Answers
-import ygmd.kmpquiz.domain.model.qanda.Question
+import ygmd.kmpquiz.domain.model.qanda.QuestionContent
 
 data class DraftQanda(
-    val question: Question,
+    val question: QuestionContent,
     val answers: Answers,
     val categoryName: String,
 ){

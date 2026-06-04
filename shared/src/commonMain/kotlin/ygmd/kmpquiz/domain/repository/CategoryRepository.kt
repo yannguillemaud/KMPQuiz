@@ -7,9 +7,9 @@ import ygmd.kmpquiz.domain.model.category.CategoryWithCount
 interface CategoryRepository {
     fun observeCategories(): Flow<List<Category>>
     fun observeCategoriesWithCount(): Flow<List<CategoryWithCount>>
-    fun addCategory(name: String): Result<Unit>
-    fun removeCategory(id: String): Result<Unit>
-    fun getById(id: String): Result<Category>
-    fun getByName(name: String): Result<Category>
-    fun getAllCategories(): List<Category>
+    suspend fun addCategory(name: String): Result<String>
+    suspend fun removeCategory(id: String): Result<Unit>
+    suspend fun getById(id: String): Category?
+    suspend fun getByName(name: String): Category?
+    suspend fun getAllCategories(): List<Category>
 }

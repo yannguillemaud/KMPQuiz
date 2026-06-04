@@ -1,49 +1,46 @@
 [versions]
 # Android & Gradle
-agp = "9.0.1"
+agp = "9.2.1"
 
 # AndroidX
 androidx-activity = "1.13.0"
 androidx-appcompat = "1.7.1"
-androidx-core = "1.18.0"
+androidx-core = "1.19.0"
 androidx-lifecycle = "2.10.0"
 androidx-navigation = "2.9.2"
 androidx-material-icons = "1.7.8"
 androidx-datastore = "1.2.1"
-androidx-compose-bom = "2026.04.01"
+androidx-compose-bom = "2026.05.01"
 
 # Compose
-compose-multiplatform = "1.10.3"
+compose-multiplatform = "1.11.1"
 coil-compose = "3.4.0"
+material3 = "1.9.0"
+material = "1.14.0"
 
 # Kotlin
-grant = "1.4.0"
-kotlin = "2.3.21"
-kotlin-coroutines = "1.10.2"
+kotlin = "2.4.0"
+kotlin-coroutines = "1.11.0"
 kotlin-serialization-json = "1.11.0"
-kotlin-datetime = "0.7.1"
+kotlin-datetime = "0.8.0"
 
 # Koin
-koin = "4.1.1"
-
+koin = "4.2.1"
+# Grant Permission
+grant = "2.1.0"
 # Ktor
-ktor = "3.4.0"
-
+ktor = "3.5.0"
 # SQLDelight
-material3 = "1.9.0"
 sqldelight = "2.3.2"
-
 # Logging
-kermit = "2.0.8"
-
-# Cron
-kcron-common = "0.31.7"
-
-# Material
-material = "1.13.0"
+kermit = "2.1.0"
 
 # Hot Reload
-compose-hot-reload = "1.1.0"
+compose-hot-reload = "1.1.1"
+
+# Test
+turbine = "1.2.1"
+activity-ktx = "1.13.0"
 
 [libraries]
 # AndroidX Core
@@ -102,7 +99,6 @@ kotlinx-collections-immutable = { module = "org.jetbrains.kotlinx:kotlinx-collec
 # Ktor
 ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
 ktor-client-okhttp = { module = "io.ktor:ktor-client-okhttp", version.ref = "ktor" }
-ktor-client-cio = { module = "io.ktor:ktor-client-cio", version.ref = "ktor" }
 ktor-client-mock = { module = "io.ktor:ktor-client-mock", version.ref = "ktor" }
 ktor-client-content-negotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor" }
 ktor-serialization-kotlinx-json = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktor" }
@@ -110,14 +106,11 @@ ktor-serialization-kotlinx-json = { module = "io.ktor:ktor-serialization-kotlinx
 # SQLDelight
 sqldelight-coroutines-extensions = { module = "app.cash.sqldelight:coroutines-extensions", version.ref = "sqldelight" }
 sqldelight-android-driver = { module = "app.cash.sqldelight:android-driver", version.ref = "sqldelight" }
-sqldelight-jvm-sqlite-driver = { module = "app.cash.sqldelight:sqlite-driver", version.ref = "sqldelight" }
 
 # Logging
 kermit = { module = "co.touchlab:kermit", version.ref = "kermit" }
-
-# Cron
-kcron-common = { module = "com.ucasoft.kcron:kcron-common", version.ref = "kcron-common" }
-kcron-ui-builder = { module = "com.ucasoft.kcron:kcron-ui-builder", version.ref = "kcron-common" }
+turbine = { module = "app.cash.turbine:turbine", version.ref = "turbine" }
+androidx-activity-ktx = { group = "androidx.activity", name = "activity-ktx", version.ref = "activity-ktx" }
 
 [plugins]
 # Android

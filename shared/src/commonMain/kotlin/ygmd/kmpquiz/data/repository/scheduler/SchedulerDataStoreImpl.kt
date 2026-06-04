@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.serialization.json.Json
-import ygmd.kmpquiz.domain.model.cron.SchedulerConfiguration
+import ygmd.kmpquiz.domain.model.scheduler.SchedulerConfiguration
 import ygmd.kmpquiz.domain.repository.SchedulerDataStore
 
 private val logger = Logger.withTag("SchedulerDataStore")

@@ -1,13 +1,14 @@
 package ygmd.kmpquiz.domain.scheduler
 
-import kotlinx.datetime.LocalDateTime
-import kotlinx.datetime.toKotlinLocalDateTime
-
 interface QuizScheduler {
+    /**
+     * Schedules an alarm for the given quiz id at the given timestamp
+     * @param exactTimestampEpochMillis the timestamp in milliseconds
+     */
     fun scheduleAlarm(quizId: String, exactTimestampEpochMillis: Long)
-    fun cancelAlarm(quizId: String)
-}
 
-interface TimeProvider {
-    fun now(): LocalDateTime = java.time.LocalDateTime.now().toKotlinLocalDateTime()
+    /**
+     * Cancels the alarm for the given quiz id
+     */
+    fun cancelAlarm(quizId: String)
 }

@@ -15,17 +15,20 @@ sealed class Route() {
     data object Quizzes : Route()
 
     @Serializable
-    data class PlayQuiz(val quizId: String) : Route()
-
-    @Serializable
-    data class QandaEdit(val qandaId: String) : Route()
-
-    @Serializable
-    data class QandaCreation(val categoryId: String? = null) : Route()
+    data class PlaySession(
+        val quizId: String? = null,
+        val sessionId: String? = null,
+    ) : Route()
 
     @Serializable
     data class Category(val categoryId: String) : Route()
 
     @Serializable
-    data class QuizEditor(val quizToEdit: String? = null) : Route()
+    data class QuizEditor(val quizId: String? = null) : Route()
+
+    @Serializable
+    data object SessionHistory: Route()
+
+    @Serializable
+    data class SessionDetails(val sessionId: String): Route()
 }

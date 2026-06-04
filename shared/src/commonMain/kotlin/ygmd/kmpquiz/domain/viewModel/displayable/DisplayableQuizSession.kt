@@ -1,10 +1,6 @@
 package ygmd.kmpquiz.domain.viewModel.displayable
 
-import ygmd.kmpquiz.domain.model.qanda.Answers
-import ygmd.kmpquiz.domain.model.qanda.Choice
-import ygmd.kmpquiz.domain.model.quiz.QuizResult
-import ygmd.kmpquiz.domain.model.quiz.QuizSession
-
+/*
 sealed interface DisplayableQuizSession {
     val session: QuizSession
     val title: String
@@ -13,7 +9,7 @@ sealed interface DisplayableQuizSession {
 
     data class InProgress(
         override val session: QuizSession,
-        val selectedAnswer: Choice?,
+        val selectedAnswer: AnswerContent?,
         val currentQanda: DisplayableQanda,
         val shuffledAnswers: Answers,
     ) : DisplayableQuizSession {
@@ -27,7 +23,7 @@ sealed interface DisplayableQuizSession {
             get() = session.currentIndex
 
         override val size: Int
-            get() = session.qandas.size
+            get() = session.questions.size
     }
 
     data class Completed(
@@ -41,6 +37,6 @@ sealed interface DisplayableQuizSession {
             get() = session.currentIndex +1
 
         override val size: Int
-            get() = session.qandas.size
+            get() = session.questions.size
     }
-}
+}*/

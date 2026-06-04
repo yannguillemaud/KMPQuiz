@@ -1,6 +1,6 @@
 package ygmd.kmpquiz.domain.viewModel.displayable
 
-import ygmd.kmpquiz.domain.model.cron.SchedulerSelection
+import ygmd.kmpquiz.domain.model.scheduler.SchedulerSelection
 
 data class DisplayableQuiz(
     val id: String,

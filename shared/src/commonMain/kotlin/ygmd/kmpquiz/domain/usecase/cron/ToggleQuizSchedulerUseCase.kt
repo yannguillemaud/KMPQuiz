@@ -10,7 +10,7 @@ class ToggleQuizSchedulerUseCase(
     private val permissionRepository: PermissionRepository,
 ) {
     suspend operator fun invoke(quizId: String, isEnabled: Boolean): Result<Unit> {
-        val config = quizRepository.getQuizById(quizId).getOrNull()?.schedulerConfiguration
+        val config = quizRepository.getById(quizId).getOrNull()?.schedulerConfiguration
             ?: return Result.failure(
                 NoSchedulerForQuizException(quizId)
             )
@@ -23,7 +23,7 @@ class ToggleQuizSchedulerUseCase(
                 if (!permissionRepository.hasNotificationPermission()) {
                     return Result.failure(NoNotificationPermission())
                 }
-                scheduleQuizUseCase.configureAndSchedule(quizId, config)
+                scheduleQuizUseCase.schedule(quizId, config.selection)
             }
     }
 }

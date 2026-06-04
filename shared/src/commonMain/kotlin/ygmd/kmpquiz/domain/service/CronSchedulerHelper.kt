@@ -1,51 +1,30 @@
 package ygmd.kmpquiz.domain.service
 
-import com.ucasoft.kcron.Cron
-import com.ucasoft.kcron.core.builders.DelicateIterableApi
-import com.ucasoft.kcron.core.extensions.anyDays
-import com.ucasoft.kcron.core.extensions.hours
-import com.ucasoft.kcron.core.extensions.minutes
-import com.ucasoft.kcron.cron
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toInstant
-import kotlinx.datetime.toJavaLocalDateTime
-import ygmd.kmpquiz.domain.model.cron.SchedulerSelection
-import kotlin.time.Duration
-import kotlin.time.toKotlinDuration
+import kotlinx.datetime.toKotlinLocalDateTime
+import ygmd.kmpquiz.domain.model.scheduler.SchedulerSelection
+import java.time.LocalDateTime
+import java.time.LocalTime
+import java.time.ZoneId
+import kotlin.time.Instant
 
-@OptIn(DelicateIterableApi::class)
 object CronSchedulerHelper {
-    fun durationOfCron(cronExpression: String): Duration {
-        val instants = Cron.parseAndBuild(cronExpression)
-            .asIterable()
-            .take(2)
-            .map { it.toJavaLocalDateTime() }
-        return java.time.Duration
-            .between(instants.first(), instants.last())
-            .toKotlinDuration()
-    }
-
-    fun nextExecutionAsMillis(cronExpression: String): Long {
-        return Cron.parseAndBuild(cronExpression)
-            .nextRun
-            ?.toInstant(TimeZone.currentSystemDefault())
-            ?.toEpochMilliseconds() ?: error("Cannot find next execution for cron: $cronExpression")
-    }
-
-    fun selectionAsCron(selection: SchedulerSelection): String {
-        val cronExpression = when (selection) {
-            is SchedulerSelection.SpecificTime -> {
-                cron {
-                    minutes(selection.minute)
-                    hours(selection.hour)
-                    anyDays()
-                }.expression
-            }
-
-            is SchedulerSelection.TimeRange -> {
-                TODO()
-            }
+    fun computeNextTrigger(scheduler: SchedulerSelection.SpecificTime): Instant {
+        val timeZone = TimeZone.currentSystemDefault()
+        val zoneId = ZoneId.systemDefault()
+        val nowLocalDateTime = LocalDateTime.now(zoneId)
+        if (scheduler.localTime.isAfter(LocalTime.now(zoneId))) {
+            val nexTrigger = nowLocalDateTime
+                .withHour(scheduler.hour)
+                .withMinute(scheduler.minute)
+            return nexTrigger.toKotlinLocalDateTime().toInstant(timeZone)
+        } else {
+            val nexTrigger = nowLocalDateTime
+                .plusDays(1)
+                .withHour(scheduler.hour)
+                .withMinute(scheduler.minute)
+            return nexTrigger.toKotlinLocalDateTime().toInstant(timeZone)
         }
-        return cronExpression
     }
 }

@@ -8,10 +8,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
-import ygmd.kmpquiz.domain.usecase.notification.RescheduleAllQuizzesUseCase
+import ygmd.kmpquiz.domain.usecase.notification.RescheduleTaskUseCase
 
 class BootReceiver() : BroadcastReceiver(), KoinComponent {
-    private val rescheduleUseCase by inject<RescheduleAllQuizzesUseCase>()
+    private val rescheduleUseCase by inject<RescheduleTaskUseCase>()
 
     override fun onReceive(context: Context, intent: Intent) {
         val isValidAction = intent.action == Intent.ACTION_BOOT_COMPLETED ||
@@ -20,7 +20,7 @@ class BootReceiver() : BroadcastReceiver(), KoinComponent {
         val pendingResult = goAsync()
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                rescheduleUseCase()
+                rescheduleUseCase.rescheduleAll()
             } catch (e: Exception) {
                 // silent
             } finally {

@@ -7,7 +7,8 @@ import android.content.Intent
 import co.touchlab.kermit.Logger
 import infra.receiver.QuizNotificationReceiver
 import ygmd.kmpquiz.domain.scheduler.QuizScheduler
-import kotlin.time.Instant
+import java.time.Instant
+import java.time.ZoneId
 
 private val logger = Logger.withTag("AndroidScheduler")
 
@@ -26,17 +27,15 @@ class AndroidScheduler(
         )
         logger.d {
             "Scheduled alarm for $quizId at ${
-                Instant.fromEpochMilliseconds(
-                    exactTimestampEpochMillis
-                )
+                Instant.ofEpochMilli(exactTimestampEpochMillis).atZone(ZoneId.systemDefault())
             }"
         }
     }
 
     override fun cancelAlarm(quizId: String) {
-        val pendingIntent = createPendingIntent(quizId)
-        alarmManager.cancel(pendingIntent)
-        pendingIntent.cancel()
+        val targetIntent = createPendingIntent(quizId)
+        targetIntent.cancel()
+        logger.i { "Canceled alarm for quiz $quizId" }
     }
 
     private fun createPendingIntent(quizId: String): PendingIntent {
