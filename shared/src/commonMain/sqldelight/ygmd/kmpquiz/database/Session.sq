@@ -1,0 +1,49 @@
+import kotlin.String;
+import kotlin.collections.List;
+import ygmd.kmpquiz.domain.model.quiz.session.QuizSession.SessionState;
+
+CREATE TABLE quiz_session (
+    id TEXT NOT NULL PRIMARY KEY,
+    quiz_id TEXT NOT NULL,
+    state TEXT AS SessionState NOT NULL,
+    question_ids TEXT AS List<String> NOT NULL,
+    created_at INTEGER NOT NULL,
+    updated_at INTEGER NOT NULL
+);
+
+CREATE TABLE session_answer (
+    session_id TEXT NOT NULL,
+    question_id TEXT NOT NULL,
+    answer_id TEXT NOT NULL,
+    PRIMARY KEY (session_id, question_id),
+    FOREIGN KEY (session_id) REFERENCES quiz_session(id) ON DELETE CASCADE
+);
+
+createSession:
+INSERT INTO quiz_session(id, quiz_id, state, question_ids, created_at, updated_at)
+VALUES (?, ?, ?, ?, ?, ?);
+
+updateSessionState:
+UPDATE quiz_session SET
+    state = ?,
+    updated_at = ?
+WHERE id = ?;
+
+getSessions:
+SELECT * FROM quiz_session qs;
+
+getSessionById:
+SELECT * FROM quiz_session qs WHERE qs.id = :id;
+
+getAllAnswers:
+SELECT * FROM session_answer;
+
+getAnswersBySessionId:
+SELECT * FROM session_answer sa WHERE sa.session_id = :id;
+
+insertAnswer:
+INSERT OR REPLACE INTO session_answer (session_id, question_id, answer_id)
+VALUES (?, ?, ?);
+
+deleteSessions:
+DELETE FROM session_answer;

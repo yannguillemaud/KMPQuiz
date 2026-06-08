@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- FETCH API -->
-    <uses-permission android:name="android.permission.INTERNET" />
 
-    <!-- NOTIFICATIONS -->
+    <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
-<!--    <uses-permission android:name="android.permission.USE_EXACT_ALARM" />-->
     <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
     <application
+        android:name="ygmd.kmpquiz.android.QuizApplication"
+        android:label="KMPQuiz"
         android:allowBackup="false"
         android:icon="@android:mipmap/sym_def_app_icon"
         android:supportsRtl="true"
@@ -20,26 +20,36 @@
             android:exported="true"
             android:launchMode="singleTop">
 
-            <!-- Point d'entrée normal -->
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
 
-            <!-- Point d'entrée par deep link -->
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
 
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
 
-                <data android:scheme="myapp" android:host="quiz" />
+                <data
+                    android:host="quiz"
+                    android:scheme="myapp" />
             </intent-filter>
         </activity>
 
         <receiver
-            android:name="ygmd.kmpquiz.android.notification.NotificationReceiver"
+            android:name="infra.receiver.QuizNotificationReceiver"
             android:enabled="true"
-            android:exported="true" />
+            android:exported="false">
+        </receiver>
+        <receiver
+            android:name="infra.receiver.BootReceiver"
+            android:enabled="true"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
+        </receiver>
     </application>
 </manifest>

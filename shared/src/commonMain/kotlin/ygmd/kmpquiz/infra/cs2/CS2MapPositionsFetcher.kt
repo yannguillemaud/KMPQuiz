@@ -14,7 +14,7 @@ import ygmd.kmpquiz.domain.git.GitTreeNode
 import ygmd.kmpquiz.domain.git.GitTreeResponse
 import ygmd.kmpquiz.domain.model.draftqanda.DraftQanda
 import ygmd.kmpquiz.domain.model.qanda.AnswersFactory
-import ygmd.kmpquiz.domain.model.qanda.Question
+import ygmd.kmpquiz.domain.model.qanda.QuestionContent
 import ygmd.kmpquiz.domain.result.FailureType.NETWORK_ERROR
 import ygmd.kmpquiz.domain.result.FailureType.RATE_LIMIT
 import ygmd.kmpquiz.domain.result.FailureType.SERVER_ERROR
@@ -117,9 +117,8 @@ class CS2MapPositionsFetcher(
                     }
 
                     DraftQanda(
-                        question = Question.ImageQuestion(
-                            imageUrl = buildGithubRawUrl(currentNode.path),
-                            text = "How is this callout called ?"
+                        question = QuestionContent.ImageContent(
+                            imageUrl = buildGithubRawUrl(currentNode.path)
                         ),
                         answers = AnswersFactory.createMultipleTextChoices(
                             correctAnswer = currentNode.path.substringAfter("/")

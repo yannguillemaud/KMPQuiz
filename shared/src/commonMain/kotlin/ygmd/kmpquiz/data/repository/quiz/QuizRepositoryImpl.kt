@@ -1,113 +1,231 @@
 package ygmd.kmpquiz.data.repository.quiz
 
+import app.cash.sqldelight.coroutines.asFlow
+import app.cash.sqldelight.coroutines.mapToList
+import co.touchlab.kermit.Logger
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
-import ygmd.kmpquiz.database.QuizEntity
-import ygmd.kmpquiz.domain.dao.QuizDao
-import ygmd.kmpquiz.domain.model.cron.CronExpression
-import ygmd.kmpquiz.domain.model.cron.QuizCron
-import ygmd.kmpquiz.domain.model.quiz.DraftQuiz
+import ygmd.kmpquiz.database.KMPQuizDatabase
+import ygmd.kmpquiz.domain.model.category.CategoryWithCount
+import ygmd.kmpquiz.domain.model.scheduler.SchedulerConfiguration
 import ygmd.kmpquiz.domain.model.quiz.Quiz
 import ygmd.kmpquiz.domain.repository.QuizRepository
-import ygmd.kmpquiz.domain.repository.RelationRepository
-import java.util.UUID
+
+private val logger = Logger.withTag("QuizRepository")
 
 class QuizRepositoryImpl(
-    private val quizDao: QuizDao,
-    private val relationRepository: RelationRepository,
+    private val database: KMPQuizDatabase,
+    private val dispatchers: CoroutineDispatcher = Dispatchers.IO,
 ) : QuizRepository {
     override fun observeAll(): Flow<List<Quiz>> {
-        return quizDao.observeAllQuizzes()
-            .map {
-                it.map { entity ->
-                    mapToQuiz(entity)
+        val allQuizzes = database.quizQueries.selectAll()
+            .asFlow().mapToList(dispatchers)
+        val categoriesByQuiz =
+            database.quizCategoryRelationQueries.getAllCategoriesConfigurationWithCount()
+                .asFlow().mapToList(dispatchers)
+                .map { relation -> relation.groupBy { it.quizId } }
+        val schedulerConfigurations = database.schedulerConfigurationQueries.getAll()
+            .asFlow().mapToList(dispatchers)
+            .map { schedulers -> schedulers.associateBy({ it.quiz_id }, { it }) }
+        return combine(
+            allQuizzes,
+            categoriesByQuiz,
+            schedulerConfigurations,
+        ) { quizzes, categories, schedulerConfigurations ->
+            quizzes.map { quiz ->
+                val categories = categories[quiz.id].orEmpty()
+                    .map { category ->
+                        CategoryWithCount(
+                            category.categoryId,
+                            category.categoryName,
+                            category.categoryCount.toInt()
+                        )
+                    }
+                val questionsConfiguration = quiz.questions_config
+                val schedulerConfiguration = schedulerConfigurations[quiz.id]?.let {
+                    SchedulerConfiguration(
+                        id = it.id,
+                        selection = it.selection,
+                        isEnabled = it.enabled == true
+                    )
                 }
+                Quiz(
+                    id = quiz.id,
+                    title = quiz.title,
+                    categories = categories,
+                    qandasConfiguration = questionsConfiguration,
+                    schedulerConfiguration = schedulerConfiguration,
+                )
+            }
+        }
+    }
+
+    override suspend fun getAll(): List<Quiz> {
+        val categoriesByQuizId = database.quizCategoryRelationQueries
+            .getAllCategoriesConfigurationWithCount()
+            .executeAsList()
+            .groupBy { it.quizId }
+        val schedulersConfigurationsByQuizId = database.schedulerConfigurationQueries
+            .getAll().executeAsList()
+            .associate {
+                it.quiz_id to SchedulerConfiguration(
+                    id = it.id,
+                    selection = it.selection,
+                    isEnabled = it.enabled == true
+                )
+            }
+        return database.quizQueries.selectAll().executeAsList()
+            .map { row ->
+                val categories = categoriesByQuizId[row.id].orEmpty()
+                    .map { category ->
+                        CategoryWithCount(
+                            category.categoryId,
+                            category.categoryName,
+                            category.categoryCount.toInt()
+                        )
+                    }
+                val questionsConfiguration = row.questions_config
+                val schedulerConfiguration = schedulersConfigurationsByQuizId[row.id]
+                Quiz(
+                    id = row.id,
+                    title = row.title,
+                    categories = categories,
+                    qandasConfiguration = questionsConfiguration,
+                    schedulerConfiguration = schedulerConfiguration
+                )
             }
     }
 
-    override suspend fun getAllQuizzes(): List<Quiz> {
-        return quizDao.getAllQuizzes()
-            .map { mapToQuiz(it) }
-    }
-
-    override suspend fun getQuizById(id: String): Result<Quiz> {
-        return quizDao.getQuizById(id)?.let { Result.success(mapToQuiz(it)) }
-            ?: Result.failure(Exception("Quiz not found"))
-    }
-
-    override suspend fun insertQuiz(draft: DraftQuiz): Result<Quiz> {
-        val entity = QuizEntity(
-            id = UUID.randomUUID().toString(),
-            title = draft.title,
-            cron_expression = draft.cron?.cron?.expression,
-            cron_display_name = draft.cron?.cron?.displayName,
-            cron_enabled = if (draft.cron?.isEnabled == true) 1L else 0L
+    override suspend fun getById(id: String): Result<Quiz> {
+        val quizEntity = database.quizQueries
+            .getById(id)
+            .executeAsOneOrNull() ?: return Result.failure(Exception("Quiz not found"))
+        val categories = getCategoriesWithCountForQuiz(id)
+        val config = quizEntity.questions_config
+        val schedulerConfiguration = database.schedulerConfigurationQueries
+            .getSchedulerConfigurationForQuiz(quizEntity.id)
+            .executeAsOneOrNull()
+            ?.let { scheduler -> SchedulerConfiguration(scheduler.id, scheduler.selection, scheduler.enabled == true) }
+        val quiz = Quiz(
+            id = quizEntity.id,
+            title = quizEntity.title,
+            categories = categories,
+            qandasConfiguration = config,
+            schedulerConfiguration = schedulerConfiguration
         )
-        val result = quizDao.save(entity)
-        return result?.let {
-            draft.qandas.forEach { qanda -> relationRepository.insertQandaToQuizId(it, qanda) }
-            Result.success(
-                Quiz(
-                    id = it,
-                    title = draft.title,
-                    quizCron = draft.cron,
-                    qandas = draft.qandas,
-                )
-            )
-        } ?: Result.failure(Exception("Failed to insert quiz"))
+        return Result.success(quiz)
     }
+
+    private fun getCategoriesWithCountForQuiz(quizId: String): List<CategoryWithCount> =
+        database.quizCategoryRelationQueries
+            .getCategoriesWithCountForQuiz(quizId).executeAsList()
+            .map { (categoryId, categoryName, count) ->
+                CategoryWithCount(
+                    categoryId,
+                    categoryName,
+                    count.toInt()
+                )
+            }
 
     override suspend fun saveQuiz(
-        id: String,
-        quiz: Quiz
+        quiz: Quiz,
     ): Result<Unit> {
-        val existing = quizDao.getQuizById(id)
-        if(existing == null) {
-            return Result.failure(Exception("Quiz not found"))
-        }
-        val entity = QuizEntity(
-            id = id,
-            title = quiz.title,
-            cron_expression = quiz.quizCron?.cron?.expression,
-            cron_display_name = quiz.quizCron?.cron?.displayName,
-            cron_enabled = if (quiz.quizCron?.isEnabled == true) 1L else 0L
-        )
-        return quizDao.save(entity)?.let {
-            val existingQandas = relationRepository.getQandasByQuizId(existing.id)
-            if(existingQandas != quiz.qandas) {
-                existingQandas.forEach { existingQanda ->
-                    relationRepository.deleteQandaFromQuizId(existing.id, existingQanda)
-                }
-                quiz.qandas.forEach { qanda ->
-                    relationRepository.insertQandaToQuizId(it, qanda)
-                }
+        try {
+            database.transaction {
+                insertQuiz(quiz)
+                updateSchedulerConfiguration(quiz.id, quiz.schedulerConfiguration)
+                updateCategoriesForQuiz(quiz.id, quiz)
+                Result.success(Unit)
             }
-            Result.success(Unit)
-        } ?: Result.failure(Exception("Failed to update quiz"))
+            return Result.success(Unit)
+        } catch (e: Exception) {
+            logger.e(e) { "Failed to save quiz" }
+            return Result.failure(SaveQuizFailedException(quiz.id))
+        }
+    }
+
+    private fun updateSchedulerConfiguration(
+        quizId: String,
+        schedulerConfiguration: SchedulerConfiguration?
+    ) {
+        if (schedulerConfiguration != null) {
+            database.schedulerConfigurationQueries.saveSchedulerConfiguration(
+                id = schedulerConfiguration.id,
+                quiz_id = quizId,
+                selection = schedulerConfiguration.selection,
+                name = schedulerConfiguration.selection.toString(),
+                enabled = schedulerConfiguration.isEnabled
+            )
+        } else {
+            database.schedulerConfigurationQueries.removeSchedulerConfiguration(quizId)
+        }
+    }
+
+    private fun insertQuiz(quiz: Quiz) {
+        database.quizQueries.save(
+            id = quiz.id,
+            title = quiz.title,
+            questions_config = quiz.qandasConfiguration
+        )
+    }
+
+    private fun updateCategoriesForQuiz(quizId: String, quiz: Quiz) {
+        val quizCategoryRelationQueries = database.quizCategoryRelationQueries
+        val existingCategoriesForQuiz = quizCategoryRelationQueries
+            .getCategoriesWithCountForQuiz(quizId)
+            .executeAsList()
+            .map { it.id }
+        val quizCategoriesId = quiz.categories.map { it.id }
+        val categoriesToDelete =
+            existingCategoriesForQuiz.filter { !quizCategoriesId.contains(it) }
+        categoriesToDelete.forEach { categoryId ->
+            if (quizCategoryRelationQueries.removeCategoryForQuiz(
+                    quiz_id = quizId,
+                    category_id = categoryId
+                ).value == 0L
+            ) logger.e { "Failed to delete category $categoryId for quiz $quizId" }
+        }
+        val categoriesToAdd =
+            quizCategoriesId.filter { !existingCategoriesForQuiz.contains(it) }
+        categoriesToAdd.forEach { categoryId ->
+            quizCategoryRelationQueries.insertQuizCategoryRelation(
+                quiz_id = quizId,
+                category_id = categoryId
+            )
+        }
     }
 
     override suspend fun deleteQuizById(id: String): Result<Unit> {
-        try {
-            quizDao.deleteById(id)
-            return Result.success(Unit)
-        } catch (e: Exception) {
-            return Result.failure(e)
-        }
+        val result = database.quizQueries.deleteById(id)
+        if (result.value == 0L) return Result.failure(Exception("Failed to delete quiz"))
+        return Result.success(Unit)
     }
 
-    override suspend fun deleteAll() {
-        TODO("Not yet implemented")
+    override suspend fun toggleQuizScheduler(
+        quizId: String,
+        newValue: Boolean
+    ): Result<Unit> {
+        val result = database.schedulerConfigurationQueries.scheduleQuiz(newValue, quizId)
+        if (result.value == 0L) return Result.failure(Exception("Failed to toggle cron"))
+        return Result.success(Unit)
     }
 
-    private suspend fun mapToQuiz(entity: QuizEntity): Quiz = Quiz(
-        id = entity.id,
-        title = entity.title,
-        quizCron = entity.cron_expression?.let {
-            QuizCron(
-                cron = CronExpression(it, displayName = requireNotNull(entity.cron_display_name)),
-                isEnabled = entity.cron_enabled == 1L
-            )
-        },
-        qandas = relationRepository.getQandasByQuizId(entity.id)
-    )
+    override suspend fun getAllScheduled(): Map<String, SchedulerConfiguration> {
+        return database.schedulerConfigurationQueries.getAllScheduled()
+            .executeAsList()
+            .associate {
+                it.id to SchedulerConfiguration(
+                    id = it.id,
+                    selection = it.selection,
+                    isEnabled = it.enabled == true
+                )
+            }
+    }
 }
+
+data class SaveQuizFailedException(val quizId: String) : Exception(
+    "Quiz with id $quizId not found"
+)

@@ -1,48 +1,46 @@
 [versions]
 # Android & Gradle
-agp = "9.0.0"
-compileSdk = "36"
-minSdk = "23"
-targetSdk = "33"
+agp = "9.2.1"
 
 # AndroidX
-androidx-activity = "1.12.2"
+androidx-activity = "1.13.0"
 androidx-appcompat = "1.7.1"
-androidx-core = "1.17.0"
-androidx-lifecycle = "2.9.6"
-androidx-navigation = "2.9.1"
+androidx-core = "1.19.0"
+androidx-lifecycle = "2.10.0"
+androidx-navigation = "2.9.2"
 androidx-material-icons = "1.7.8"
-androidx-datastore = "1.2.0"
-androidx-compose-bom = "2026.01.01"
+androidx-datastore = "1.2.1"
+androidx-compose-bom = "2026.05.01"
 
 # Compose
-compose-multiplatform = "1.10.0"
-compose-compiler = "2.2.10"
-coil-compose = "3.3.0"
+compose-multiplatform = "1.11.1"
+coil-compose = "3.4.0"
+material3 = "1.9.0"
+material = "1.14.0"
 
 # Kotlin
-kotlin = "2.3.0"
-kotlin-coroutines = "1.10.2"
-kotlin-serialization-json = "1.10.0"
-kotlin-datetime = "0.7.1"
+kotlin = "2.4.0"
+kotlin-coroutines = "1.11.0"
+kotlin-serialization-json = "1.11.0"
+kotlin-datetime = "0.8.0"
 
 # Koin
-koin = "4.1.1"
-
+koin = "4.2.1"
+# Grant Permission
+grant = "2.1.0"
 # Ktor
-ktor = "3.4.0"
-
+ktor = "3.5.0"
 # SQLDelight
-sqldelight = "2.2.1"
-
+sqldelight = "2.3.2"
 # Logging
-kermit = "2.0.8"
+kermit = "2.1.0"
 
-# Cron
-kcron-common = "0.31.7"
+# Hot Reload
+compose-hot-reload = "1.1.1"
 
-# Material
-material = "1.10.0"
+# Test
+turbine = "1.2.1"
+activity-ktx = "1.13.0"
 
 [libraries]
 # AndroidX Core
@@ -51,6 +49,7 @@ androidx-appcompat = { module = "androidx.appcompat:appcompat", version.ref = "a
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "androidx-activity" }
 
 # AndroidX Lifecycle
+androidx-datastore-preferences-core = { module = "androidx.datastore:datastore-preferences-core", version.ref = "androidx-datastore" }
 androidx-lifecycle-runtime-compose = { module = "org.jetbrains.androidx.lifecycle:lifecycle-runtime-compose", version.ref = "androidx-lifecycle" }
 androidx-lifecycle-viewmodel-compose = { module = "org.jetbrains.androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "androidx-lifecycle" }
 
@@ -58,7 +57,7 @@ androidx-lifecycle-viewmodel-compose = { module = "org.jetbrains.androidx.lifecy
 androidx-navigation-compose = { module = "org.jetbrains.androidx.navigation:navigation-compose", version.ref = "androidx-navigation" }
 
 # AndroidX DataStore
-androidx-datastore = { module = "androidx.datastore:datastore", version.ref = "androidx-datastore" }
+androidx-datastore = { module = "androidx.datastore:datastore-preferences-android", version.ref = "androidx-datastore" }
 
 # Compose
 androidx-compose-bom = { module = "androidx.compose:compose-bom", version.ref = "androidx-compose-bom" }
@@ -67,8 +66,10 @@ androidx-compose-ui-tooling-preview = { group = "androidx.compose.ui", name = "u
 androidx-compose-ui = { group = "androidx.compose.ui", name = "ui" }
 androidx-compose-ui-graphics = { group = "androidx.compose.ui", name = "ui-graphics" }
 androidx-compose-ui-tooling = { group = "androidx.compose.ui", name = "ui-tooling" }
-androidx-compose-material3 = { module = "androidx.compose.material3:material3", version = "1.4.0" }
 androidx-compose-material-icons-extended = { module = "androidx.compose.material:material-icons-extended", version.ref = "androidx-material-icons" }
+grant-compose = { module = "dev.brewkits:grant-compose", version.ref = "grant" }
+grant-core = { module = "dev.brewkits:grant-core", version.ref = "grant" }
+grant-core-koin = { module = "dev.brewkits:grant-core-koin", version.ref = "grant" }
 jetbrains-compose-ui-tooling-preview = { module = "org.jetbrains.compose.ui:ui-tooling-preview", version.ref = "compose-multiplatform" }
 
 # Coil
@@ -77,6 +78,10 @@ coil-compose-okhttp = { module = "io.coil-kt.coil3:coil-network-okhttp", version
 
 # Material
 material = { group = "com.google.android.material", name = "material", version.ref = "material" }
+material3 = { module = "org.jetbrains.compose.material3:material3", version.ref = "material3" }
+androidx-compose-material3 = { module = "androidx.compose.material3:material3", version = "1.4.0" }
+
+grant = { module = "dev.rickclephas.kmp:grant", version.ref = "grant" }
 
 # Koin
 koin-android = { module = "io.insert-koin:koin-android", version.ref = "koin" }
@@ -85,16 +90,15 @@ koin-compose-viewmodel-nav = { module = "io.insert-koin:koin-compose-viewmodel-n
 koin-androidx-workmanager = { module = "io.insert-koin:koin-androidx-workmanager", version.ref = "koin" }
 
 # Kotlin
-kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlin-coroutines" }
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlin-coroutines" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlin-serialization-json" }
 kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlin-datetime" }
+kotlinx-collections-immutable = { module = "org.jetbrains.kotlinx:kotlinx-collections-immutable", version = "0.4.0"}
 
 # Ktor
 ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
 ktor-client-okhttp = { module = "io.ktor:ktor-client-okhttp", version.ref = "ktor" }
-ktor-client-cio = { module = "io.ktor:ktor-client-cio", version.ref = "ktor" }
 ktor-client-mock = { module = "io.ktor:ktor-client-mock", version.ref = "ktor" }
 ktor-client-content-negotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor" }
 ktor-serialization-kotlinx-json = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktor" }
@@ -102,13 +106,11 @@ ktor-serialization-kotlinx-json = { module = "io.ktor:ktor-serialization-kotlinx
 # SQLDelight
 sqldelight-coroutines-extensions = { module = "app.cash.sqldelight:coroutines-extensions", version.ref = "sqldelight" }
 sqldelight-android-driver = { module = "app.cash.sqldelight:android-driver", version.ref = "sqldelight" }
-sqldelight-jvm-jdbc-driver = { module = "app.cash.sqldelight:jdbc-driver", version.ref = "sqldelight" }
 
 # Logging
 kermit = { module = "co.touchlab:kermit", version.ref = "kermit" }
-
-# Cron
-kcron-common = { module = "com.ucasoft.kcron:kcron-common", version.ref = "kcron-common" }
+turbine = { module = "app.cash.turbine:turbine", version.ref = "turbine" }
+androidx-activity-ktx = { group = "androidx.activity", name = "activity-ktx", version.ref = "activity-ktx" }
 
 [plugins]
 # Android
@@ -124,3 +126,6 @@ compose-multiplatform = { id = "org.jetbrains.compose", version.ref = "compose-m
 
 # SQLDelight
 sqldelight = { id = "app.cash.sqldelight", version.ref = "sqldelight" }
+
+# Hot Reload
+compose-hot-reload = { id = "org.jetbrains.compose.hot-reload", version.ref = "compose-hot-reload" }

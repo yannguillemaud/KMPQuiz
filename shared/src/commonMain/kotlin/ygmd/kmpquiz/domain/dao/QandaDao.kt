@@ -1,41 +1,41 @@
 package ygmd.kmpquiz.domain.dao
 
 import kotlinx.coroutines.flow.Flow
-import ygmd.kmpquiz.database.QandaEntity
+import ygmd.kmpquiz.database.Qanda_entity
 
 interface QandaDao {
     /**
      * Observe la liste complète des questions avec les détails de leur catégorie.
      * Retourne un Flow de QandaWithCategory.
      */
-    fun observeQandasEntity(): Flow<List<QandaEntity>>
+    fun observeQandasEntity(): Flow<List<Qanda_entity>>
 
     /**
      * Récupère la liste complète des questions avec les détails de leur catégorie.
      * Retourne une List de QandaEntity.
      */
-    suspend fun getAll(): List<QandaEntity>
+    suspend fun getAll(): List<Qanda_entity>
 
     /**
      * Récupère une question par son ID, avec les détails de sa catégorie.
      */
-    suspend fun getById(id: String): QandaEntity?
+    suspend fun getById(id: String): Qanda_entity?
 
     /**
      * Récupère les questions d'une catégorie donnée, par son ID.
      */
-    suspend fun getByCategory(categoryId: String): List<QandaEntity>
+    suspend fun getByCategory(categoryId: String): List<Qanda_entity>
 
     /**
      * Récupère une question par sa clé de contexte.
      */
-    suspend fun getByContextKey(contextKey: String): QandaEntity?
+    suspend fun getByContextKey(contextKey: String): Qanda_entity?
 
     /**
      * Sauvegarde une entité question. Note : cette méthode prend toujours un QandaEntity
      * car on insère dans la table de base, pas dans la vue.
      */
-    suspend fun save(entity: QandaEntity): QandaEntity
+    suspend fun save(entity: Qanda_entity): Qanda_entity
 
     /**
      * Supprime toutes les questions.

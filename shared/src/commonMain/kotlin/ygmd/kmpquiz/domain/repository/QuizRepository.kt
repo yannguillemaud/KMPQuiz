@@ -1,17 +1,43 @@
 package ygmd.kmpquiz.domain.repository
 
 import kotlinx.coroutines.flow.Flow
-import ygmd.kmpquiz.domain.model.quiz.DraftQuiz
+import ygmd.kmpquiz.domain.model.scheduler.SchedulerConfiguration
 import ygmd.kmpquiz.domain.model.quiz.Quiz
 
 interface QuizRepository {
+    /**
+     * Observe all quizzes.
+     */
     fun observeAll(): Flow<List<Quiz>>
 
-    suspend fun getAllQuizzes(): List<Quiz>
-    suspend fun getQuizById(id: String): Result<Quiz>
+    /**
+     * Get all quizzes.
+     */
+    suspend fun getAll(): List<Quiz>
 
-    suspend fun insertQuiz(draft: DraftQuiz): Result<Quiz>
-    suspend fun saveQuiz(id: String, quiz: Quiz): Result<Unit>
+    /**
+     * Get a quiz by id.
+     */
+    suspend fun getById(id: String): Result<Quiz>
+
+    /**
+     * Save a quiz.
+     */
+    suspend fun saveQuiz(quiz: Quiz): Result<Unit>
+
+    /**
+     * Delete a quiz by id.
+     */
     suspend fun deleteQuizById(id: String): Result<Unit>
-    suspend fun deleteAll()
+
+    /**
+     * Toggle the scheduler for a quiz.
+     */
+    suspend fun toggleQuizScheduler(quizId: String, newValue: Boolean): Result<Unit>
+
+    /**
+     * Get all scheduled quizzes.
+     * Returns a map of quiz id to scheduler configuration.
+     */
+    suspend fun getAllScheduled(): Map<String, SchedulerConfiguration>
 }

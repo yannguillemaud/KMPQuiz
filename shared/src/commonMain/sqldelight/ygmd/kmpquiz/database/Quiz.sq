@@ -1,24 +1,24 @@
-import com.android.build.gradle.internal.dsl.decorator.SupportedPropertyType.Var.Boolean;
+import ygmd.kmpquiz.domain.model.quiz.QuizConfigDetails;
 
-CREATE TABLE IF NOT EXISTS quizEntity (
+CREATE TABLE IF NOT EXISTS quiz_entity (
     id TEXT PRIMARY KEY,
     title TEXT NOT NULL,
-    cron_expression TEXT,
-    cron_display_name TEXT,
-    cron_enabled INTEGER -- todo AS Boolean + columnAdapter. now 0 to false
+    questions_config TEXT AS QuizConfigDetails NOT NULL
 );
 
 selectAll:
-SELECT * FROM quizEntity;
+SELECT * FROM quiz_entity;
 
 getById:
-SELECT * FROM quizEntity q
-WHERE q.id = ?;
+SELECT * FROM quiz_entity WHERE id=?;
 
-insert:
-INSERT OR REPLACE INTO quizEntity(id, title, cron_expression, cron_display_name, cron_enabled)
-VALUES ?;
+save:
+INSERT INTO quiz_entity (
+    id, title, questions_config
+) VALUES (?, ?, ?) ON CONFLICT(id) DO UPDATE SET
+    title = excluded.title,
+    questions_config = excluded.questions_config;
 
 deleteById:
-DELETE FROM quizEntity
+DELETE FROM quiz_entity
 WHERE id = ?;

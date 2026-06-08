@@ -4,39 +4,31 @@ import kotlinx.serialization.Serializable
 
 // Routes de navigation
 @Serializable
-sealed class Route(val name: String) {
+sealed class Route() {
+    @Serializable
+    data object Home : Route()
 
     @Serializable
-    data object Home : Route("Home")
+    data object Categories : Route()
 
     @Serializable
-    data object Fetch : Route("Fetch")
+    data object Quizzes : Route()
 
     @Serializable
-    data object Categories : Route("Categories")
+    data class PlaySession(
+        val quizId: String? = null,
+        val sessionId: String? = null,
+    ) : Route()
 
     @Serializable
-    data object Settings : Route("Settings")
+    data class Category(val categoryId: String) : Route()
 
     @Serializable
-    data object Quizzes : Route("Quizzes")
+    data class QuizEditor(val quizId: String? = null) : Route()
 
     @Serializable
-    data class PlayQuiz(val quizId: String) : Route("PlayQuiz/$quizId")
+    data object SessionHistory: Route()
 
     @Serializable
-    data class QandaEdit(val qandaId: String) : Route("QandaEdit/$qandaId")
-
-    @Serializable
-    data class QandaCreation(val categoryId: String? = null) : Route(
-        "QandaCreation${categoryId?.let { "/$it" }.orEmpty()}")
-
-    @Serializable
-    data class QuizSettings(val quizId: String) : Route("QuizSettings/$quizId")
-
-    @Serializable
-    data object QuizCreation : Route("QuizCreation")
-
-    @Serializable
-    data class Category(val categoryId: String) : Route("Category/$categoryId")
+    data class SessionDetails(val sessionId: String): Route()
 }

@@ -1,44 +1,46 @@
-CREATE TABLE qandaEntity (
+import ygmd.kmpquiz.domain.model.qanda.Answers;
+import ygmd.kmpquiz.domain.model.qanda.QuestionContent;
+
+CREATE TABLE qanda_entity (
     id TEXT PRIMARY KEY,
-    question_type TEXT NOT NULL DEFAULT "text",
-    question_text TEXT,
-    question_url TEXT,
-    incorrect_answers_text TEXT NOT NULL,
-    correct_answer_text TEXT NOT NULL,
+    question TEXT AS QuestionContent NOT NULL,
+    answers TEXT AS Answers NOT NULL,
     category_id TEXT NOT NULL,
     context_key TEXT NOT NULL UNIQUE,
-    FOREIGN KEY(category_id) REFERENCES categoryEntity(id)
+    FOREIGN KEY(category_id) REFERENCES category_entity(id) ON DELETE CASCADE
 );
 
-CREATE INDEX idx_qanda_context_key ON qandaEntity(context_key);
-CREATE INDEX idx_qanda_category_id ON qandaEntity(category_id);
-
 selectAll:
-SELECT * FROM qandaEntity;
+SELECT * FROM qanda_entity;
 
 getById:
-SELECT * FROM qandaEntity q
+SELECT * FROM qanda_entity q
 WHERE q.id = ?;
 
 getByCategory:
-SELECT * FROM qandaEntity q
+SELECT * FROM qanda_entity q
 WHERE q.category_id = ?;
 
 getByContextKey:
-SELECT * FROM qandaEntity q
+SELECT * FROM qanda_entity q
 WHERE q.context_key = ?;
 
-insert:
-INSERT OR REPLACE INTO qandaEntity(id, context_key, question_type, question_text, question_url, incorrect_answers_text, correct_answer_text, category_id)
-VALUES ?;
+saveQanda:
+INSERT INTO qanda_entity(id, question, answers, category_id, context_key)
+VALUES (?, ?, ?, ?, ?)
+ON CONFLICT(id) DO UPDATE SET
+question = excluded.question,
+answers = excluded.answers,
+category_id = excluded.category_id,
+context_key = excluded.context_key;
 
 deleteAll:
-DELETE FROM qandaEntity;
+DELETE FROM qanda_entity;
 
 deleteById:
-DELETE FROM qandaEntity
+DELETE FROM qanda_entity
 WHERE id = ?;
 
 deleteByCategoryId:
-DELETE FROM qandaEntity
+DELETE FROM qanda_entity
 WHERE category_id = ?;

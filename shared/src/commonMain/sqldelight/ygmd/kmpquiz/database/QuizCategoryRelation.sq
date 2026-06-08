@@ -1,0 +1,36 @@
+CREATE TABLE quiz_category_relation (
+    quiz_id TEXT NOT NULL,
+    category_id TEXT NOT NULL,
+    PRIMARY KEY (quiz_id, category_id),
+    FOREIGN KEY (quiz_id) REFERENCES quiz_entity(id) ON DELETE CASCADE,
+    FOREIGN KEY (category_id) REFERENCES category_entity(id) ON DELETE CASCADE
+);
+
+getAllCategoriesConfigurationWithCount:
+SELECT
+    quiz.id AS quizId,
+    category.id AS categoryId,
+    category.name AS categoryName,
+    COUNT(qanda.id) AS categoryCount
+FROM quiz_category_relation relation
+INNER JOIN quiz_entity quiz ON relation.quiz_id = quiz.id
+INNER JOIN category_entity category ON relation.category_id = category.id
+INNER JOIN qanda_entity qanda ON category.id = qanda.category_id
+GROUP BY quiz.id;
+
+getCategoriesWithCountForQuiz:
+SELECT category.id, category.name, COUNT(qanda.id) AS questionsSizeForCategory
+FROM category_entity category
+INNER JOIN quiz_category_relation quizCategoryRelation ON category.id = quizCategoryRelation.category_id
+LEFT JOIN qanda_entity qanda ON category.id = qanda.category_id
+WHERE quiz_id = ?
+GROUP BY category.id;
+
+insertQuizCategoryRelation:
+INSERT INTO quiz_category_relation(quiz_id, category_id)
+VALUES (?, ?);
+
+removeCategoryForQuiz:
+DELETE FROM quiz_category_relation
+WHERE quiz_category_relation.quiz_id = ?
+AND quiz_category_relation.category_id = ?;

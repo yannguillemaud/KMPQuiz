@@ -27,16 +27,17 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import ygmd.kmpquiz.domain.model.qanda.Choice
+import ygmd.kmpquiz.domain.model.qanda.AnswerContent
 import ygmd.kmpquiz.domain.model.qanda.Question
+import ygmd.kmpquiz.domain.model.qanda.QuestionContent
 import ygmd.kmpquiz.domain.viewModel.displayable.DisplayableQanda
 import ygmd.kmpquiz.ui.composable.qanda.ImageView
 
 @Composable
 fun QandaQuizCard(
     qanda: DisplayableQanda,
-    selectedAnswer: Choice?,
-    onSelectAnswer: (Choice) -> Unit,
+    selectedAnswer: AnswerContent?,
+    onSelectAnswer: (AnswerContent) -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -56,9 +57,9 @@ fun QandaQuizCard(
             colors = CardDefaults.cardColors(containerColor = Color.Black)
         ) {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                if (qanda.question is Question.ImageQuestion) {
+                if (qanda.question is QuestionContent.ImageContent) {
                     ImageView(imageUrl = qanda.question.imageUrl, modifier = Modifier.fillMaxSize())
-                } else if (qanda.question is Question.TextQuestion) {
+                } else if (qanda.question is QuestionContent.TextContent) {
                     Text(
                         text = qanda.question.text,
                         style = MaterialTheme.typography.headlineSmall,

@@ -1,10 +1,14 @@
 package ygmd.kmpquiz.domain.scheduler
 
-import ygmd.kmpquiz.domain.model.cron.QuizCron
-import ygmd.kmpquiz.domain.model.quiz.Quiz
+interface QuizScheduler {
+    /**
+     * Schedules an alarm for the given quiz id at the given timestamp
+     * @param exactTimestampEpochMillis the timestamp in milliseconds
+     */
+    fun scheduleAlarm(quizId: String, exactTimestampEpochMillis: Long)
 
-interface TaskScheduler {
-    suspend fun rescheduleAllQuizzes(quizzes: List<Quiz>)
-    suspend fun rescheduleQuiz(quizId: String, newCronValue: QuizCron?)
-    suspend fun cancelAllReminders()
+    /**
+     * Cancels the alarm for the given quiz id
+     */
+    fun cancelAlarm(quizId: String)
 }

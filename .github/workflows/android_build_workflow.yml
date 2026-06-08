@@ -1,60 +1,74 @@
-name: Deploy APK Release
+name: CI/CD Build and Deploy APK
+
 on:
   push:
     tags:
-      - 'v*'
+      - 'v[1-9]*.[0-9]*.*'
+      - '[1-9]*.[0-9]*.*'
     branches:
       - main
+      - develop
 
 jobs:
   build:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-    steps:
-      - uses: actions/checkout@v4
 
-      - name: set up JDK 17
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
           cache: gradle
 
-      - name: Decode Keystore
-        env:
-          ENCODED_STRING: ${{ secrets.APP_KEYSTORE_BASE64 }}
-        run: |
-          echo $ENCODED_STRING | base64 -d > androidApp/keystore.jks
-
       - name: Ensure gradlew is executable
         run: chmod +x ./gradlew
 
-      - name: Build Release APK
-        env:
-          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
-          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
-          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-        run: ./gradlew assembleRelease
-
-      - name: Verify APK existence
+      - name: Build APK based on trigger
+        id: build_step
         run: |
-          ls -la androidApp/build/outputs/apk/release/
+          if [[ "${{ github.ref }}" == refs/tags/* ]]; then
+            echo "Valid release tag detected. Building Release APK..."
+            ./gradlew :androidApp:assembleRelease --stacktrace --build-cache
+          
+            echo "APK_PATH=androidApp/build/outputs/apk/release/androidApp-release-unsigned.apk" >> $GITHUB_ENV
+            echo "IS_RELEASE=true" >> $GITHUB_ENV
+          else
+            echo "Branch detected. Building Debug APK..."
+            ./gradlew :androidApp:assembleDebug --stacktrace --build-cache
+          
+            echo "APK_PATH=androidApp/build/outputs/apk/debug/androidApp-debug.apk" >> $GITHUB_ENV
+            echo "IS_RELEASE=false" >> $GITHUB_ENV
+          fi
 
-      - name: Upload APK as Artifact
+      - name: Fail if APK missing
+        run: |
+          if [ ! -f "${{ env.APK_PATH }}" ]; then
+            echo "ERROR: APK not found at ${{ env.APK_PATH }}"
+            exit 1
+          fi
+          echo "APK successfully found at ${{ env.APK_PATH }}"
+
+      - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: androidApp-release
-          path: androidApp/build/outputs/apk/release/*.apk
+          name: app-${{ env.IS_RELEASE == 'true' && 'release' || 'debug' }}-apk
+          path: ${{ env.APK_PATH }}
 
-      - name: Create Release
+      - name: Create GitHub Release
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
-          files: androidApp/build/outputs/apk/release/*.apk
+          files: ${{ env.APK_PATH }}
           tag_name: ${{ github.ref_name }}
           name: Release ${{ github.ref_name }}
+          generate_release_notes: true
           draft: false
           prerelease: false
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
