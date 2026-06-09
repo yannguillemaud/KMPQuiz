@@ -1,5 +1,5 @@
 package ygmd.kmpquiz.data.database
 
 object DatabaseConstants {
-    const val databaseName = "kmpQuizDabatase"
+    const val DATABASE_NAME = "ygmd.kmpquiz.database"
 }

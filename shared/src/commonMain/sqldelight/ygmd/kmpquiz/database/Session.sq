@@ -1,6 +1,6 @@
 import kotlin.String;
 import kotlin.collections.List;
-import ygmd.kmpquiz.domain.model.quiz.session.QuizSession.SessionState;
+import ygmd.kmpquiz.core.domain.session.Session.SessionState;
 
 CREATE TABLE quiz_session (
     id TEXT NOT NULL PRIMARY KEY,

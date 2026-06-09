@@ -1,9 +1,9 @@
-import ygmd.kmpquiz.domain.model.quiz.QuizConfigDetails;
+import ygmd.kmpquiz.core.domain.quiz.config.QuizQuestionsConfiguration;
 
 CREATE TABLE IF NOT EXISTS quiz_entity (
     id TEXT PRIMARY KEY,
     title TEXT NOT NULL,
-    questions_config TEXT AS QuizConfigDetails NOT NULL
+    questions_config TEXT AS QuizQuestionsConfiguration NOT NULL
 );
 
 selectAll:

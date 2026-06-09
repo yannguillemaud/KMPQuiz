@@ -3,9 +3,9 @@ package ygmd.kmpquiz.data.repository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
-import ygmd.kmpquiz.domain.model.scheduler.SchedulerConfiguration
-import ygmd.kmpquiz.domain.model.quiz.Quiz
-import ygmd.kmpquiz.domain.repository.QuizRepository
+import ygmd.kmpquiz.core.domain.quiz.config.QuizSchedulerConfiguration
+import ygmd.kmpquiz.core.domain.quiz.Quiz
+import ygmd.kmpquiz.core.repository.QuizRepository
 import java.util.Collections.emptyMap
 
 class FakeQuizRepository: QuizRepository {
@@ -48,7 +48,7 @@ class FakeQuizRepository: QuizRepository {
         return Result.success(Unit)
     }
 
-    override suspend fun getAllScheduled(): Map<String, SchedulerConfiguration> {
+    override suspend fun getAllScheduled(): Map<String, QuizSchedulerConfiguration> {
         return quizzes.value.values.filter { it.schedulerConfiguration?.isEnabled == true }
             .associate { it.id to it.schedulerConfiguration!! }
     }
