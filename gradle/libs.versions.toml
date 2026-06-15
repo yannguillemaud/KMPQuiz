@@ -27,7 +27,7 @@ kotlin-datetime = "0.8.0"
 # Koin
 koin = "4.2.1"
 # Grant Permission
-grant = "2.1.0"
+grant = "2.2.0"
 # Ktor
 ktor = "3.5.0"
 # SQLDelight
@@ -67,21 +67,21 @@ androidx-compose-ui = { group = "androidx.compose.ui", name = "ui" }
 androidx-compose-ui-graphics = { group = "androidx.compose.ui", name = "ui-graphics" }
 androidx-compose-ui-tooling = { group = "androidx.compose.ui", name = "ui-tooling" }
 androidx-compose-material-icons-extended = { module = "androidx.compose.material:material-icons-extended", version.ref = "androidx-material-icons" }
-grant-compose = { module = "dev.brewkits:grant-compose", version.ref = "grant" }
-grant-core = { module = "dev.brewkits:grant-core", version.ref = "grant" }
-grant-core-koin = { module = "dev.brewkits:grant-core-koin", version.ref = "grant" }
 jetbrains-compose-ui-tooling-preview = { module = "org.jetbrains.compose.ui:ui-tooling-preview", version.ref = "compose-multiplatform" }
 
 # Coil
 coil-compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coil-compose" }
 coil-compose-okhttp = { module = "io.coil-kt.coil3:coil-network-okhttp", version.ref = "coil-compose" }
 
+# Grant permissions
+grant-compose = { module = "dev.brewkits:grant-compose", version.ref = "grant" }
+grant-core = { module = "dev.brewkits:grant-core", version.ref = "grant" }
+grant-core-koin = { module = "dev.brewkits:grant-core-koin", version.ref = "grant" }
+
 # Material
 material = { group = "com.google.android.material", name = "material", version.ref = "material" }
 material3 = { module = "org.jetbrains.compose.material3:material3", version.ref = "material3" }
 androidx-compose-material3 = { module = "androidx.compose.material3:material3", version = "1.4.0" }
-
-grant = { module = "dev.rickclephas.kmp:grant", version.ref = "grant" }
 
 # Koin
 koin-android = { module = "io.insert-koin:koin-android", version.ref = "koin" }

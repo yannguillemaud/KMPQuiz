@@ -7,16 +7,24 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import dev.brewkits.grant.GrantLauncher
+import dev.brewkits.grant.GrantManager
+import dev.brewkits.grant.impl.AndroidGrantLauncher
 import kotlinx.coroutines.flow.MutableStateFlow
-import ygmd.kmpquiz.ui.App
+import org.koin.android.ext.android.inject
+import org.koin.java.KoinJavaComponent.inject
+import ygmd.kmpquiz.presentation.App
+import kotlin.getValue
 
 class MainActivity : ComponentActivity() {
     private val pendingQuizTarget = MutableStateFlow<String?>(null)
+    private val grantManager: GrantManager by inject()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         pendingQuizTarget.value = extractQuizId(intent)
         enableEdgeToEdge()
+        grantManager.setLauncher(AndroidGrantLauncher.from(this))
         setContent {
             val quizId by pendingQuizTarget.collectAsState()
             App(

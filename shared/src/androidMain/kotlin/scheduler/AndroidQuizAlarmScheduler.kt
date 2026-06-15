@@ -5,29 +5,29 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import co.touchlab.kermit.Logger
-import infra.receiver.QuizNotificationReceiver
-import ygmd.kmpquiz.domain.scheduler.QuizScheduler
+import infra.receiver.AndroidNotificationReceiver
+import ygmd.kmpquiz.core.service.scheduler.QuizAlarmScheduler
 import java.time.Instant
 import java.time.ZoneId
 
 private val logger = Logger.withTag("AndroidScheduler")
 
-class AndroidScheduler(
+class AndroidAlarmScheduler(
     private val context: Context
-) : QuizScheduler {
+) : QuizAlarmScheduler {
 
     private val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
 
-    override fun scheduleAlarm(quizId: String, exactTimestampEpochMillis: Long) {
+    override fun scheduleAlarm(quizId: String, exactEpochMillis: Long) {
         val pendingIntent = createPendingIntent(quizId)
         alarmManager.setAndAllowWhileIdle(
             AlarmManager.RTC_WAKEUP,
-            exactTimestampEpochMillis,
+            exactEpochMillis,
             pendingIntent
         )
         logger.d {
             "Scheduled alarm for $quizId at ${
-                Instant.ofEpochMilli(exactTimestampEpochMillis).atZone(ZoneId.systemDefault())
+                Instant.ofEpochMilli(exactEpochMillis).atZone(ZoneId.systemDefault())
             }"
         }
     }
@@ -39,8 +39,8 @@ class AndroidScheduler(
     }
 
     private fun createPendingIntent(quizId: String): PendingIntent {
-        val intent = Intent(context, QuizNotificationReceiver::class.java).apply {
-            putExtra(QuizNotificationReceiver.QUIZ_ID_KEY, quizId)
+        val intent = Intent(context, AndroidNotificationReceiver::class.java).apply {
+            putExtra(AndroidNotificationReceiver.QUIZ_ID_KEY, quizId)
         }
         return PendingIntent.getBroadcast(
             /* context = */ context,

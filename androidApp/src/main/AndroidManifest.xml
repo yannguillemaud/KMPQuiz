@@ -38,18 +38,9 @@
         </activity>
 
         <receiver
-            android:name="infra.receiver.QuizNotificationReceiver"
+            android:name="infra.receiver.AndroidNotificationReceiver"
             android:enabled="true"
             android:exported="false">
-        </receiver>
-        <receiver
-            android:name="infra.receiver.BootReceiver"
-            android:enabled="true"
-            android:exported="false">
-            <intent-filter>
-                <action android:name="android.intent.action.BOOT_COMPLETED" />
-                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
-            </intent-filter>
         </receiver>
     </application>
 </manifest>

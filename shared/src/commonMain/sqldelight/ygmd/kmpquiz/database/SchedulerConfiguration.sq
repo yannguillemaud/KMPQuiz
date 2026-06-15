@@ -1,5 +1,5 @@
 import kotlin.Boolean;
-import ygmd.kmpquiz.domain.model.scheduler.SchedulerSelection;
+import ygmd.kmpquiz.core.domain.quiz.config.SchedulerSelection;
 
 CREATE TABLE quiz_scheduler_configuration_entity (
     id TEXT PRIMARY KEY,

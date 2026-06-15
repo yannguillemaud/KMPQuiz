@@ -3,27 +3,22 @@ package ygmd.kmpquiz.data.di
 import kotlinx.coroutines.Dispatchers
 import kotlinx.serialization.json.Json
 import org.koin.dsl.module
-import ygmd.kmpquiz.data.repository.category.CategoryRepositoryImpl
-import ygmd.kmpquiz.data.repository.category.PersistenceCategoryDao
-import ygmd.kmpquiz.data.repository.fetch.FetchRepository
-import ygmd.kmpquiz.data.repository.qanda.InMemoryQandaDao
-import ygmd.kmpquiz.data.repository.qanda.QandaRepositoryImpl
-import ygmd.kmpquiz.data.repository.quiz.PermissionRepositoryImpl
-import ygmd.kmpquiz.data.repository.quiz.QuizRepositoryImpl
-import ygmd.kmpquiz.data.repository.relation.QuizCategoryRelationDao
-import ygmd.kmpquiz.data.repository.relation.RelationRepositoryImpl
-import ygmd.kmpquiz.data.repository.scheduler.SchedulerDataStoreImpl
+import ygmd.kmpquiz.core.repository.CategoryRepository
+import ygmd.kmpquiz.core.repository.FetcherRepository
+import ygmd.kmpquiz.core.repository.PermissionRepository
+import ygmd.kmpquiz.core.repository.QandaRepository
+import ygmd.kmpquiz.core.repository.QuizRepository
+import ygmd.kmpquiz.core.repository.SessionRepository
+import ygmd.kmpquiz.data.dao.CategoryDao
+import ygmd.kmpquiz.data.dao.QandaDao
+import ygmd.kmpquiz.data.repository.category.PersistentCategoryRepository
+import ygmd.kmpquiz.data.repository.category.SQLDelightCategoryDao
+import ygmd.kmpquiz.data.repository.fetcher.InMemoryFetcherRepository
+import ygmd.kmpquiz.data.repository.permission.GrantPermissionRepository
+import ygmd.kmpquiz.data.repository.qanda.PersistentQandaRepository
+import ygmd.kmpquiz.data.repository.qanda.SQLDelightQandaDao
+import ygmd.kmpquiz.data.repository.quiz.PersistentQuizRepository
 import ygmd.kmpquiz.data.repository.session.PersistentSessionRepository
-import ygmd.kmpquiz.domain.dao.CategoryDao
-import ygmd.kmpquiz.domain.dao.QandaDao
-import ygmd.kmpquiz.domain.dao.RelationDao
-import ygmd.kmpquiz.domain.repository.CategoryRepository
-import ygmd.kmpquiz.domain.repository.PermissionRepository
-import ygmd.kmpquiz.domain.repository.QandaRepository
-import ygmd.kmpquiz.domain.repository.QuizRepository
-import ygmd.kmpquiz.domain.repository.RelationRepository
-import ygmd.kmpquiz.domain.repository.SchedulerDataStore
-import ygmd.kmpquiz.domain.repository.SessionRepository
 
 // Data Layer - Repositories & DataSources
 val dataModule = module {
@@ -36,24 +31,14 @@ val dataModule = module {
 
     // Repositories
     single<QandaRepository> {
-        QandaRepositoryImpl(
+        PersistentQandaRepository(
             qandaDao = get(),
         )
     }
 
-    single<FetchRepository> {
-        FetchRepository(fetchers = getAll())
-    }
-
     single<QuizRepository> {
-        QuizRepositoryImpl(
+        PersistentQuizRepository(
             database = get(),
-        )
-    }
-
-    single<RelationRepository> {
-        RelationRepositoryImpl(
-            relationDao = get()
         )
     }
 
@@ -64,36 +49,25 @@ val dataModule = module {
         )
     }
 
-    single<FetchRepository> {
-        FetchRepository(
-            fetchers = getAll()
-        )
-    }
-
     single<QandaDao> {
-        InMemoryQandaDao(database = get())
-    }
-
-    single<RelationDao> {
-        QuizCategoryRelationDao(get())
+        SQLDelightQandaDao(database = get())
     }
 
     single<CategoryDao> {
-        PersistenceCategoryDao(get())
+        SQLDelightCategoryDao(get())
     }
 
     single<CategoryRepository>{
-        CategoryRepositoryImpl(categoryDao = get())
-    }
-
-    single<SchedulerDataStore> {
-        SchedulerDataStoreImpl(
-            dataStore = get(),
-            json = get()
-        )
+        PersistentCategoryRepository(categoryDao = get())
     }
 
     single<PermissionRepository> {
-        PermissionRepositoryImpl(grantManager = get())
+        GrantPermissionRepository(grantManager = get())
+    }
+
+    single<FetcherRepository>{
+        InMemoryFetcherRepository(
+            fetchers = getAll()
+        )
     }
 }

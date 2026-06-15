@@ -1,5 +1,5 @@
-import ygmd.kmpquiz.domain.model.qanda.Answers;
-import ygmd.kmpquiz.domain.model.qanda.QuestionContent;
+import ygmd.kmpquiz.core.domain.qanda.Answers;
+import ygmd.kmpquiz.core.domain.qanda.QuestionContent;
 
 CREATE TABLE qanda_entity (
     id TEXT PRIMARY KEY,

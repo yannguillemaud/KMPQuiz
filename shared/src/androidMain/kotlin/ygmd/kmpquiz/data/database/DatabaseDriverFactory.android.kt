@@ -11,7 +11,7 @@ actual fun Scope.sqlDriverFactory(): SqlDriver {
     return AndroidSqliteDriver(
         schema = KMPQuizDatabase.Schema,
         context = androidContext(),
-        name = "${DatabaseConstants.databaseName}.db",
+        name = "${DatabaseConstants.DATABASE_NAME}.db",
         callback = object : AndroidSqliteDriver.Callback(KMPQuizDatabase.Schema) {
             override fun onConfigure(db: SupportSQLiteDatabase) {
                 super.onConfigure(db)

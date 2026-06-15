@@ -10,12 +10,12 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.withContext
 import ygmd.kmpquiz.database.KMPQuizDatabase
 import ygmd.kmpquiz.database.Session_answer
-import ygmd.kmpquiz.domain.model.quiz.session.AnswerId
-import ygmd.kmpquiz.domain.model.quiz.session.QandaId
-import ygmd.kmpquiz.domain.model.quiz.session.QuizId
-import ygmd.kmpquiz.domain.model.quiz.session.QuizSession
-import ygmd.kmpquiz.domain.model.quiz.session.SessionId
-import ygmd.kmpquiz.domain.repository.SessionRepository
+import ygmd.kmpquiz.core.domain.session.AnswerId
+import ygmd.kmpquiz.core.domain.session.QandaId
+import ygmd.kmpquiz.core.domain.session.QuizId
+import ygmd.kmpquiz.core.domain.session.Session
+import ygmd.kmpquiz.core.domain.session.SessionId
+import ygmd.kmpquiz.core.repository.SessionRepository
 import kotlin.collections.map
 
 class PersistentSessionRepository(
@@ -24,14 +24,14 @@ class PersistentSessionRepository(
 ) : SessionRepository {
     private val queries = database.sessionQueries
 
-    override fun observeSessions(): Flow<List<QuizSession>> {
+    override fun observeSessions(): Flow<List<Session>> {
         val sessionsFlow = queries.getSessions().asFlow().mapToList(dispatcher)
         val answersFlow = queries.getAllAnswers().asFlow().mapToList(dispatcher)
         return combine(sessionsFlow, answersFlow) { sessions, answers ->
             val answersBySessionId: Map<String, List<Session_answer>> =
                 answers.groupBy { it.session_id }
             sessions.map { session ->
-                QuizSession(
+                Session(
                     sessionId = SessionId(session.id),
                     quizId = QuizId(session.quiz_id),
                     questions = session.question_ids.map { QandaId(it) }.toPersistentList(),
@@ -46,7 +46,7 @@ class PersistentSessionRepository(
         }
     }
 
-    override fun observeSession(sessionId: String): Flow<QuizSession?> {
+    override fun observeSession(sessionId: String): Flow<Session?> {
         val sessionFlow = queries.getSessionById(sessionId).asFlow().mapToList(dispatcher)
         val sessionAnswersFlow =
             queries.getAnswersBySessionId(sessionId).asFlow().mapToList(dispatcher)
@@ -54,7 +54,7 @@ class PersistentSessionRepository(
             if (quizSession.isEmpty()) return@combine null
             val session = quizSession.first()
             val answers = quizSessionAnswers.groupBy { it.session_id }[session.id].orEmpty()
-            QuizSession(
+            Session(
                 sessionId = SessionId(session.id),
                 quizId = QuizId(session.quiz_id),
                 questions = session.question_ids.map { QandaId(it) }.toPersistentList(),
@@ -70,7 +70,7 @@ class PersistentSessionRepository(
 
     override suspend fun initSession(
         sessionId: String,
-        session: QuizSession
+        session: Session
     ): Result<Unit> = withContext(dispatcher) {
         try {
             queries.createSession(
@@ -89,7 +89,7 @@ class PersistentSessionRepository(
 
     override suspend fun updateSessionState(
         sessionId: String,
-        newState: QuizSession.SessionState
+        newState: Session.SessionState
     ): Result<Unit> = withContext(dispatcher) {
         try {
             queries.updateSessionState(

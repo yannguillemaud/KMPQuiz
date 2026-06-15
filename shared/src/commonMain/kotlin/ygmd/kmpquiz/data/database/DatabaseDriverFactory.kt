@@ -14,5 +14,5 @@ fun createDatabase(
     qanda_entityAdapter = DatabaseAdapters.qandaAdapter,
     quiz_entityAdapter = quizAdapter,
     quiz_scheduler_configuration_entityAdapter = DatabaseAdapters.quizSchedulerConfigurationAdapter,
-    quiz_sessionAdapter = DatabaseAdapters.quizSessionAdapter,
+    quiz_sessionAdapter = DatabaseAdapters.sessionAdapter,
 )
