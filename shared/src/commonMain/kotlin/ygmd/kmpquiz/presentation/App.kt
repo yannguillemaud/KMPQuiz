@@ -43,7 +43,7 @@ import ygmd.kmpquiz.core.domain.route.KMPQuizRoute.QuizEditor
 import ygmd.kmpquiz.core.domain.route.KMPQuizRoute.Quizzes
 import ygmd.kmpquiz.presentation.screen.category.CategoriesScreen
 import ygmd.kmpquiz.presentation.screen.home.HomeScreen
-import ygmd.kmpquiz.presentation.screen.qandas.CategoryScreen
+import ygmd.kmpquiz.presentation.screen.category.CategoryScreen
 import ygmd.kmpquiz.presentation.screen.quiz.DetailedSessionHistoryScreen
 import ygmd.kmpquiz.presentation.screen.quiz.QuizEditorScreen
 import ygmd.kmpquiz.presentation.screen.quiz.QuizSessionScreen

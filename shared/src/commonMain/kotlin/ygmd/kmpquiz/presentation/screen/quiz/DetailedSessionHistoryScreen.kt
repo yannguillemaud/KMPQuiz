@@ -59,7 +59,7 @@ import coil3.compose.AsyncImage
 import org.koin.compose.viewmodel.koinViewModel
 import ygmd.kmpquiz.core.domain.session.SessionStats
 import ygmd.kmpquiz.presentation.composable.playquiz.ErrorState
-import ygmd.kmpquiz.presentation.screen.qandas.QandaImagePreview
+import ygmd.kmpquiz.presentation.screen.category.QandaImagePreview
 import ygmd.kmpquiz.presentation.viewModel.quiz.session.CategoryStatUiState
 import ygmd.kmpquiz.presentation.viewModel.quiz.session.DetailedSessionUiState
 import ygmd.kmpquiz.presentation.viewModel.quiz.session.DetailedSessionViewModel

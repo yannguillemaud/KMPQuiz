@@ -4,10 +4,12 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import co.touchlab.kermit.Logger
-import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import ygmd.kmpquiz.core.domain.qanda.Answers
 import ygmd.kmpquiz.core.domain.qanda.QuestionContent
@@ -38,43 +40,77 @@ class CategoryQandaViewModel(
     savedStateHandle: SavedStateHandle,
     private val categoryUseCase: CategoryUseCase,
     private val getQandasUseCase: GetQandaUseCase
-): ViewModel(){
+) : ViewModel() {
     private val categoryId: String = checkNotNull(savedStateHandle["categoryId"])
-    private val _uiState = MutableStateFlow<CategoryQuestionsState>(CategoryQuestionsState.Loading)
-    val qandasUiState: StateFlow<CategoryQuestionsState> = _uiState
+
+    private val _loadingState = MutableStateFlow<CategoryQuestionsState>(CategoryQuestionsState.Loading)
+    private val _rawQandas = MutableStateFlow<List<DisplayableQanda>>(emptyList())
+    private val _searchQuery = MutableStateFlow("")
+
+    val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
+
+    val qandasUiState: StateFlow<CategoryQuestionsState> = combine(
+        _loadingState,
+        _rawQandas,
+        _searchQuery
+    ) { loadState, rawList, query ->
+        when (loadState) {
+            is CategoryQuestionsState.Loading -> CategoryQuestionsState.Loading
+            is CategoryQuestionsState.Error -> loadState
+            is CategoryQuestionsState.Success -> {
+                val filtered = if (query.isBlank()) rawList
+                               else rawList.filter { it.matchesQuery(query) }
+                CategoryQuestionsState.Success(category = loadState.category, qandas = filtered)
+            }
+        }
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = CategoryQuestionsState.Loading
+    )
 
     init {
         loadData()
+    }
+
+    fun onSearchQueryChanged(query: String) {
+        _searchQuery.value = query
     }
 
     private fun loadData() {
         viewModelScope.launch {
             try {
                 val category = categoryUseCase.getById(categoryId)
-                if(category == null){
-                    _uiState.update { CategoryQuestionsState.Error("Category not found") }
+                if (category == null) {
+                    _loadingState.value = CategoryQuestionsState.Error("Category not found")
                     return@launch
                 }
-                val questionsDeferred = async { getQandasUseCase.getByCategory(categoryId) }
-                val fetchedQuestions = questionsDeferred.await().map {
+                val displayableCategory = DisplayableCategory(category.id, category.name)
+                val fetchedQuestions = getQandasUseCase.getByCategory(categoryId).map {
                     DisplayableQanda(
                         id = it.id,
                         contextKey = it.contextKey,
-                        category = DisplayableCategory(category.id, category.name),
+                        category = displayableCategory,
                         question = it.question,
                         answers = it.answers
                     )
                 }
-                _uiState.update {
-                    CategoryQuestionsState.Success(
-                        category = DisplayableCategory(category.id, category.name),
-                        qandas = fetchedQuestions
-                    )
-                }
+                _rawQandas.value = fetchedQuestions
+                _loadingState.value = CategoryQuestionsState.Success(
+                    category = displayableCategory,
+                    qandas = emptyList()
+                )
             } catch (e: Exception) {
                 logger.e(e) { "Failed to load category questions" }
-                _uiState.update { CategoryQuestionsState.Error("Failed to load category questions") }
+                _loadingState.value = CategoryQuestionsState.Error("Failed to load category questions")
             }
         }
+    }
+
+    private fun DisplayableQanda.matchesQuery(query: String): Boolean {
+        val normalized = query.trim().lowercase()
+        return contextKey.lowercase().contains(normalized)
+            || (question as? QuestionContent.TextContent)?.text?.lowercase()?.contains(normalized) == true
+            || answers.correctAnswer.contextKey.lowercase().contains(normalized)
     }
 }
