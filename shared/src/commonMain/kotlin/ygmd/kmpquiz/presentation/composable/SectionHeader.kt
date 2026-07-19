@@ -12,22 +12,21 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-
+import ygmd.kmpquiz.presentation.theme.Dimens
 
 @Composable
 fun SectionHeader(title: String, icon: ImageVector) {
     Row(
-        modifier = Modifier.padding(bottom = 12.dp, top = 4.dp),
+        modifier = Modifier.padding(bottom = Dimens.PaddingMediumSmall, top = Dimens.ChoiceVerticalPadding),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
+        horizontalArrangement = Arrangement.spacedBy(Dimens.PaddingSmall)
     ) {
         Icon(
             imageVector = icon,
             contentDescription = null,
             tint = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.size(18.dp)
+            modifier = Modifier.size(Dimens.SectionIconSize)
         )
         Text(
             text = title.uppercase(),

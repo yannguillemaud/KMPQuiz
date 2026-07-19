@@ -23,7 +23,7 @@ sealed interface QuestionContent {
     @Serializable
     data class TextContent(val text: String) : QuestionContent
     @Serializable
-    data class ImageContent(val imageUrl: String) : QuestionContent
+    data class ImageContent(val imageUrl: String, val altText: String? = null) : QuestionContent
 }
 
 @Serializable

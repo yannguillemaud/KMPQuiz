@@ -40,4 +40,12 @@ interface QuizRepository {
      * Returns a map of quiz id to scheduler configuration.
      */
     suspend fun getAllScheduled(): Map<String, QuizSchedulerConfiguration>
+    fun removeCategory(categoryId: String): Result<Unit>
+    fun countCategoryInUse(categoryId: String): Int
+
+    /**
+     * Returns the number of DISTINCT quizzes referencing any of the given categories.
+     * Distinct so a quiz shared across several selected categories is counted once.
+     */
+    fun countCategoriesInUse(categoryIds: Set<String>): Int
 }

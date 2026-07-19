@@ -1,6 +1,5 @@
 package ygmd.kmpquiz.presentation.viewModel.category
 
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import co.touchlab.kermit.Logger
@@ -37,12 +36,10 @@ data class DisplayableQanda(
 )
 
 class CategoryQandaViewModel(
-    savedStateHandle: SavedStateHandle,
+    private val categoryId: String,
     private val categoryUseCase: CategoryUseCase,
     private val getQandasUseCase: GetQandaUseCase
 ) : ViewModel() {
-    private val categoryId: String = checkNotNull(savedStateHandle["categoryId"])
-
     private val _loadingState = MutableStateFlow<CategoryQuestionsState>(CategoryQuestionsState.Loading)
     private val _rawQandas = MutableStateFlow<List<DisplayableQanda>>(emptyList())
     private val _searchQuery = MutableStateFlow("")

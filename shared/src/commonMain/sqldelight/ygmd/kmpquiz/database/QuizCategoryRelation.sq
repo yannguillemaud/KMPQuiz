@@ -34,3 +34,18 @@ removeCategoryForQuiz:
 DELETE FROM quiz_category_relation
 WHERE quiz_category_relation.quiz_id = ?
 AND quiz_category_relation.category_id = ?;
+
+removeCategoryFromAllQuizzes:
+DELETE FROM quiz_category_relation
+WHERE quiz_category_relation.category_id = ?;
+
+countCategoryInUse:
+SELECT COUNT(*) FROM quiz_category_relation qcr
+WHERE qcr.category_id = ?;
+
+-- Counts the DISTINCT quizzes referencing any of the given categories. DISTINCT is
+-- required so a quiz sharing several selected categories is counted once (naively summing
+-- countCategoryInUse over the set would double-count shared quizzes).
+countCategoriesInUse:
+SELECT COUNT(DISTINCT quiz_id) FROM quiz_category_relation qcr
+WHERE qcr.category_id IN :categoryIds;

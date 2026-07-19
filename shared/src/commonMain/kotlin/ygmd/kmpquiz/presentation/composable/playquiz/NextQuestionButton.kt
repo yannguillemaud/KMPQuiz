@@ -1,18 +1,27 @@
 package ygmd.kmpquiz.presentation.composable.playquiz
 
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowRight
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.Icon
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.material3.Button
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 
 @Composable
-fun NextQuestionButton(onClick: () -> Unit) {
-    FloatingActionButton(onClick = onClick) {
-        Icon(
-            Icons.AutoMirrored.Filled.ArrowRight,
-            contentDescription = "Question suivante" // Bon pour l'accessibilité
+fun NextQuestionButton(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Button(
+        onClick = onClick,
+        modifier = modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.large,
+    ) {
+        Text(
+            text = "Next Question →",
+            style = MaterialTheme.typography.labelLarge,
+            fontWeight = FontWeight.SemiBold,
         )
     }
 }

@@ -1,7 +1,6 @@
 package ygmd.kmpquiz.presentation.screen.quiz
 
 import androidx.compose.animation.Crossfade
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -18,11 +17,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.outlined.Cancel
@@ -41,7 +39,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -57,15 +55,15 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import org.koin.compose.viewmodel.koinViewModel
-import ygmd.kmpquiz.core.domain.session.SessionStats
+import ygmd.kmpquiz.presentation.theme.Dimens
 import ygmd.kmpquiz.presentation.composable.playquiz.ErrorState
-import ygmd.kmpquiz.presentation.screen.category.QandaImagePreview
+import ygmd.kmpquiz.presentation.composable.playquiz.GlobalScoreSection
+import ygmd.kmpquiz.presentation.composable.qanda.QandaImagePreview
 import ygmd.kmpquiz.presentation.viewModel.quiz.session.CategoryStatUiState
 import ygmd.kmpquiz.presentation.viewModel.quiz.session.DetailedSessionUiState
 import ygmd.kmpquiz.presentation.viewModel.quiz.session.DetailedSessionViewModel
 import ygmd.kmpquiz.presentation.viewModel.quiz.session.QandaUiState
 import ygmd.kmpquiz.presentation.viewModel.quiz.session.UserAnswerState
-import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -74,8 +72,8 @@ fun DetailedSessionHistoryScreen(
     onNavigateBack: () -> Unit = {},
     viewModel: DetailedSessionViewModel = koinViewModel(),
 ) {
-    val state by viewModel.sessionHistoryState.collectAsState()
-    var expandedImageUrl by remember { mutableStateOf<String?>(null) }
+    val state by viewModel.sessionHistoryState.collectAsStateWithLifecycle()
+    var expandedImage by remember { mutableStateOf<Pair<String, String?>?>(null) }
 
     LaunchedEffect(Unit) {
         viewModel.initialize(sessionId)
@@ -119,16 +117,20 @@ fun DetailedSessionHistoryScreen(
                 }
                 is DetailedSessionUiState.Error -> ErrorState(message = sessionState.message)
                 is DetailedSessionUiState.Loaded -> {
-                    ResultsDashboard(sessionState, onImageClick = { expandedImageUrl = it })
+                    ResultsDashboard(
+                        sessionState,
+                        onImageClick = { url, altText -> expandedImage = url to altText }
+                    )
                 }
             }
         }
     }
 
-    expandedImageUrl?.let { url ->
+    expandedImage?.let { (url, altText) ->
         QandaImagePreview(
             imageUrl = url,
-            onDismiss = { expandedImageUrl = null }
+            altText = altText,
+            onDismiss = { expandedImage = null }
         )
     }
 }
@@ -136,12 +138,14 @@ fun DetailedSessionHistoryScreen(
 @Composable
 private fun ResultsDashboard(
     sessionState: DetailedSessionUiState.Loaded,
-    onImageClick: (String) -> Unit = {}
+    onImageClick: (String, String?) -> Unit = { _, _ -> }
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(bottom = 32.dp),
-        verticalArrangement = Arrangement.spacedBy(24.dp)
+        // Bottom padding reserves space for the floating nav capsule so the last
+        // reviewed answer card is not obscured.
+        contentPadding = PaddingValues(bottom = Dimens.BottomNavPadding),
+        verticalArrangement = Arrangement.spacedBy(Dimens.PaddingLarge)
     ) {
         // 1. SECTION : GLOBAL SCORE
         item {
@@ -161,7 +165,7 @@ private fun ResultsDashboard(
                 text = "Detailed Review",
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(horizontal = 16.dp)
+                modifier = Modifier.padding(horizontal = Dimens.PaddingMedium)
             )
         }
 
@@ -170,7 +174,7 @@ private fun ResultsDashboard(
                 Text(
                     text = "No recorded answers found.",
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(horizontal = 16.dp)
+                    modifier = Modifier.padding(horizontal = Dimens.PaddingMedium)
                 )
             }
         } else {
@@ -181,57 +185,8 @@ private fun ResultsDashboard(
                 HistoryItemCard(
                     qanda = qanda,
                     userAnswerState = userAnswerState,
-                    modifier = Modifier.padding(horizontal = 16.dp),
+                    modifier = Modifier.padding(horizontal = Dimens.PaddingMedium),
                     onImageClick = onImageClick
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun GlobalScoreSection(stats: SessionStats) {
-    // Animation fluide pour le remplissage du Donut Chart
-    val animatedProgress by animateFloatAsState(
-        targetValue = stats.globalSuccessRate,
-        animationSpec = tween(durationMillis = 1000),
-        label = "ScoreAnimation"
-    )
-
-    Column(
-        modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Box(contentAlignment = Alignment.Center) {
-            // Cercle de fond (Track)
-            CircularProgressIndicator(
-                progress = { 1f },
-                modifier = Modifier.size(160.dp),
-                color = MaterialTheme.colorScheme.surfaceVariant,
-                strokeWidth = 12.dp,
-                strokeCap = StrokeCap.Round
-            )
-            // Cercle de score animé
-            CircularProgressIndicator(
-                progress = { animatedProgress },
-                modifier = Modifier.size(160.dp),
-                color = MaterialTheme.colorScheme.primary,
-                strokeWidth = 12.dp,
-                strokeCap = StrokeCap.Round
-            )
-
-            // Texte au centre
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(
-                    text = "${(stats.globalSuccessRate * 100).roundToInt()}%",
-                    style = MaterialTheme.typography.displayMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                Text(
-                    text = "${stats.totalCorrect} / ${stats.totalQuestions} correct",
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }
@@ -245,22 +200,21 @@ private fun CategoryBreakdownSection(categories: List<CategoryStatUiState>) {
             text = "Performance by Category",
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.SemiBold,
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+            modifier = Modifier.padding(horizontal = Dimens.PaddingMedium, vertical = Dimens.PaddingSmall)
         )
 
-        // LazyRow permet de scroller horizontalement si on a beaucoup de catégories
         LazyRow(
-            contentPadding = PaddingValues(horizontal = 16.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+            contentPadding = PaddingValues(horizontal = Dimens.PaddingMedium),
+            horizontalArrangement = Arrangement.spacedBy(Dimens.PaddingMediumSmall)
         ) {
             items(categories, key = { it.categoryName }) { category ->
                 OutlinedCard(
-                    modifier = Modifier.width(160.dp),
-                    shape = RoundedCornerShape(12.dp)
+                    modifier = Modifier.widthIn(min = 140.dp, max = 200.dp),
+                    shape = MaterialTheme.shapes.medium
                 ) {
                     Column(
-                        modifier = Modifier.padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                        modifier = Modifier.padding(Dimens.PaddingMedium),
+                        verticalArrangement = Arrangement.spacedBy(Dimens.PaddingSmall)
                     ) {
                         Text(
                             text = category.categoryName.uppercase(),
@@ -277,7 +231,7 @@ private fun CategoryBreakdownSection(categories: List<CategoryStatUiState>) {
 
                         LinearProgressIndicator(
                             progress = { category.successRate },
-                            modifier = Modifier.fillMaxWidth().height(6.dp).clip(RoundedCornerShape(3.dp)),
+                            modifier = Modifier.fillMaxWidth().height(6.dp).clip(MaterialTheme.shapes.extraSmall),
                             color = MaterialTheme.colorScheme.secondary,
                             trackColor = MaterialTheme.colorScheme.secondaryContainer,
                             strokeCap = StrokeCap.Round
@@ -294,7 +248,7 @@ fun HistoryItemCard(
     modifier: Modifier = Modifier,
     qanda: QandaUiState,
     userAnswerState: UserAnswerState,
-    onImageClick: (String) -> Unit = {}
+    onImageClick: (String, String?) -> Unit = { _, _ -> }
 ) {
     val isCorrect = userAnswerState.isCorrect
     val containerColor = if (isCorrect) {
@@ -316,13 +270,13 @@ fun HistoryItemCard(
 
     ElevatedCard(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp)
+        shape = MaterialTheme.shapes.large
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+                .padding(Dimens.PaddingMedium),
+            verticalArrangement = Arrangement.spacedBy(Dimens.PaddingMediumSmall)
         ) {
             // Category Badge
             Text(
@@ -349,39 +303,37 @@ fun HistoryItemCard(
                         modifier = Modifier
                             .fillMaxWidth()
                             .aspectRatio(16f / 9f)
-                            .clip(RoundedCornerShape(8.dp))
-                            .clickable(true, onClick = { onImageClick(content.imageUrl) })
+                            .clip(MaterialTheme.shapes.medium)
+                            .clickable(true, onClick = { onImageClick(content.imageUrl, content.altText) })
                     )
                 }
             }
-
-            Spacer(modifier = Modifier.height(4.dp))
 
             // User's Answer Highlight
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clip(RoundedCornerShape(8.dp))
+                    .clip(MaterialTheme.shapes.medium)
                     .background(containerColor)
                     .border(
                         width = 1.dp,
                         color = borderColor,
-                        shape = RoundedCornerShape(8.dp)
+                        shape = MaterialTheme.shapes.medium
                     )
-                    .padding(12.dp)
+                    .padding(Dimens.PaddingMediumSmall)
             ) {
                 Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    verticalAlignment = Alignment.Top,
+                    horizontalArrangement = Arrangement.spacedBy(Dimens.PaddingSmall)
                 ) {
                     Icon(
                         imageVector = icon,
                         contentDescription = if (isCorrect) "Correct Answer" else "Wrong Answer",
                         tint = iconTint
                     )
-                    Row(
+                    Column(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
+                        verticalArrangement = Arrangement.spacedBy(Dimens.PaddingSmall)
                     ) {
                         Column {
                             Text(
@@ -396,12 +348,12 @@ fun HistoryItemCard(
                                 fontWeight = FontWeight.Medium
                             )
                         }
-                        if(!isCorrect){
+                        if (!isCorrect) {
                             Column {
                                 Text(
                                     text = "Correct Answer",
                                     style = MaterialTheme.typography.labelMedium,
-                                    color = iconTint
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                                 Text(
                                     text = userAnswerState.correctAnswerContent.text,

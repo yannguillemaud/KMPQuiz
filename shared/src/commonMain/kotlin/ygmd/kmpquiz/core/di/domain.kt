@@ -16,6 +16,7 @@ import ygmd.kmpquiz.core.usecase.qanda.GetQandaWithCategoryUseCase
 import ygmd.kmpquiz.core.usecase.quiz.DeleteQuizUseCase
 import ygmd.kmpquiz.core.usecase.quiz.GetQuizUseCase
 import ygmd.kmpquiz.core.usecase.quiz.SaveQuizUseCase
+import ygmd.kmpquiz.core.usecase.session.SessionQuestionReviewUseCase
 import ygmd.kmpquiz.core.usecase.session.SessionResultsUseCase
 import ygmd.kmpquiz.core.usecase.session.SetUpQuizSessionUseCase
 import ygmd.kmpquiz.presentation.viewModel.quiz.session.NextStateSessionUseCase
@@ -104,6 +105,7 @@ val domainModule = module {
 
     factory {
         CategoryUseCase(
+            quizRepository = get(),
             categoryRepository = get()
         )
     }
@@ -111,6 +113,13 @@ val domainModule = module {
     factory {
         SessionResultsUseCase(
             qandaUseCase = get(),
+        )
+    }
+
+    factory {
+        SessionQuestionReviewUseCase(
+            getQandaUseCase = get(),
+            categoryUseCase = get(),
         )
     }
 

@@ -4,6 +4,7 @@ import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -12,22 +13,21 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Add
-import androidx.compose.material.icons.outlined.History
 import androidx.compose.material.icons.outlined.Quiz
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -35,7 +35,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.brewkits.grant.compose.GrantDialog
 import org.koin.compose.viewmodel.koinViewModel
 import ygmd.kmpquiz.core.domain.event.Event
@@ -43,7 +43,8 @@ import ygmd.kmpquiz.presentation.composable.EmptyState
 import ygmd.kmpquiz.presentation.composable.LoadingState
 import ygmd.kmpquiz.presentation.composable.playquiz.ErrorState
 import ygmd.kmpquiz.presentation.composable.playquiz.QuizCard
-import ygmd.kmpquiz.presentation.theme.Dimens.DefaultPadding
+import ygmd.kmpquiz.presentation.theme.Dimens.BottomNavPadding
+import ygmd.kmpquiz.presentation.theme.Dimens.PaddingMedium
 import ygmd.kmpquiz.presentation.viewModel.quiz.QuizViewModel
 import ygmd.kmpquiz.presentation.viewModel.quiz.QuizzesUiState
 
@@ -53,10 +54,10 @@ fun QuizzesScreen(
     quizViewModel: QuizViewModel = koinViewModel(),
     onNavigateToQuizEditor: (quizId: String?) -> Unit = {},
     onNavigateToPlayQuiz: (quizId: String) -> Unit = {},
-    onNavigateToSessionHistory: () -> Unit = {},
+    onNavigateToSessionHistory: () -> Unit = {}, // Incoming Feature
 ) {
-    val quizzesUiState by quizViewModel.quizzesState.collectAsState(
-        initial = QuizzesUiState(isLoading = true)
+    val quizzesUiState by quizViewModel.quizzesState.collectAsStateWithLifecycle(
+        initialValue = QuizzesUiState(isLoading = true)
     )
     val snackbarHostState = remember { SnackbarHostState() }
 
@@ -76,26 +77,34 @@ fun QuizzesScreen(
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
-            CenterAlignedTopAppBar(
-                title = {
-                    Text(
-                        text = "Quizzes",
-                        fontWeight = FontWeight.Bold,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                },
-                actions = {
-                    IconButton(onClick = onNavigateToSessionHistory) {
-                        Icon(
-                            imageVector = Icons.Outlined.History,
-                            contentDescription = "View Session History"
+            Column {
+                CenterAlignedTopAppBar(
+                    title = {
+                        Text(
+                            text = "Quizzes",
+                            fontWeight = FontWeight.Bold,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),
-                scrollBehavior = scrollBehavior
-            )
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),
+                    scrollBehavior = scrollBehavior
+                )
+                /** Incoming Feature
+                PrimaryTabRow(selectedTabIndex = 0) {
+                    Tab(
+                        selected = true,
+                        onClick = {},
+                        text = { Text("Quizzes") }
+                    )
+                    Tab(
+                        selected = false,
+                        onClick = onNavigateToSessionHistory,
+                        text = { Text("History") }
+                    )
+                }
+                **/
+            }
         },
         floatingActionButton = {
             FloatingActionButton(
@@ -147,12 +156,12 @@ fun QuizzesScreen(
                         LazyColumn(
                             modifier = Modifier.fillMaxSize(),
                             contentPadding = PaddingValues(
-                                start = DefaultPadding,
-                                end = DefaultPadding,
-                                top = DefaultPadding,
-                                bottom = 88.dp
+                                start = PaddingMedium,
+                                end = PaddingMedium,
+                                top = PaddingMedium,
+                                bottom = BottomNavPadding
                             ),
-                            verticalArrangement = Arrangement.spacedBy(DefaultPadding),
+                            verticalArrangement = Arrangement.spacedBy(PaddingMedium),
                         ) {
                             items(
                                 items = state.quizzes,

@@ -7,6 +7,7 @@ import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -18,20 +19,19 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.automirrored.outlined.HelpOutline
 import androidx.compose.material.icons.outlined.Close
+import androidx.compose.material.icons.outlined.Image
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
@@ -44,7 +44,6 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -53,19 +52,22 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import coil3.compose.AsyncImage
 import androidx.compose.ui.platform.LocalLocale
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
-import coil3.compose.AsyncImage
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.koin.compose.viewmodel.koinViewModel
+import org.koin.core.parameter.parametersOf
 import ygmd.kmpquiz.core.domain.qanda.QuestionContent
+import ygmd.kmpquiz.presentation.composable.playquiz.ErrorState
+import ygmd.kmpquiz.presentation.composable.qanda.QandaImagePreview
+import ygmd.kmpquiz.presentation.theme.Dimens
 import ygmd.kmpquiz.presentation.viewModel.category.CategoryQandaViewModel
 import ygmd.kmpquiz.presentation.viewModel.category.CategoryQuestionsState
 import ygmd.kmpquiz.presentation.viewModel.category.DisplayableQanda
@@ -73,15 +75,15 @@ import ygmd.kmpquiz.presentation.viewModel.category.DisplayableQanda
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CategoryScreen(
-    categoryQandaViewModel: CategoryQandaViewModel = koinViewModel(),
+    categoryId: String,
+    categoryQandaViewModel: CategoryQandaViewModel = koinViewModel(parameters = { parametersOf(categoryId) }),
     onNavigateBack: () -> Unit = {},
 ) {
-    val categoryQandasState by categoryQandaViewModel.qandasUiState.collectAsState()
-    val searchQuery by categoryQandaViewModel.searchQuery.collectAsState()
+    val categoryQandasState by categoryQandaViewModel.qandasUiState.collectAsStateWithLifecycle()
+    val searchQuery by categoryQandaViewModel.searchQuery.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
-    var expandedImageUrl by remember { mutableStateOf<String?>(null) }
+    var expandedImage by remember { mutableStateOf<Pair<String, String?>?>(null) }
 
-    // Key Crossfade off state type only — prevents re-animation on every filter keystroke
     val stateType by remember {
         derivedStateOf {
             when (categoryQandasState) {
@@ -100,7 +102,6 @@ fun CategoryScreen(
                         is CategoryQuestionsState.Success -> state.category.name.replaceFirstChar {
                             if (it.isLowerCase()) it.titlecase(LocalLocale.current.platformLocale) else it.toString()
                         }
-
                         else -> "Questions"
                     }
                     Text(
@@ -118,9 +119,7 @@ fun CategoryScreen(
                         )
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.Transparent
-                )
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
             )
         },
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
@@ -140,7 +139,7 @@ fun CategoryScreen(
                     onQueryChange = categoryQandaViewModel::onSearchQueryChanged,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                        .padding(horizontal = Dimens.PaddingMedium, vertical = Dimens.PaddingSmall)
                 )
             }
 
@@ -159,14 +158,10 @@ fun CategoryScreen(
 
                     1 -> {
                         val errorState = categoryQandasState as? CategoryQuestionsState.Error
-                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                            Text(
-                                text = "Error : ${errorState?.message}",
-                                color = MaterialTheme.colorScheme.error,
-                                style = MaterialTheme.typography.bodyLarge,
-                                modifier = Modifier.padding(16.dp)
-                            )
-                        }
+                        ErrorState(
+                            modifier = Modifier.fillMaxSize(),
+                            message = errorState?.message ?: "Unknown error"
+                        )
                     }
 
                     else -> {
@@ -182,7 +177,7 @@ fun CategoryScreen(
                                         text = "No results for \"$searchQuery\"",
                                         style = MaterialTheme.typography.bodyLarge,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        modifier = Modifier.padding(16.dp)
+                                        modifier = Modifier.padding(Dimens.PaddingMedium)
                                     )
                                 }
                             }
@@ -196,7 +191,7 @@ fun CategoryScreen(
                                         text = "No questions in this category",
                                         style = MaterialTheme.typography.bodyLarge,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        modifier = Modifier.padding(16.dp)
+                                        modifier = Modifier.padding(Dimens.PaddingMedium)
                                     )
                                 }
                             }
@@ -204,11 +199,20 @@ fun CategoryScreen(
                             else -> {
                                 LazyColumn(
                                     modifier = Modifier.fillMaxSize(),
-                                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-                                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                                    contentPadding = PaddingValues(
+                                        start = Dimens.PaddingMedium,
+                                        end = Dimens.PaddingMedium,
+                                        top = Dimens.PaddingSmall,
+                                        // Clear the floating nav capsule at the bottom.
+                                        bottom = Dimens.BottomNavPadding,
+                                    ),
+                                    verticalArrangement = Arrangement.spacedBy(Dimens.PaddingMediumSmall)
                                 ) {
                                     items(qandas, key = { it.id }) { qanda ->
-                                        QandaCard(qanda, onImageClick = { expandedImageUrl = it })
+                                        QandaCard(
+                                            qanda,
+                                            onImageClick = { url, altText -> expandedImage = url to altText }
+                                        )
                                     }
                                 }
                             }
@@ -219,10 +223,11 @@ fun CategoryScreen(
         }
     }
 
-    expandedImageUrl?.let { url ->
+    expandedImage?.let { (url, altText) ->
         QandaImagePreview(
             imageUrl = url,
-            onDismiss = { expandedImageUrl = null }
+            altText = altText,
+            onDismiss = { expandedImage = null }
         )
     }
 }
@@ -239,25 +244,19 @@ private fun QandaSearchBar(
         modifier = modifier,
         placeholder = { Text("Search questions...") },
         leadingIcon = {
-            Icon(
-                imageVector = Icons.Outlined.Search,
-                contentDescription = null
-            )
+            Icon(imageVector = Icons.Outlined.Search, contentDescription = null)
         },
         trailingIcon = {
             if (query.isNotEmpty()) {
                 IconButton(onClick = { onQueryChange("") }) {
-                    Icon(
-                        imageVector = Icons.Outlined.Close,
-                        contentDescription = "Clear search"
-                    )
+                    Icon(imageVector = Icons.Outlined.Close, contentDescription = "Clear search")
                 }
             }
         },
         singleLine = true,
         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
         keyboardActions = KeyboardActions(onSearch = {}),
-        shape = RoundedCornerShape(12.dp),
+        shape = MaterialTheme.shapes.medium,
         colors = OutlinedTextFieldDefaults.colors(
             unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
         )
@@ -265,12 +264,11 @@ private fun QandaSearchBar(
 }
 
 @Composable
-private fun QandaCard(qanda: DisplayableQanda, onImageClick: (String) -> Unit) {
+private fun QandaCard(qanda: DisplayableQanda, onImageClick: (String, String?) -> Unit) {
     OutlinedCard(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp)
+        shape = MaterialTheme.shapes.medium
     ) {
-
         ListItem(
             colors = ListItemDefaults.colors(containerColor = Color.Transparent),
             headlineContent = {
@@ -287,7 +285,7 @@ private fun QandaCard(qanda: DisplayableQanda, onImageClick: (String) -> Unit) {
 
                     is QuestionContent.ImageContent -> {
                         Text(
-                            text = qanda.answers.correctAnswer.contextKey,
+                            text = content.altText ?: "Image question",
                             style = MaterialTheme.typography.titleMedium,
                             fontStyle = FontStyle.Italic,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -297,8 +295,8 @@ private fun QandaCard(qanda: DisplayableQanda, onImageClick: (String) -> Unit) {
             },
             supportingContent = {
                 val text = when (qanda.question) {
-                    is QuestionContent.TextContent -> "Correct Answer: ${qanda.answers.correctAnswer.contextKey}"
-                    is QuestionContent.ImageContent -> "Click on image to have it full size."
+                    is QuestionContent.TextContent -> "Correct answer: ${qanda.answers.correctAnswer.contextKey}"
+                    is QuestionContent.ImageContent -> "Tap image to preview"
                 }
                 Text(
                     text = text,
@@ -309,20 +307,36 @@ private fun QandaCard(qanda: DisplayableQanda, onImageClick: (String) -> Unit) {
             leadingContent = {
                 when (val content = qanda.question) {
                     is QuestionContent.ImageContent -> {
-                        AsyncImage(
-                            model = content.imageUrl,
-                            contentDescription = "Question Image",
-                            contentScale = ContentScale.Crop,
-                            modifier = Modifier
-                                .size(56.dp)
-                                .clip(RoundedCornerShape(8.dp))
-                                .clickable { onImageClick(qanda.question.imageUrl) }
-                        )
+                        Box(contentAlignment = Alignment.TopEnd) {
+                            AsyncImage(
+                                model = content.imageUrl,
+                                contentDescription = "Question image",
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier
+                                    .size(Dimens.QandaThumbnailSize)
+                                    .clip(MaterialTheme.shapes.medium)
+                                    .clickable { onImageClick(content.imageUrl, content.altText) }
+                            )
+                            Box(
+                                modifier = Modifier
+                                    .padding(2.dp)
+                                    .clip(MaterialTheme.shapes.extraSmall)
+                                    .background(MaterialTheme.colorScheme.primaryContainer)
+                                    .padding(2.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Outlined.Image,
+                                    contentDescription = "Image question",
+                                    modifier = Modifier.size(12.dp),
+                                    tint = MaterialTheme.colorScheme.onPrimaryContainer
+                                )
+                            }
+                        }
                     }
 
                     is QuestionContent.TextContent -> {
                         Box(
-                            modifier = Modifier.size(56.dp),
+                            modifier = Modifier.size(Dimens.QandaThumbnailSize),
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
@@ -335,47 +349,5 @@ private fun QandaCard(qanda: DisplayableQanda, onImageClick: (String) -> Unit) {
                 }
             }
         )
-    }
-}
-
-@Composable
-fun QandaImagePreview(
-    imageUrl: String,
-    onDismiss: () -> Unit
-) {
-    Dialog(
-        onDismissRequest = onDismiss,
-        properties = DialogProperties(
-            usePlatformDefaultWidth = false
-        )
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp)
-                .clickable(onClick = onDismiss),
-            contentAlignment = Alignment.Center
-        ) {
-            AsyncImage(
-                model = imageUrl,
-                contentDescription = null,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(16.dp))
-            )
-
-            IconButton(
-                onClick = onDismiss,
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .padding(8.dp),
-                colors = IconButtonDefaults.iconButtonColors(
-                    containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.7f),
-                    contentColor = MaterialTheme.colorScheme.onSurface
-                )
-            ) {
-                Icon(Icons.Outlined.Close, contentDescription = "Fermer")
-            }
-        }
     }
 }

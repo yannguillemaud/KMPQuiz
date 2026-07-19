@@ -25,11 +25,24 @@ data class HomeContentState(
     val isDownloading = sources.any { it.value.isDownloading }
 }
 
+/**
+ * Render-ready state of one question source.
+ *
+ * [status] flattens the domain [FetcherState] into the four UI states the source row can
+ * paint (Ready / Syncing / Updated / Error), giving the "Updated" (green) dot a real data
+ * path. [isDownloading] stays derived so the aggregate [HomeContentState.isDownloading]
+ * keeps working unchanged.
+ */
 data class FetcherUiState(
     val name: String,
-    val isDownloading: Boolean,
+    val status: FetcherStatus,
     val error: String? = null,
-)
+) {
+    val isDownloading: Boolean get() = status == FetcherStatus.Syncing
+}
+
+/** UI-facing status of a question source, mapped 1:1 from [FetcherState]. */
+enum class FetcherStatus { Ready, Syncing, Updated, Error }
 
 sealed interface DownloadIntent {
     data class Fetch(val fetcherId: String) : DownloadIntent
@@ -60,7 +73,12 @@ class HomeViewModel(
             sources = fetchers.associate { fetcher ->
                 fetcher.id to FetcherUiState(
                     name = fetcher.name,
-                    isDownloading = fetcher.state is FetcherState.Fetching,
+                    status = when (fetcher.state) {
+                        FetcherState.Idle -> FetcherStatus.Ready
+                        FetcherState.Fetching -> FetcherStatus.Syncing
+                        FetcherState.Success -> FetcherStatus.Updated
+                        is FetcherState.Error -> FetcherStatus.Error
+                    },
                     error = (fetcher.state as? FetcherState.Error)?.message
                 )
             }
