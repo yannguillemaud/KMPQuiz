@@ -18,6 +18,10 @@ val localProperties = Properties().apply {
 fun signingProp(key: String): String? =
     System.getenv(key) ?: localProperties.getProperty(key)
 
+val appVersionName = System.getenv("VERSION_NAME")
+    ?: providers.exec { commandLine("git", "describe", "--tags", "--always", "--dirty") }
+        .standardOutput.asText.get().trim()
+
 android {
     namespace = "ygmd.kmpquiz"
     compileSdk = 37
@@ -26,7 +30,7 @@ android {
         minSdk = 26
         targetSdk = 37
         versionCode = System.getenv("VERSION_CODE")?.toIntOrNull() ?: 1
-        versionName = System.getenv("VERSION_NAME") ?: "0.2.0-dev"
+        versionName = appVersionName
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -65,6 +69,14 @@ android {
 
     buildFeatures {
         compose = true
+    }
+}
+
+androidComponents {
+    onVariants { variant ->
+        variant.outputs.forEach { output ->
+            output.outputFileName.set("kmpquiz-$appVersionName-${variant.buildType}.apk")
+        }
     }
 }
 
