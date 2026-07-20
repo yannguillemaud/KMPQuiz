@@ -13,18 +13,14 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import ygmd.kmpquiz.core.domain.qanda.QuestionContent.ImageContent
-import ygmd.kmpquiz.core.domain.qanda.QuestionContent.TextContent
 import ygmd.kmpquiz.core.domain.quiz.Quiz
 import ygmd.kmpquiz.core.domain.session.Session
 import ygmd.kmpquiz.core.domain.session.SessionStats
 import ygmd.kmpquiz.core.usecase.category.CategoryUseCase
-import ygmd.kmpquiz.core.usecase.qanda.GetQandaUseCase
 import ygmd.kmpquiz.core.usecase.quiz.GetQuizUseCase
 import ygmd.kmpquiz.core.usecase.session.ObserveSessionUseCase
+import ygmd.kmpquiz.core.usecase.session.SessionQuestionReviewUseCase
 import ygmd.kmpquiz.core.usecase.session.SessionResultsUseCase
-import ygmd.kmpquiz.presentation.viewModel.quiz.session.QandaUiState.QuestionUiState.ImageQuestionUiState
-import ygmd.kmpquiz.presentation.viewModel.quiz.session.QandaUiState.QuestionUiState.TextQuestionUiState
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeFormatter.ofPattern
 
@@ -86,6 +82,7 @@ sealed interface DetailedSessionUiState {
 }
 
 data class CategoryStatUiState(
+    val categoryId: String,
     val categoryName: String,
     val totalQuestions: Int,
     val correctAnswers: Int,
@@ -103,7 +100,7 @@ class DetailedSessionViewModel(
     private val getSessionsUseCase: ObserveSessionUseCase,
     private val getQuizUseCase: GetQuizUseCase,
     private val sessionResultsUseCase: SessionResultsUseCase,
-    private val getQandaUseCase: GetQandaUseCase,
+    private val sessionQuestionReviewUseCase: SessionQuestionReviewUseCase,
     private val categoryUseCase: CategoryUseCase,
 ) : ViewModel() {
     private val _quiz = MutableStateFlow<Quiz?>(null)
@@ -116,7 +113,7 @@ class DetailedSessionViewModel(
                 quiz == null -> flowOf(DetailedSessionUiState.Error("Quiz not found"))
                 session == null -> flowOf(DetailedSessionUiState.Loading)
                 else -> flow(sessionResults(session, quiz))
-            }.catch { DetailedSessionUiState.Error(it.message ?: "Unknown error") }
+            }.catch { emit(DetailedSessionUiState.Error(it.message ?: "Unknown error")) }
         }.stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
@@ -128,44 +125,10 @@ class DetailedSessionViewModel(
         quiz: Quiz
     ): suspend FlowCollector<DetailedSessionUiState>.() -> Unit = {
         val results = sessionResultsUseCase(session)
-        val userAnswers = results.userResults
-            .map { (qandaId, userAnswer) ->
-                val qanda =
-                    getQandaUseCase.getById(qandaId.id) ?: error("Qanda ${qandaId.id} not found.")
-                val qandaState = qanda.let { qanda ->
-                    QandaUiState(
-                        category = categoryUseCase.getById(qanda.categoryId)?.name
-                            ?: error("Category ${qanda.categoryId} not found"),
-                        question = when (qanda.question) {
-                            is ImageContent -> ImageQuestionUiState(qanda.question.imageUrl)
-                            is TextContent -> TextQuestionUiState(qanda.question.text)
-                        },
-                        answers = qanda.answers.map {
-                            QandaUiState.AnswerUiState(it.id, it.contextKey)
-                        }
-                    )
-                }
-                val answer = UserAnswerState(
-                    userAnswerContent = qanda.answers.first { it.id == userAnswer.answerId.id }
-                        .let {
-                            QandaUiState.AnswerUiState(it.id, it.contextKey)
-                        },
-                    correctAnswerContent = qanda.answers.correctAnswer.let {
-                        QandaUiState.AnswerUiState(it.id, it.contextKey)
-                    }
-                )
-                qandaState to answer
-            }
+        val userAnswers = sessionQuestionReviewUseCase(results).toUserAnswerUiStates()
 
-        val categoriesBreakdown = results.stats.categoriesStats.map { stat ->
-            CategoryStatUiState(
-                categoryName = categoryUseCase.getById(stat.categoryId)?.name
-                    ?: "Unknown",
-                totalQuestions = stat.totalQuestions,
-                correctAnswers = stat.correctAnswers,
-                successRate = stat.successRate
-            )
-        }
+        val categoriesBreakdown =
+            results.stats.categoriesStats.toCategoryStatUiStates(categoryUseCase)
 
         emit(
             DetailedSessionUiState.Loaded(
@@ -181,6 +144,7 @@ class DetailedSessionViewModel(
         if (_session.value != null) return
         viewModelScope.launch {
             getSessionsUseCase.observeSession(sessionId).collect {
+                if (it == null) return@collect
                 _session.value = it
                 _quiz.value = getQuizUseCase.getById(it.quizId.id)
             }

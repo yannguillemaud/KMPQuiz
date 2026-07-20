@@ -1,9 +1,10 @@
 package ygmd.kmpquiz.core.domain.route
 
+import androidx.navigation3.runtime.NavKey
 import kotlinx.serialization.Serializable
 
 @Serializable
-sealed interface KMPQuizRoute {
+sealed interface KMPQuizRoute : NavKey {
     @Serializable
     data object Home : KMPQuizRoute
 
@@ -17,6 +18,7 @@ sealed interface KMPQuizRoute {
     data class PlaySession(
         val quizId: String? = null,
         val sessionId: String? = null,
+        val fromNotification: Boolean = false,
     ) : KMPQuizRoute
 
     @Serializable
@@ -30,4 +32,11 @@ sealed interface KMPQuizRoute {
 
     @Serializable
     data class SessionDetails(val sessionId: String): KMPQuizRoute
+
+    @Serializable
+    data class CategoryReview(
+        val sessionId: String,
+        val categoryId: String,
+        val categoryName: String,
+    ) : KMPQuizRoute
 }

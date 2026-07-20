@@ -26,7 +26,6 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import ygmd.kmpquiz.presentation.theme.Dimens
-import ygmd.kmpquiz.presentation.theme.Dimens.DefaultPadding
 import ygmd.kmpquiz.presentation.viewModel.quiz.DisplayableQuiz
 
 @Composable
@@ -56,7 +55,7 @@ fun QuizCard(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(DefaultPadding)
+                .padding(Dimens.PaddingMedium)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),

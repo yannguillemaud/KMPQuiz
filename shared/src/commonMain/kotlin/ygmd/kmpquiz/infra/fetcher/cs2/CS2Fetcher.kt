@@ -22,6 +22,7 @@ import ygmd.kmpquiz.core.service.fetcher.Fetcher
 import ygmd.kmpquiz.infra.fetcher.cs2.CS2QandaFetcherConstants.API_URL
 import ygmd.kmpquiz.infra.git.GitTreeNode
 import ygmd.kmpquiz.infra.git.GitTreeResponse
+import java.util.Locale
 import java.util.UUID
 
 data class PositionDetails(
@@ -75,32 +76,45 @@ class CS2Fetcher(
         val qandaDetails = positionsByMap.flatMap { (mapName, positions) ->
             val qandas = mutableListOf<QandaDetails>()
             positions.forEach { positionDetails ->
-                val shuffledPositions = positions.shuffled() - positionDetails
-                val correctAnswer = positionDetails.positionName
-                val incorrectAnswers = shuffledPositions.take(3)
-                val correctAnswerContent = AnswerContent.TextAnswerContent(
-                    id = UUID.randomUUID().toString(),
-                    text = correctAnswer
-                )
-                qandas.add(
-                    QandaDetails(
-                        categoryName = mapName,
-                        question = QuestionContent.ImageContent(positionDetails.positionImageUrl),
-                        answers = Answers(
-                            answerContents = incorrectAnswers.map {
-                                AnswerContent.TextAnswerContent(
-                                    id = UUID.randomUUID().toString(),
-                                    text = it.positionName
-                                )
-                            } + correctAnswerContent,
-                            correctAnswer = correctAnswerContent
-                        )
-                    )
+                qandas += extractPosition(
+                    positions = positions,
+                    positionDetails = positionDetails,
+                    mapName = mapName
                 )
             }
             qandas
         }
         return qandaDetails
+    }
+
+    private fun extractPosition(
+        positions: List<PositionDetails>,
+        positionDetails: PositionDetails,
+        mapName: String
+    ): QandaDetails {
+        val shuffledPositions = positions.shuffled() - positionDetails
+        val correctAnswer = positionDetails.positionName
+        val incorrectAnswers = shuffledPositions.take(3)
+        val correctAnswerContent = AnswerContent.TextAnswerContent(
+            id = UUID.randomUUID().toString(),
+            text = correctAnswer
+        )
+        return QandaDetails(
+            categoryName = mapName,
+            question = QuestionContent.ImageContent(
+                positionDetails.positionImageUrl,
+                altText = positionDetails.positionName
+            ),
+            answers = Answers(
+                answerContents = incorrectAnswers.map {
+                    AnswerContent.TextAnswerContent(
+                        id = UUID.randomUUID().toString(),
+                        text = it.positionName
+                    )
+                } + correctAnswerContent,
+                correctAnswer = correctAnswerContent
+            )
+        )
     }
 }
 
@@ -115,6 +129,8 @@ private fun GitTreeNode.getPositionName(): String {
     return path
         .substringAfter("/")
         .substringBeforeLast(".")
+        .lowercase()
+        .replaceFirstChar { it.uppercase(Locale.getDefault()) }
 }
 
 private fun String.extension() = substringAfterLast(".")

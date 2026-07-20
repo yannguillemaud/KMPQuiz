@@ -7,6 +7,7 @@ import ygmd.kmpquiz.presentation.viewModel.home.HomeViewModel
 import ygmd.kmpquiz.presentation.viewModel.category.CategoryQandaViewModel
 import ygmd.kmpquiz.presentation.viewModel.quiz.QuizViewModel
 import ygmd.kmpquiz.presentation.viewModel.quiz.edit.QuizEditViewModel
+import ygmd.kmpquiz.presentation.viewModel.quiz.session.CategoryReviewViewModel
 import ygmd.kmpquiz.presentation.viewModel.quiz.session.DetailedSessionViewModel
 import ygmd.kmpquiz.presentation.viewModel.quiz.session.QuizSessionViewModel
 import ygmd.kmpquiz.presentation.viewModel.quiz.session.SessionViewModel
@@ -22,9 +23,9 @@ val viewModelModule = module {
         )
     }
 
-    factory {
+    factory { (categoryId: String) ->
         CategoryQandaViewModel(
-            savedStateHandle = get(),
+            categoryId = categoryId,
             categoryUseCase = get(),
             getQandasUseCase = get(),
         )
@@ -33,12 +34,13 @@ val viewModelModule = module {
     factory {
         QuizSessionViewModel(
             getQuizUC = get(),
-            savedStateHandle = get(),
             setUpSessionUC = get(),
             submitAnswer = get(),
             observeSessionUC = get(),
             nextState = get(),
             getDetailedQandaUC = get(),
+            sessionResultsUseCase = get(),
+            categoryUseCase = get(),
         )
     }
 
@@ -84,8 +86,16 @@ val viewModelModule = module {
             getSessionsUseCase = get(),
             getQuizUseCase = get(),
             sessionResultsUseCase = get(),
-            getQandaUseCase = get(),
+            sessionQuestionReviewUseCase = get(),
             categoryUseCase = get(),
+        )
+    }
+
+    factory {
+        CategoryReviewViewModel(
+            observeSessionUseCase = get(),
+            sessionResultsUseCase = get(),
+            sessionQuestionReviewUseCase = get(),
         )
     }
 }

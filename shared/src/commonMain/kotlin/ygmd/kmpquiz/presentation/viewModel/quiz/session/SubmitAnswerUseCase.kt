@@ -1,5 +1,6 @@
 package ygmd.kmpquiz.presentation.viewModel.quiz.session
 
+import co.touchlab.kermit.Logger
 import ygmd.kmpquiz.core.domain.session.Session
 import ygmd.kmpquiz.core.domain.session.Session.SessionState.Completed
 import ygmd.kmpquiz.core.domain.session.Session.SessionState.InProgress
@@ -21,9 +22,13 @@ class SubmitAnswerUseCase(
 
 class NextStateSessionUseCase(
     private val sessionRepository: SessionRepository,
+    private val logger: Logger = Logger.withTag("NextStateSessionUseCase"),
 ) {
     suspend operator fun invoke(session: Session?) {
-        if(session == null || session.state is Completed) return
+        if(session == null) {
+            logger.w { "Cannot invoke NextStateSessionUseCase with null session" }
+            return
+        }
         sessionRepository.updateSessionState(session.sessionId.id, session.nextState())
     }
 }

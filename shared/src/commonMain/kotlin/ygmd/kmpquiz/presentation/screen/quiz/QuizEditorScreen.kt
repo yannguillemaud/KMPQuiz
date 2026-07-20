@@ -52,6 +52,7 @@ import ygmd.kmpquiz.presentation.composable.SectionHeader
 import ygmd.kmpquiz.presentation.composable.createquiz.CategorySelectionSection
 import ygmd.kmpquiz.presentation.composable.createquiz.QuizQuestionConfigSection
 import ygmd.kmpquiz.presentation.composable.createquiz.SchedulerConfigurationSection
+import ygmd.kmpquiz.presentation.theme.Dimens
 import ygmd.kmpquiz.presentation.theme.ExtendedColors
 import ygmd.kmpquiz.presentation.theme.ExtendedTheme
 import ygmd.kmpquiz.presentation.viewModel.quiz.edit.QuizEditViewModel
@@ -230,7 +231,8 @@ fun QuizEditorScreen(
 
                 item(key = "questions_count") {
                     Card(
-                        modifier = Modifier.fillMaxWidth().padding(bottom = 80.dp),
+                        // Reserve space so the last card clears the floating nav capsule.
+                        modifier = Modifier.fillMaxWidth().padding(bottom = Dimens.BottomNavPadding),
                         colors = CardDefaults.cardColors(
                             containerColor = if (quiz.configuration.noQuestionsSelectedError != null)
                                 MaterialTheme.colorScheme.errorContainer

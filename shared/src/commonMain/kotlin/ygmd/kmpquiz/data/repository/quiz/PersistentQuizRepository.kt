@@ -63,6 +63,20 @@ class PersistentQuizRepository(
         }
     }
 
+    override fun countCategoryInUse(categoryId: String): Int {
+        return database.quizCategoryRelationQueries.countCategoryInUse(categoryId).executeAsOne().toInt()
+    }
+
+    override fun countCategoriesInUse(categoryIds: Set<String>): Int {
+        return database.quizCategoryRelationQueries
+            .countCategoriesInUse(categoryIds.toList()).executeAsOne().toInt()
+    }
+
+    override fun removeCategory(categoryId: String): Result<Unit> {
+        database.quizCategoryRelationQueries.removeCategoryFromAllQuizzes(categoryId)
+        return Result.success(Unit)
+    }
+
     override suspend fun getAll(): List<Quiz> {
         val categoriesByQuizId = database.quizCategoryRelationQueries
             .getAllCategoriesConfigurationWithCount()

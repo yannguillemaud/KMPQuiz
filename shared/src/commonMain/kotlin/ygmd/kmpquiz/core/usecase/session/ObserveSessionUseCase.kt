@@ -53,11 +53,8 @@ class ObserveSessionUseCase(
                 }
             }
 
-    fun observeSession(sessionId: String): Flow<Session> {
-        val result = sessionRepository.observeSession(sessionId)
-        return result.map {
-            it ?: throw IllegalStateException("Session $sessionId not found")
-        }
+    fun observeSession(sessionId: String): Flow<Session?> {
+        return sessionRepository.observeSession(sessionId)
     }
 
     suspend fun deleteSessions() {
