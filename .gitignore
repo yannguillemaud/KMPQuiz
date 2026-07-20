@@ -10,10 +10,8 @@ local.properties
 xcuserdata
 .kotlin
 
-# Release signing material — never commit real keystores or their base64 exports
 *.jks
 *.keystore
-keystore_base64.txt
+release.b64
 
-# Except the dedicated non-secret CI debug keystore, which is intentionally tracked
 !androidApp/keystores/debug-ci.jks
