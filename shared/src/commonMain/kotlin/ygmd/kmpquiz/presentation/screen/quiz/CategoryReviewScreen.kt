@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
@@ -88,46 +89,55 @@ fun CategoryReviewScreen(
             )
         }
     ) { paddingValues ->
-        Crossfade(
-            targetState = state,
-            label = "CategoryReviewTransition",
-            animationSpec = tween(300),
-            modifier = Modifier.fillMaxSize().padding(paddingValues)
-        ) { reviewState ->
-            when (reviewState) {
-                is CategoryReviewUiState.Loading -> {
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator()
+        Box(
+            modifier = Modifier.fillMaxSize().padding(paddingValues),
+            contentAlignment = Alignment.TopCenter,
+        ) {
+            Crossfade(
+                targetState = state,
+                label = "CategoryReviewTransition",
+                animationSpec = tween(300),
+                // Cap width first, before fillMaxSize() makes the constraint tight — see the
+                // matching comment in QuizSessionScreen for why the reverse order is a no-op.
+                modifier = Modifier
+                    .widthIn(max = Dimens.SessionContentMaxWidth)
+                    .fillMaxSize()
+            ) { reviewState ->
+                when (reviewState) {
+                    is CategoryReviewUiState.Loading -> {
+                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                            CircularProgressIndicator()
+                        }
                     }
-                }
 
-                is CategoryReviewUiState.Error -> ErrorState(message = reviewState.message)
+                    is CategoryReviewUiState.Error -> ErrorState(message = reviewState.message)
 
-                is CategoryReviewUiState.Loaded -> {
-                    if (reviewState.userAnswers.isEmpty()) {
-                        EmptyState(
-                            modifier = Modifier.fillMaxSize(),
-                            icon = Icons.Outlined.QuestionAnswer,
-                            title = "No questions to review",
-                            description = "This category has no answered questions in this session.",
-                            fullSizeState = true
-                        )
-                    } else {
-                        LazyColumn(
-                            modifier = Modifier.fillMaxSize(),
-                            contentPadding = PaddingValues(
-                                start = Dimens.PaddingMedium,
-                                end = Dimens.PaddingMedium,
-                                top = Dimens.PaddingMedium,
-                                bottom = Dimens.PaddingLarge,
-                            ),
-                            verticalArrangement = Arrangement.spacedBy(Dimens.PaddingMediumSmall)
-                        ) {
-                            itemsIndexed(
-                                items = reviewState.userAnswers,
-                                key = { idx, _ -> idx }
-                            ) { _, (qanda, userAnswer) ->
-                                QuestionReviewCard(qanda = qanda, userAnswer = userAnswer)
+                    is CategoryReviewUiState.Loaded -> {
+                        if (reviewState.userAnswers.isEmpty()) {
+                            EmptyState(
+                                modifier = Modifier.fillMaxSize(),
+                                icon = Icons.Outlined.QuestionAnswer,
+                                title = "No questions to review",
+                                description = "This category has no answered questions in this session.",
+                                fullSizeState = true
+                            )
+                        } else {
+                            LazyColumn(
+                                modifier = Modifier.fillMaxSize(),
+                                contentPadding = PaddingValues(
+                                    start = Dimens.PaddingMedium,
+                                    end = Dimens.PaddingMedium,
+                                    top = Dimens.PaddingMedium,
+                                    bottom = Dimens.PaddingLarge,
+                                ),
+                                verticalArrangement = Arrangement.spacedBy(Dimens.PaddingMediumSmall)
+                            ) {
+                                itemsIndexed(
+                                    items = reviewState.userAnswers,
+                                    key = { idx, _ -> idx }
+                                ) { _, (qanda, userAnswer) ->
+                                    QuestionReviewCard(qanda = qanda, userAnswer = userAnswer)
+                                }
                             }
                         }
                     }

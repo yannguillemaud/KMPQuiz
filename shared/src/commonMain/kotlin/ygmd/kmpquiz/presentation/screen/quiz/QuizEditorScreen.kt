@@ -44,17 +44,14 @@ import androidx.compose.ui.composed
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import dev.brewkits.grant.compose.GrantDialog
 import org.koin.compose.viewmodel.koinViewModel
 import ygmd.kmpquiz.core.domain.event.Event
 import ygmd.kmpquiz.presentation.composable.SectionHeader
+import ygmd.kmpquiz.core.service.permission.PermissionRationaleDialog
 import ygmd.kmpquiz.presentation.composable.createquiz.CategorySelectionSection
 import ygmd.kmpquiz.presentation.composable.createquiz.QuizQuestionConfigSection
 import ygmd.kmpquiz.presentation.composable.createquiz.SchedulerConfigurationSection
 import ygmd.kmpquiz.presentation.theme.Dimens
-import ygmd.kmpquiz.presentation.theme.ExtendedColors
-import ygmd.kmpquiz.presentation.theme.ExtendedTheme
 import ygmd.kmpquiz.presentation.viewModel.quiz.edit.QuizEditViewModel
 
 
@@ -110,8 +107,8 @@ fun QuizEditorScreen(
                 contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
                 icon = {
                     if (quiz.metadata.isSaving) CircularProgressIndicator(
-                        modifier = Modifier.size(24.dp),
-                        strokeWidth = 2.dp,
+                        modifier = Modifier.size(Dimens.IconSize),
+                        strokeWidth = Dimens.ThinStrokeWidth,
                         color = MaterialTheme.colorScheme.onPrimaryContainer
                     )
                     else Icon(Icons.Default.Save, contentDescription = null)
@@ -123,7 +120,7 @@ fun QuizEditorScreen(
         },
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { paddingValues ->
-        GrantDialog(handler = viewModel.notificationPermission)
+        PermissionRationaleDialog(handler = viewModel.notificationPermission)
         if (quiz.metadata.isLoading) {
             Surface(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
                 Column(
@@ -134,7 +131,7 @@ fun QuizEditorScreen(
                     CircularProgressIndicator()
                     Text(
                         "Loading quiz data...",
-                        modifier = Modifier.padding(top = 16.dp),
+                        modifier = Modifier.padding(top = Dimens.PaddingMedium),
                         style = MaterialTheme.typography.bodyMedium
                     )
                 }
@@ -144,16 +141,16 @@ fun QuizEditorScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(paddingValues)
-                    .padding(horizontal = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                    .padding(horizontal = Dimens.PaddingMedium),
+                verticalArrangement = Arrangement.spacedBy(Dimens.PaddingMedium)
             ) {
                 /* TITLE */
                 item(key = "title_field") {
                     Card(
-                        modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                        modifier = Modifier.fillMaxWidth().padding(top = Dimens.PaddingSmall),
                         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
                     ) {
-                        Column(modifier = Modifier.padding(16.dp)) {
+                        Column(modifier = Modifier.padding(Dimens.PaddingMedium)) {
                             SectionHeader(title = "General Info", icon = Icons.Default.Title)
                             OutlinedTextField(
                                 modifier = Modifier.fillMaxWidth().clearFocusOnTap(),
@@ -182,7 +179,7 @@ fun QuizEditorScreen(
                         modifier = Modifier.fillMaxWidth(),
                         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
                     ) {
-                        Column(modifier = Modifier.padding(16.dp)) {
+                        Column(modifier = Modifier.padding(Dimens.PaddingMedium)) {
                             SectionHeader(title = "Scheduler", icon = Icons.Default.Schedule)
                             SchedulerConfigurationSection(
                                 currentSelection = quiz.configuration.selectedScheduler.selectedScheduler,
@@ -200,7 +197,7 @@ fun QuizEditorScreen(
                         modifier = Modifier.fillMaxWidth(),
                         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
                     ) {
-                        Column(modifier = Modifier.padding(16.dp)) {
+                        Column(modifier = Modifier.padding(Dimens.PaddingMedium)) {
                             SectionHeader(title = "Categories", icon = Icons.Default.Category)
                             CategorySelectionSection(
                                 categories = quiz.content.availableCategories,
@@ -217,7 +214,7 @@ fun QuizEditorScreen(
                         modifier = Modifier.fillMaxWidth(),
                         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
                     ) {
-                        Column(modifier = Modifier.padding(16.dp)) {
+                        Column(modifier = Modifier.padding(Dimens.PaddingMedium)) {
                             SectionHeader(title = "Questions Settings", icon = Icons.Default.Settings)
                             QuizQuestionConfigSection(
                                 quizMode = quiz.configuration.selectedQuizMode,
@@ -240,9 +237,9 @@ fun QuizEditorScreen(
                         )
                     ) {
                         Row(
-                            modifier = Modifier.padding(16.dp),
+                            modifier = Modifier.padding(Dimens.PaddingMedium),
                             verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            horizontalArrangement = Arrangement.spacedBy(Dimens.PaddingMediumSmall)
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Info,

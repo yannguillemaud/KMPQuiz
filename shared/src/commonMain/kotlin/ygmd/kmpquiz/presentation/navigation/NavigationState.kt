@@ -10,6 +10,11 @@ import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.rememberNavBackStack
+import androidx.savedstate.serialization.SavedStateConfiguration
+import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.modules.SerializersModule
+import kotlinx.serialization.modules.polymorphic
+import kotlinx.serialization.modules.subclassesOfSealed
 import ygmd.kmpquiz.core.domain.route.KMPQuizRoute
 
 /**
@@ -144,7 +149,7 @@ class NavigationState(
 }
 
 /**
- * Thin façade over [NavigationState] that the screens' callback lambdas resolve to. Screens
+ * Façade over [NavigationState] that the screens' callback lambdas resolve to. Screens
  * never see this type directly — `App` translates their `onNavigateToX` / `onNavigateBack`
  * callbacks into these calls.
  */
@@ -161,15 +166,28 @@ class Navigator(val state: NavigationState) {
 }
 
 /**
+ * Configuration for polymorphic serialization of [KMPQuizRoute] subclasses.
+ * Required for Navigation 3 Multiplatform to persist the back stack on non-Android targets.
+ */
+@OptIn(ExperimentalSerializationApi::class)
+private val KMPQuizRouteConfiguration = SavedStateConfiguration {
+    serializersModule = SerializersModule {
+        polymorphic(NavKey::class) {
+            subclassesOfSealed<KMPQuizRoute>()
+        }
+    }
+}
+
+/**
  * Builds a [Navigator] backed by one [rememberNavBackStack] per bottom-nav tab. The three
  * `rememberNavBackStack` calls are unconditional (fixed tab set), so they satisfy the rules
  * of Composable invocation.
  */
 @Composable
 fun rememberNavigator(startRoute: KMPQuizRoute = KMPQuizRoute.Home): Navigator {
-    val homeStack = rememberNavBackStack(KMPQuizRoute.Home)
-    val categoriesStack = rememberNavBackStack(KMPQuizRoute.Categories)
-    val quizzesStack = rememberNavBackStack(KMPQuizRoute.Quizzes)
+    val homeStack = rememberNavBackStack(KMPQuizRouteConfiguration, KMPQuizRoute.Home)
+    val categoriesStack = rememberNavBackStack(KMPQuizRouteConfiguration, KMPQuizRoute.Categories)
+    val quizzesStack = rememberNavBackStack(KMPQuizRouteConfiguration, KMPQuizRoute.Quizzes)
     return remember {
         Navigator(
             NavigationState(

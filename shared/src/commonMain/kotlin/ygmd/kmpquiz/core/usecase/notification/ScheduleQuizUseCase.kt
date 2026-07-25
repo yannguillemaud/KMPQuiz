@@ -27,11 +27,10 @@ class ScheduleQuizUseCase(
      */
     suspend fun schedule(quizId: String): Result<Unit> {
         val quiz = quizRepository.getById(quizId).getOrThrow()
-        return computeQuizSchedulerNextTriggerUseCase.invoke(quiz)?.let {
-            alarmScheduler.scheduleAlarm(quizId, it.toEpochMilliseconds())
-            logger.i { "Scheduled quiz $quizId [$it]" }
-            Result.success(Unit)
-        } ?: Result.failure(Exception("Failed to compute next trigger for quiz: $quizId."))
+        val nextTrigger = computeQuizSchedulerNextTriggerUseCase(quiz) ?: return Result.failure(
+            Exception("Failed to compute next trigger for quiz: $quizId.")
+        )
+        return alarmScheduler.scheduleAlarm(quizId, nextTrigger.toEpochMilliseconds())
     }
 }
 

@@ -58,11 +58,11 @@ import ygmd.kmpquiz.presentation.screen.category.CategoriesScreen
 import ygmd.kmpquiz.presentation.screen.home.HomeScreen
 import ygmd.kmpquiz.presentation.screen.category.CategoryScreen
 import ygmd.kmpquiz.presentation.screen.quiz.CategoryReviewScreen
-import ygmd.kmpquiz.presentation.screen.quiz.DetailedSessionHistoryScreen
+import ygmd.kmpquiz.presentation.screen.quiz.history.DetailedSessionHistoryScreen
 import ygmd.kmpquiz.presentation.screen.quiz.QuizEditorScreen
 import ygmd.kmpquiz.presentation.screen.quiz.QuizSessionScreen
 import ygmd.kmpquiz.presentation.screen.quiz.QuizzesScreen
-import ygmd.kmpquiz.presentation.screen.quiz.SessionHistoryScreen
+import ygmd.kmpquiz.presentation.screen.quiz.history.SessionHistoryScreen
 import ygmd.kmpquiz.presentation.theme.KMPQuizTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -244,6 +244,12 @@ fun App(
                                 isNewSession = key.sessionId == null,
                                 sessionId = key.sessionId,
                                 fromNotification = key.fromNotification,
+                                // Only the entry genuinely at the top of the active tab's stack may
+                                // claim system-back precedence; when CategoryReview is pushed on
+                                // top, a predictive-back peek would otherwise still compose (and
+                                // let win) this screen's NavigationEventHandler, over-popping two
+                                // levels instead of one. See QuizSessionScreen's isForeground KDoc.
+                                isForeground = navigator.state.currentEntry == key,
                                 // Both the mid-quiz back arrow and the finish-screen arrow land on
                                 // the Quizzes tab root, clearing this session off whichever tab
                                 // pushed it (Quizzes for manual play, Home for the deep-link path).

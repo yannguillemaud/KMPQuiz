@@ -18,7 +18,7 @@ class AndroidAlarmScheduler(
 
     private val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
 
-    override fun scheduleAlarm(quizId: String, exactEpochMillis: Long) {
+    override fun scheduleAlarm(quizId: String, exactEpochMillis: Long): Result<Unit> {
         val pendingIntent = createPendingIntent(quizId)
         alarmManager.setAndAllowWhileIdle(
             AlarmManager.RTC_WAKEUP,
@@ -30,6 +30,7 @@ class AndroidAlarmScheduler(
                 Instant.ofEpochMilli(exactEpochMillis).atZone(ZoneId.systemDefault())
             }"
         }
+        return Result.success(Unit)
     }
 
     override fun cancelAlarm(quizId: String) {
