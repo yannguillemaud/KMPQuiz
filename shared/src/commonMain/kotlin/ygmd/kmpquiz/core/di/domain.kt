@@ -1,6 +1,5 @@
 package ygmd.kmpquiz.core.di
 
-import dev.brewkits.grant.impl.DefaultGrantManager
 import org.koin.dsl.module
 import ygmd.kmpquiz.core.service.notification.NotificationHandler
 import ygmd.kmpquiz.core.usecase.scheduler.ComputeQuizSchedulerNextTriggerUseCase
@@ -83,9 +82,9 @@ val domainModule = module {
         )
     }
 
-    single {
-        DefaultGrantManager(platformDelegate = get())
-    }
+    // DefaultGrantManager binding is Android-only (Grant has no desktop artifact) and now
+    // lives in the Android `platformModule` actual, alongside grantModule/grantPlatformModule
+    // — see B3 in docs/refactorization/2026-07-24-desktop-grant-koin-backhandler.md.
 
     factory {
         ScheduleQuizUseCase(

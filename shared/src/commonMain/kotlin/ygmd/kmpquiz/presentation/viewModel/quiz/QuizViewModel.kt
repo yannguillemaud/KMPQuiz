@@ -2,10 +2,6 @@ package ygmd.kmpquiz.presentation.viewModel.quiz
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import dev.brewkits.grant.AppGrant.NOTIFICATION
-import dev.brewkits.grant.GrantHandler
-import dev.brewkits.grant.GrantManager
-import dev.brewkits.grant.GrantStatus.GRANTED
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -13,6 +9,8 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import ygmd.kmpquiz.core.domain.permission.PermissionOutcome
+import ygmd.kmpquiz.core.service.permission.PermissionHandlerFactory
 import ygmd.kmpquiz.core.usecase.scheduler.ToggleQuizSchedulerUseCase
 import ygmd.kmpquiz.core.usecase.quiz.DeleteQuizUseCase
 import ygmd.kmpquiz.core.usecase.quiz.GetQuizUseCase
@@ -39,11 +37,14 @@ class QuizViewModel(
     private val getQuizUseCase: GetQuizUseCase,
     private val deleteQuizUseCase: DeleteQuizUseCase,
     private val toggleQuizSchedulerUseCase: ToggleQuizSchedulerUseCase,
-    private val grantManager: GrantManager,
+    permissionHandlerFactory: PermissionHandlerFactory,
 ) : ViewModel() {
     private val _quizEvents = Channel<Event>()
     val quizEvents = _quizEvents.receiveAsFlow()
-    val notificationHandler = GrantHandler(grantManager, NOTIFICATION, viewModelScope)
+    // PermissionHandler is scope-bound (viewModelScope only exists once this ViewModel is
+    // constructed), so it is built here from the injected factory rather than injected
+    // directly — see PermissionHandlerFactory's kdoc.
+    val notificationHandler = permissionHandlerFactory.create(viewModelScope)
 
     val quizzesState: StateFlow<QuizzesUiState> = getQuizUseCase.observeQuizzes()
         .map { quizzes ->
@@ -80,14 +81,20 @@ class QuizViewModel(
                 toggleQuizSchedulerUseCase(quizId, false)
                 return@launch
             }
-            val result = notificationHandler.requestSuspend(
+            val outcome = notificationHandler.requestSuspend(
                 rationaleMessage = "Notifications are required to schedule quizzes",
                 settingsMessage = "Please enable notifications in Settings"
             )
-            if (result == GRANTED) toggleQuizSchedulerUseCase(quizId, true)
-            else {
-                val uiEvent = Event.ShowSnackbar("Notifications are required to schedule quizzes")
-                _quizEvents.send(uiEvent)
+            // Granted (Android, permission actually approved) or NotApplicable (desktop,
+            // no OS permission gate) both mean "proceed" — anything else blocks.
+            when (outcome) {
+                is PermissionOutcome.Granted,
+                is PermissionOutcome.NotApplicable -> toggleQuizSchedulerUseCase(quizId, true)
+                is PermissionOutcome.Denied,
+                is PermissionOutcome.DeniedAlways -> {
+                    val uiEvent = Event.ShowSnackbar("Notifications are required to schedule quizzes")
+                    _quizEvents.send(uiEvent)
+                }
             }
         }
     }

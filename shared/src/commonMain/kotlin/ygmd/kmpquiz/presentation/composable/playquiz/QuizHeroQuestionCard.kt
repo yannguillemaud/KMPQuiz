@@ -8,9 +8,9 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
@@ -61,7 +61,11 @@ fun QuizHeroQuestionCard(
     ElevatedCard(
         modifier = modifier
             .fillMaxWidth()
-            .defaultMinSize(minHeight = 200.dp)
+            // Non-required: intersects with the incoming constraint rather than overriding
+            // it, so this only takes effect because the call site (QuizStartedContent)
+            // wraps this card in Box(Modifier.weight(1f), contentAlignment = Center) instead
+            // of putting weight(1f) directly here. See Dimens.HeroCardMinHeight's KDoc.
+            .heightIn(min = Dimens.HeroCardMinHeight, max = Dimens.HeroCardMaxHeight)
             .border(
                 width = 1.dp,
                 brush = borderBrush,
@@ -93,6 +97,10 @@ fun QuizHeroQuestionCard(
                         MediaImageView(
                             imageUrl = content.imageUrl,
                             contentDescription = content.altText,
+                            // The card itself is already bounded (Dimens.HeroCardMinHeight /
+                            // HeroCardMaxHeight on the ElevatedCard above), so the image just
+                            // fills whatever space the card ends up with — no separate cap
+                            // needed here.
                             modifier = Modifier
                                 .fillMaxSize()
                                 .padding(Dimens.PaddingMedium),
