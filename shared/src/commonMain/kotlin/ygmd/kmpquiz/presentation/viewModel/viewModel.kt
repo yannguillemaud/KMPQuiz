@@ -55,7 +55,7 @@ val viewModelModule = module {
             getQuizUseCase = get(),
             deleteQuizUseCase = get(),
             toggleQuizSchedulerUseCase = get(),
-            grantManager = get(),
+            permissionHandlerFactory = get(),
         )
     }
 
@@ -64,7 +64,7 @@ val viewModelModule = module {
             saveQuizUseCase = get(),
             categoryUseCase = get(),
             getQuizUseCase = get(),
-            grantManager = get(),
+            permissionHandlerFactory = get(),
         )
     }
 

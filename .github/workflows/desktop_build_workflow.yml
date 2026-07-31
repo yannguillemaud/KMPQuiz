@@ -1,0 +1,87 @@
+name: CI/CD Build Desktop (Windows)
+
+on:
+  push:
+    tags:
+      - 'v[0-9]*.[0-9]*.*'
+    branches:
+      - develop
+      - feature/desktop
+  workflow_dispatch:
+
+jobs:
+  build-desktop:
+    runs-on: windows-latest
+    permissions:
+      contents: write
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: gradle
+
+      - name: Derive version
+        run: |
+          if [[ "${{ github.ref }}" == refs/tags/* ]]; then
+            RAW_TAG="${{ github.ref_name }}"
+            VERSION="${RAW_TAG#v}"
+          else
+            VERSION="0.0.0"
+          fi
+          echo "VERSION_NAME=$VERSION" >> "$GITHUB_ENV"
+          echo "Derived VERSION_NAME=$VERSION"
+
+      - name: Build desktop artifact based on trigger
+        run: |
+          if [[ "${{ github.ref }}" == refs/tags/* ]]; then
+            echo "Release tag detected. Building MSI installer..."
+            ./gradlew :desktop:packageMsi --stacktrace --build-cache
+
+            MSI_PATH=$(find desktop/build/compose/binaries/main/msi -maxdepth 1 -name "*.msi" | head -n 1)
+            if [ -z "$MSI_PATH" ]; then
+              echo "ERROR: MSI not found under desktop/build/compose/binaries/main/msi"
+              exit 1
+            fi
+
+            RENAMED_PATH="desktop/build/compose/binaries/main/msi/kmpquiz-${VERSION_NAME}.msi"
+            mv "$MSI_PATH" "$RENAMED_PATH"
+
+            echo "ARTIFACT_PATH=$RENAMED_PATH" >> "$GITHUB_ENV"
+            echo "IS_RELEASE=true" >> "$GITHUB_ENV"
+          else
+            echo "Branch detected. Building distributable app image..."
+            ./gradlew :desktop:createDistributable --stacktrace --build-cache
+
+            APP_DIR="desktop/build/compose/binaries/main/app/KMPQuiz"
+            if [ ! -d "$APP_DIR" ]; then
+              echo "ERROR: app image directory not found at $APP_DIR"
+              exit 1
+            fi
+
+            echo "ARTIFACT_PATH=$APP_DIR" >> "$GITHUB_ENV"
+            echo "IS_RELEASE=false" >> "$GITHUB_ENV"
+          fi
+
+      - name: Upload desktop artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: desktop-${{ env.IS_RELEASE == 'true' && 'release-msi' || 'debug-app-image' }}
+          path: ${{ env.ARTIFACT_PATH }}
+
+      - name: Attach MSI to GitHub Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ env.ARTIFACT_PATH }}
+          tag_name: ${{ github.ref_name }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}

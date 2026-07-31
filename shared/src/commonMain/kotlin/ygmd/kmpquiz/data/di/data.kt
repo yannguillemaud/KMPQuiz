@@ -5,7 +5,6 @@ import kotlinx.serialization.json.Json
 import org.koin.dsl.module
 import ygmd.kmpquiz.core.repository.CategoryRepository
 import ygmd.kmpquiz.core.repository.FetcherRepository
-import ygmd.kmpquiz.core.repository.PermissionRepository
 import ygmd.kmpquiz.core.repository.QandaRepository
 import ygmd.kmpquiz.core.repository.QuizRepository
 import ygmd.kmpquiz.core.repository.SessionRepository
@@ -14,7 +13,6 @@ import ygmd.kmpquiz.data.dao.QandaDao
 import ygmd.kmpquiz.data.repository.category.PersistentCategoryRepository
 import ygmd.kmpquiz.data.repository.category.SQLDelightCategoryDao
 import ygmd.kmpquiz.data.repository.fetcher.InMemoryFetcherRepository
-import ygmd.kmpquiz.data.repository.permission.GrantPermissionRepository
 import ygmd.kmpquiz.data.repository.qanda.PersistentQandaRepository
 import ygmd.kmpquiz.data.repository.qanda.SQLDelightQandaDao
 import ygmd.kmpquiz.data.repository.quiz.PersistentQuizRepository
@@ -61,9 +59,9 @@ val dataModule = module {
         PersistentCategoryRepository(categoryDao = get())
     }
 
-    single<PermissionRepository> {
-        GrantPermissionRepository(grantManager = get())
-    }
+    // PermissionRepository binding is platform-specific (Grant on Android, no-op on
+    // desktop) and lives in each target's `platformModule` actual — see B2/B6 in
+    // docs/refactorization/2026-07-24-desktop-grant-koin-backhandler.md.
 
     single<FetcherRepository>{
         InMemoryFetcherRepository(

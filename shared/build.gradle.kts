@@ -1,5 +1,3 @@
-import org.jetbrains.kotlin.gradle.internal.types.error.ErrorModuleDescriptor.platform
-
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
     alias(libs.plugins.compose.multiplatform)
@@ -11,6 +9,8 @@ plugins {
 }
 
 kotlin {
+    jvmToolchain(21)
+
     android {
         compileSdk = 37
         minSdk = 26
@@ -19,6 +19,10 @@ kotlin {
         withHostTestBuilder {
 
         }
+    }
+
+    jvm("desktop") {
+
     }
 
     sourceSets {
@@ -41,12 +45,21 @@ kotlin {
                 // SQLDelight (Database)
                 implementation(libs.sqldelight.coroutines.extensions)
 
+                // Koin (DI) - core is needed here since core/di, data/di and di/Koin.kt
+                // reference Koin types directly from commonMain.
+                implementation(libs.koin.core)
+                // koin-compose-viewmodel is a genuine Compose Multiplatform artifact
+                // (Android/iOS/Desktop/Web) — every commonMain screen already imports
+                // org.koin.compose.viewmodel.koinViewModel, so it belongs here, not
+                // androidMain-only.
+                implementation(libs.koin.compose.viewmodel)
+
                 // Compose (UI)
                 implementation(libs.androidx.compose.ui)
                 implementation(libs.androidx.compose.ui.tooling)
                 implementation(libs.jetbrains.compose.ui.tooling.preview)
                 implementation(libs.androidx.compose.foundation)
-                implementation(libs.jetbrains.compose.ui.backhandler)
+                implementation(libs.androidx.navigationevent.compose)
                 implementation(libs.androidx.lifecycle.runtime.compose)
                 implementation(libs.androidx.lifecycle.viewmodel.compose)
                 implementation(libs.androidx.navigation3.ui)
@@ -61,11 +74,6 @@ kotlin {
                 // Coil (Image Loading)
                 implementation(libs.coil.compose)
                 implementation(libs.coil.compose.okhttp)
-
-                // Permissions
-                implementation(libs.grant.core)
-                implementation(libs.grant.compose)
-                implementation(libs.grant.core.koin)
             }
         }
 
@@ -85,7 +93,6 @@ kotlin {
             implementation(libs.koin.androidx.workmanager)
             implementation(libs.sqldelight.android.driver)
             implementation(libs.koin.android)
-            implementation(libs.koin.compose.viewmodel)
 
             implementation(libs.kotlinx.serialization.json)
             implementation(libs.kotlinx.datetime)
@@ -100,6 +107,20 @@ kotlin {
             implementation(libs.androidx.core.ktx)
             implementation(libs.androidx.appcompat)
             implementation(libs.material)
+
+            // Permissions
+            implementation(libs.grant.core)
+            implementation(libs.grant.compose)
+            implementation(libs.grant.core.koin)
+        }
+
+        val desktopMain by getting {
+            dependencies {
+                implementation(libs.kotlinx.coroutines.core)
+                implementation(libs.kotlinx.coroutines.swing)
+                implementation(libs.ktor.client.okhttp)
+                implementation(libs.sqldelight.sqlite.driver)
+            }
         }
     }
 }

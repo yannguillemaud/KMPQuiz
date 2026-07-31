@@ -4,10 +4,6 @@ import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import co.touchlab.kermit.Logger
-import dev.brewkits.grant.AppGrant.NOTIFICATION
-import dev.brewkits.grant.GrantHandler
-import dev.brewkits.grant.GrantManager
-import dev.brewkits.grant.GrantPermission
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
@@ -30,6 +26,7 @@ import ygmd.kmpquiz.core.usecase.category.CategoryUseCase
 import ygmd.kmpquiz.core.usecase.quiz.GetQuizUseCase
 import ygmd.kmpquiz.core.usecase.quiz.SaveQuizUseCase
 import ygmd.kmpquiz.core.domain.event.Event
+import ygmd.kmpquiz.core.service.permission.PermissionHandlerFactory
 import ygmd.kmpquiz.presentation.viewModel.displayable.DisplayableCategory
 import ygmd.kmpquiz.presentation.viewModel.displayable.DisplayableCategoryWithCount
 import ygmd.kmpquiz.presentation.viewModel.displayable.DisplayableQuizMode
@@ -85,7 +82,7 @@ class QuizEditViewModel(
     private val getQuizUseCase: GetQuizUseCase,
     private val saveQuizUseCase: SaveQuizUseCase,
     private val categoryUseCase: CategoryUseCase,
-    private val grantManager: GrantManager,
+    permissionHandlerFactory: PermissionHandlerFactory,
 ) : ViewModel() {
 
     /* inputs */
@@ -148,8 +145,10 @@ class QuizEditViewModel(
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), QuizEditUiState())
 
     /* permission handler */
-    val notificationPermission =
-        GrantHandler(grantManager, NOTIFICATION, viewModelScope)
+    // Built from the injected factory (not injected directly) — see
+    // PermissionHandlerFactory's kdoc: the handler must be bound to viewModelScope, which
+    // only exists once this ViewModel is constructed.
+    val notificationPermission = permissionHandlerFactory.create(viewModelScope)
 
     /* events */
     private val _events = Channel<Event>()
@@ -185,8 +184,9 @@ class QuizEditViewModel(
 
     /**
      * Attempts to set a scheduler. This is a suspending operation that sequentially requests
-     * Notification and Exact Alarm permissions from the OS via Grant.
-     * The UI state is only updated if both permissions are GRANTED.
+     * Notification and Exact Alarm permissions from the OS via the [PermissionHandlerFactory]
+     * port (Grant-backed on Android, no-op on desktop).
+     * The UI state is only updated if both permissions are granted (or not applicable).
      */
     fun setScheduler(schedulerSelection: SchedulerSelection?) {
         _selectedScheduler.update {

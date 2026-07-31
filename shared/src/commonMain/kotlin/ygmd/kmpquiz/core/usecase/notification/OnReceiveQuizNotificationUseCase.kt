@@ -28,7 +28,7 @@ class OnReceiveQuizNotificationUseCase(
             return
         }
         if (quiz.schedulerConfiguration?.isEnabled == true) {
-            computeQuizSchedulerNextTriggerUseCase.invoke(quiz)?.let {
+            computeQuizSchedulerNextTriggerUseCase(quiz)?.let {
                 quizAlarmScheduler.scheduleAlarm(
                     quizId = quiz.id,
                     exactEpochMillis = it.toEpochMilliseconds()
